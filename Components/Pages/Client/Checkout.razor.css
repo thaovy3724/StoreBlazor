@@ -1,0 +1,29 @@
+﻿/* Màu riêng cho MoMo */
+.text-pink {
+    color: #d82d8b;
+}
+
+/* Style cho các thẻ chọn thanh toán */
+.payment-option {
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+    .payment-option:hover {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+    }
+
+/* Hiệu ứng khi được chọn */
+.selected-payment {
+    border-color: #0d6efd !important; /* Viền xanh primary */
+    background-color: rgba(13, 110, 253, 0.05) !important; /* Nền xanh rất nhạt */
+    box-shadow: 0 0 0 1px #0d6efd; /* Đậm viền hơn */
+}
+
+/* Tăng kích thước nút radio */
+.form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    cursor: pointer;
+}

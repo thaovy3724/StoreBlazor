@@ -1,0 +1,117 @@
+﻿@* Components/ClientNavMenu.razor *@
+@inject NavigationManager Nav
+<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3">
+    <div class="container">
+        @* Brand Store *@
+        <a class="navbar-brand d-flex align-items-center fw-bold text-primary me-4" href="/client/index">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                <i class="bi bi-shop fs-5"></i>
+            </div>
+            <span style="letter-spacing: -0.5px;">FOMOStore</span>
+        </a>
+
+          <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#clientNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="clientNavbar">
+            @* Tim kiem  *@
+            <form class="d-flex flex-grow-1 mx-lg-5 my-3 my-lg-0 position-relative" @onsubmit="SearchSubmit">
+                <div class="input-group border rounded-pill bg-light overflow-hidden">
+                    <input class="form-control border-0 bg-transparent search-input py-2 ps-4"
+                           type="search"
+                           placeholder="Bạn cần mua sản phẩm gì?..."
+                           @bind="searchQuery">
+                    @* Nut tim kiem *@
+                    <button class="btn btn-primary btn-search m-1 rounded-pill fw-semibold" type="submit">
+                        <i class="bi bi-search me-1"></i> Tìm
+                    </button>
+                </div>
+            </form>
+
+            <div class="d-flex align-items-center gap-3 justify-content-end">
+                @* Gio hang *@
+                <button class="btn btn-outline-light text-dark border-0 nav-icon-btn position-relative" @onclick="GoToCart" title="Giỏ hàng">
+                    <i class="bi bi-cart3 fs-4"></i>
+                    @if (cartCount > 0)
+                    {
+                        <span class="position-absolute badge rounded-pill bg-danger border border-light badge-cart">
+                            @cartCount
+                        </span>
+                    }
+                </button>
+
+                <div class="vr h-100 mx-1 d-none d-lg-block"></div>
+                @* Thong tin ca nhan *@
+                <div class="dropdown">
+                    <button class="btn btn-outline-light text-dark border-0 d-flex align-items-center gap-2 py-1 ps-2 pe-3 rounded-pill"
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                            style="background-color: #f8f9fa;">
+                        @* Ten khach hang *@
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                            <span class="fw-bold">@GetInitials(userName)</span>
+                        </div>
+
+                        <div class="d-none d-md-block text-start" style="line-height: 1.2;">
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">Xin chào,</small>
+                            <span class="fw-semibold text-truncate" style="max-width: 100px; display:inline-block">@GetLastName(userName)</span>
+                        </div>
+                        <i class="bi bi-chevron-down ms-1 text-muted small"></i>
+                    </button>
+                    @* Thong tin ca nhan/Don hang/ Dang xuat *@
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3 overflow-hidden">
+                        <li class="px-3 py-2 bg-light border-bottom">
+                            <span class="d-block fw-bold text-dark">@userName</span>
+                        </li>
+                        <li><a class="dropdown-item py-2 mt-1" href="/profile"><i class="bi bi-person-gear me-2 text-primary"></i>Tài khoản của tôi</a></li>
+                        <li><a class="dropdown-item py-2" href="/orders"><i class="bi bi-box-seam me-2 text-primary"></i>Đơn mua</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button class="dropdown-item py-2 text-danger fw-semibold" @onclick="Logout">
+                                <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+@code {
+    private string userName = "Ngô Đức Trọng";
+    private string searchQuery = "";
+    private int cartCount = 3;
+
+    private void Logout()
+    {
+        Console.WriteLine("Logout clicked");
+    }
+
+    private void GoToCart()
+    {
+        Nav.NavigateTo("/client/cart");
+    }
+
+    private void SearchSubmit()
+    {
+        Console.WriteLine($"Searching for: {searchQuery}");
+    }
+
+    // Hàm lấy chữ cái đầu của tên để làm Avatar
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "U";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
+        return parts[^1][0].ToString().ToUpper(); // Lấy chữ cái đầu của tên
+    }
+
+    // Hàm lấy tên (bỏ họ) 
+    private string GetLastName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "User";
+        var parts = name.Split(' ');
+        return parts[^1];
+    }
+}
