@@ -1,0 +1,17 @@
+﻿@inherits LayoutComponentBase
+@using StoreBlazor.Components  
+
+<div class="page d-flex flex-column min-vh-100">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <ClientNavMenu />
+        </div>
+    <!-- Main content -->
+    <main class="flex-fill d-flex flex-column">
+        <article class="content px-4 flex-fill">
+            @Body
+        </article>
+    </main>
+    <!-- Footer -->
+    <ClientFooter />
+</div>
