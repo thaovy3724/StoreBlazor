@@ -1,0 +1,88 @@
+﻿@* ﻿@model dynamic
+
+@{
+    int maxVisiblePages = 7; // số lượng trang hiển thị tối đa (bao gồm ...)
+    int startPage = Math.Max(1, Model.CurrentPage - 3);
+    int endPage = Math.Min(Model.TotalPages, startPage + maxVisiblePages - 1);
+
+    // nếu cuối vượt quá tổng, thì lùi lại cho vừa khung
+    if (endPage - startPage < maxVisiblePages - 1)
+    {
+        startPage = Math.Max(1, endPage - maxVisiblePages + 1);
+    }
+}
+
+@functions {
+    // Tạo URL phân trang và giữ nguyên query string hiện tại
+    private string GetPageUrl(int page)
+    {
+        var query = new Dictionary<string, string>();
+
+        foreach (var key in Context.Request.Query.Keys)
+        {
+            if (key.ToLower() != "page")
+            {
+                query[key] = Context.Request.Query[key];
+            }
+        }
+
+        query["page"] = page.ToString();
+
+        var queryString = string.Join("&", query.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+        return $"?{queryString}";
+    }
+}
+
+<nav aria-label="Pagination">
+    <ul class="pagination justify-content-center mt-3">
+        <!-- Nút Previous -->
+        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+            <a class="page-link" href="@GetPageUrl(Model.CurrentPage - 1)" aria-label="Previous">&laquo;</a>
+        </li>
+
+        <!-- Trang đầu tiên + ... -->
+        @if (startPage > 1)
+        {
+            <li class="page-item">
+                <a class="page-link" href="@GetPageUrl(1)">1</a>
+            </li>
+            @if (startPage > 2)
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            }
+        }
+
+        <!-- Các trang giữa -->
+        @for (int i = startPage; i <= endPage; i++)
+        {
+            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                <a class="page-link" href="@GetPageUrl(i)">@i</a>
+            </li>
+        }
+
+        <!-- ... + Trang cuối -->
+        @if (endPage < Model.TotalPages)
+        {
+            @if (endPage < Model.TotalPages - 1)
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            }
+            <li class="page-item">
+                <a class="page-link" href="@GetPageUrl(Model.TotalPages)">@Model.TotalPages</a>
+            </li>
+        }
+
+        <!-- Nút Next -->
+        <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+            <a class="page-link" href="@GetPageUrl(Model.CurrentPage + 1)" aria-label="Next">&raquo;</a>
+        </li>
+    </ul>
+</nav> *@
+
+@code {
+
+}

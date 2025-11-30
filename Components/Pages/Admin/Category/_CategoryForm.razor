@@ -1,0 +1,33 @@
+﻿<!-- Modal dùng chung -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="categoryForm">
+                @* @Html.AntiForgeryToken() *@
+                <input type="hidden" id="categoryId" name="categoryId" @bind="Model.CategoryId" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoryModalTitle">Quản lý loại sản phẩm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên loại sản phẩm</label>
+                        <input type="text" class="form-control" id="typename" name="categoryName"
+                        @bind="Model.CategoryName">
+                        <div class="invalid-feedback" id="typename-msg"></div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" id="categoryModalSaveBtn" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public Category? Model { get; set; }
+}
