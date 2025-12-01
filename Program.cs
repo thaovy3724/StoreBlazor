@@ -1,15 +1,21 @@
 using Microsoft.EntityFrameworkCore;
 using StoreBlazor.Components;
 using StoreBlazor.Data;
+using StoreBlazor.Services.Implementations;
+using StoreBlazor.Services.Interfaces;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// instance _dbcontext object
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString,
         ServerVersion.AutoDetect(connectionString)));
+
+// instance IService
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 
 // Add services to the container.
