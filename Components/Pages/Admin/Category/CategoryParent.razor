@@ -24,9 +24,9 @@
                     </thead>
                     <tbody id="categoryTableBody">
 
-                        @if (ListResult != null && ListResult.Any())
+                        @if (listResult != null && listResult.Any())
                         {
-                            foreach (var item in ListResult)
+                            foreach (var item in listResult)
                             {
                                 <tr class="text-center" data-id="@item.CategoryId">
                                     <td>@($"LSP{item.CategoryId}")</td>
