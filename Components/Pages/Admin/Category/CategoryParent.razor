@@ -1,0 +1,92 @@
+﻿@page "/admin/category"
+@layout AdminLayout
+@inject ICategoryService service
+@inherits BaseParent<Category>
+
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold">Quản lý Loại sản phẩm</h3>
+    </div>
+
+    <_CategorySearch/>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light thead-separator">
+                        <tr class="text-center">
+                            <th style="width:100px;">ID</th>
+                            <th>Loại sản phẩm</th>
+                            <th style="width:150px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTableBody">
+                        @if (ListResult != null && ListResult.Any())
+                        {
+                            foreach (var item in ListResult)
+                            {
+                                <tr class="text-center" data-id="@item.CategoryId">
+                                    <td>@($"LSP{item.CategoryId}")</td>
+                                    <td class="category-name">@item.CategoryName</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-light border me-1 btn-edit"
+                                                title="Sửa"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#categoryModal"
+                                                @onclick="()=>OpenEditForm(item)">
+                                            <i class="bi bi-pencil text-success"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-light border btn-delete"
+                                                title="Xóa"
+                                                >
+                                            <i class="bi bi-trash text-danger"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center">Chưa có dữ liệu</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @* <!-- Phân trang-->
+            <div id="paginationContainer">
+                @await Html.PartialAsync("Pagination", (object)Model)
+            </div> *@
+            <Pagination/>
+        </div>
+    </div>
+</div>
+
+<_CategoryForm Model ="@SelectedItem"
+                IsEditMode = "@IsEditMode"
+                OnClose="CloseForm"/>
+
+@code {
+    // ==== VARIABLES ====
+    private List<Category> ListResult = new();
+
+    // ==== LOAD DATA ====
+    protected override async Task OnInitializedAsync()
+    {
+        ListResult = await service.GetAllCategoryAsync();
+    }
+
+    // ==== OPEN FORM ====
+    private bool IsEditMode = false;
+
+    private void OpenEditForm(Category item)
+    {
+        IsEditMode = true;
+        SelectedItem = item;
+    }
+
+    // === SAVE DATA ====
+
+}
