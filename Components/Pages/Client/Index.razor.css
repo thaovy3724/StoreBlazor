@@ -1,0 +1,111 @@
+﻿/* Card sản phẩm hiệu ứng hover */
+.product-card {
+    transition: all 0.3s ease;
+    border: 1px solid #eee;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+    border-color: var(--bs-primary);
+}
+
+/* Cắt tên sản phẩm 2 dòng + dấu ... */
+.product-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2; 
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 3em; 
+    line-height: 1.5em;
+}
+
+.img-wrapper {
+    position: relative;
+    padding-top: 100%; 
+    overflow: hidden;
+}
+
+.img-wrapper img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; 
+    padding: 10px;
+}
+/*Phân trang*/
+.pagination {
+    background: #ffffff;
+    padding: 8px;
+    border-radius: 50px; 
+    box-shadow: 0 5px 15px rgba(135, 206, 235, 0.2); 
+    align-items: center;
+    border: 1px solid #e0f2f1;
+}
+
+.page-item .page-link {
+    color: #1877F2;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.page-item:not(.active):not(.disabled) .page-link:hover {
+    background-color: #CAF0F8; 
+    color: #0077B6; 
+    transform: translateY(-2px); 
+}
+
+.page-item.active .page-link {
+    background-color: #1877F2;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 180, 216, 0.4);
+}
+
+.page-item.disabled .page-link {
+    color: #d1d5db; 
+    background-color: transparent;
+    cursor: not-allowed;
+}
+
+.page-link:focus {
+    box-shadow: none;
+}
+/*Modal*/
+.modal.show {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.btn-close:focus {
+    box-shadow: none;
+}
+
+.modal-body input.form-control {
+    border-left: 0;
+    border-right: 0;
+}
+
+
