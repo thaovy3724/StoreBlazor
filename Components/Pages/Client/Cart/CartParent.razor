@@ -1,0 +1,184 @@
+﻿@page "/client/cart"
+@layout ClientLayout
+@* @inject NavigationManager Nav *@
+
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h3 class="fw-bold text-primary">
+                <i class="bi "></i>Giỏ hàng của bạn
+            </h3>
+        </div>
+    </div>
+
+    @if (cartItems == null || cartItems.Count == 0)
+    {
+       @* Khi giỏ hàng trống *@
+       <_CartNull/>
+    }
+    else
+    {
+        @* Có sản phẩm *@
+        <_CartNotNull/>
+    }
+</div>
+@* modal chọn mã giảm giá *@
+@if (showCouponModal)
+{
+    <_CartDiscountModal/>
+}
+
+@code {
+    public class Product
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public decimal Price { get; set; }
+        public string ImageUrl { get; set; } = "";
+    }
+
+    public class CartItem
+    {
+        public Product Product { get; set; } = new();
+        public int Quantity { get; set; }
+    }
+
+    public class Coupon
+    {
+        public string Code { get; set; } = "";
+        public decimal DiscountAmount { get; set; }
+        public decimal MinOrderValue { get; set; }
+        public DateTime ExpiryDate { get; set; }
+    }
+
+    private List<CartItem> cartItems = new List<CartItem>();
+
+    private bool showCouponModal = false;
+    private string inputCouponCode = "";
+    private Coupon? appliedCoupon = null; 
+    private List<Coupon> availableCoupons = new List<Coupon>();
+
+    private decimal SubTotal => cartItems.Sum(x => x.Product.Price * x.Quantity);
+
+    // Tổng tiền sau khi trừ giảm giá
+    private decimal TotalAmount
+    {
+        get
+        {
+            decimal total = SubTotal;
+            if (appliedCoupon != null)
+            {
+                total -= appliedCoupon.DiscountAmount;
+            }
+            return total > 0 ? total : 0; 
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        LoadDummyCart();
+        LoadCoupons(); 
+    }
+
+    // CÁC HÀM XỬ LÝ GIỎ HÀNG 
+    private void UpdateQuantity(CartItem item, int change)
+    {
+        item.Quantity += change;
+        if (item.Quantity < 1) item.Quantity = 1;
+
+        // Kiểm tra lại mã giảm giá nếu tổng tiền thay đổi (có thể bị không đủ điều kiện nữa)
+        ValidateCoupon();
+    }
+
+    private void RemoveItem(int productId)
+    {
+        var item = cartItems.FirstOrDefault(x => x.Product.Id == productId);
+        if (item != null)
+        {
+            cartItems.Remove(item);
+            ValidateCoupon(); // Kiểm tra lại mã giảm giá
+        }
+    }
+
+    // CÁC HÀM XỬ LÝ COUPON 
+
+    // Chọn mã từ Modal
+    private void SelectCouponFromModal(Coupon coupon)
+    {
+        inputCouponCode = coupon.Code;
+        showCouponModal = false; 
+        ApplyCoupon(); 
+    }
+
+    // Áp dụng mã (từ nút bấm hoặc sau khi chọn modal)
+    private void ApplyCoupon()
+    {
+        if (string.IsNullOrWhiteSpace(inputCouponCode)) return;
+
+        // Tìm mã trong danh sách (So sánh không phân biệt hoa thường)
+        var coupon = availableCoupons.FirstOrDefault(c => c.Code.Equals(inputCouponCode, StringComparison.OrdinalIgnoreCase));
+
+        if (coupon != null)
+        {
+            if (SubTotal >= coupon.MinOrderValue)
+            {
+                appliedCoupon = coupon;
+                // Reset ô input cho đẹp
+                inputCouponCode = "";
+            }
+            else
+            {
+                // Logic xử lý lỗi (VD: hiện thông báo Toast)
+                Console.WriteLine("Đơn hàng chưa đủ giá trị tối thiểu!");
+                appliedCoupon = null;
+            }
+        }
+        else
+        {
+            Console.WriteLine("Mã giảm giá không tồn tại!");
+            appliedCoupon = null;
+        }
+    }
+
+    // Xóa mã đã chọn
+    private void RemoveCoupon()
+    {
+        appliedCoupon = null;
+    }
+
+    // Kiểm tra lại điều kiện mã khi tăng/giảm số lượng SP
+    private void ValidateCoupon()
+    {
+        if (appliedCoupon != null && SubTotal < appliedCoupon.MinOrderValue)
+        {
+            appliedCoupon = null; // Tự động hủy mã nếu không đủ tiền
+        }
+    }
+
+    private void ProceedToCheckout()
+    {
+        // Nav.NavigateTo("/client/checkout");
+    }
+
+    // DUMMY DATA 
+    private void LoadDummyCart()
+    {
+        cartItems = new List<CartItem>
+        {
+            new CartItem { Product = new Product { Id = 1, Name = "Sách Clean Architecture", Price = 350000, ImageUrl = "/uploads/SP_2577b44d52004619b75dd96cf1c4cb8e.jpg" }, Quantity = 1 },
+            new CartItem { Product = new Product { Id = 2, Name = "Bút máy Parker", Price = 1200000, ImageUrl = "/uploads/SP_2577b44d52004619b75dd96cf1c4cb8e.jpg" }, Quantity = 2 },
+            new CartItem { Product = new Product { Id = 3, Name = "Vở học sinh (Lốc 10)", Price = 85000, ImageUrl = "/uploads/SP_2577b44d52004619b75dd96cf1c4cb8e.jpg" }, Quantity = 1 }
+        };
+    }
+
+    private void LoadCoupons()
+    {
+        availableCoupons = new List<Coupon>
+        {
+            new Coupon { Code = "WELCOME", DiscountAmount = 50000, MinOrderValue = 0, ExpiryDate = DateTime.Now.AddDays(30) },
+            new Coupon { Code = "TET2025", DiscountAmount = 200000, MinOrderValue = 1500000, ExpiryDate = DateTime.Now.AddDays(15) }, // Cần đơn 1.5tr mới dùng đc
+            new Coupon { Code = "FREESHIP", DiscountAmount = 30000, MinOrderValue = 300000, ExpiryDate = DateTime.Now.AddDays(5) }
+        };
+    }
+}
