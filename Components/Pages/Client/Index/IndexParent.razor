@@ -1,0 +1,145 @@
+﻿@page "/client/index"
+@layout ClientLayout
+<div class="container py-4">
+    <div class="row">
+        @* Bộ lọc sản phẩm *@
+        <_IndexFilter/>
+
+        <div class="col-lg-9">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                @* Hien thi so luong san pham (tim kiem) *@
+                <span class="text-muted">Hiển thị <strong>@displayedProducts.Count</strong> sản phẩm</span>
+                @* Loc san pham *@
+                <select class="form-select w-auto form-select-sm">
+                    <option selected>Mới nhất</option>
+                    <option>Giá tăng dần</option>
+                    <option>Giá giảm dần</option>
+                </select>
+            </div>
+            @* Danh sach san pham *@
+            <_IndexProductCard/>
+
+            @* Phân trang *@
+            <_IndexPagination/>
+        </div>
+    </div>
+</div>
+@* Modal chi tiết sản phẩm *@
+@if (selectedProduct != null)
+{
+    <_IndexProductDetailModal/>
+}
+@code {
+    // Dữ liệu giả lập 
+    private class Product
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public decimal Price { get; set; }
+        public decimal OriginalPrice { get; set; }
+        public int Stock { get; set; }
+        public string ImageUrl { get; set; } = "/uploads/SP_2577b44d52004619b75dd96cf1c4cb8e.jpg";
+    }
+
+    private class Category
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public int Count { get; set; }
+    }
+
+    // List tổng
+    private List<Product> allProducts = new List<Product>();
+    private List<Category> categories = new List<Category>();
+
+    // List hiển thị theo trang
+    private List<Product> displayedProducts = new List<Product>();
+
+    // Biến phân trang
+    private int currentPage = 1;
+    private int pageSize = 12; 
+    private int totalPages = 1;
+
+    private Product? selectedProduct = null;
+    private int quantity = 1; 
+
+    protected override void OnInitialized()
+    {
+        // Tạo data giả 
+        LoadDummyData();
+
+        // Tính toán phân trang ban đầu
+        UpdatePagination();
+    }
+
+    //CÁC HÀM XỬ LÝ MODAL
+    private void OpenModal(Product product)
+    {
+        selectedProduct = product;
+        quantity = 1; 
+    }
+
+    private void CloseModal()
+    {
+        selectedProduct = null;
+    }
+
+    private void AddToCart(Product product)
+    {
+
+        Console.WriteLine($"Đã thêm {quantity} sản phẩm {product.Name} vào giỏ!");
+
+        CloseModal();
+    }
+
+    private void UpdatePagination()
+    {
+        totalPages = (int)Math.Ceiling((double)allProducts.Count / pageSize);
+
+        displayedProducts = allProducts
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+    }
+
+    private void ChangePage(int page)
+    {
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        UpdatePagination();
+    }
+
+    private void LoadDummyData()
+    {
+        // Data giả cho loại sản phẩm
+        categories = new List<Category>
+        {
+            new Category { Id = 1, Name = "Nước uống", Count = 120 },
+            new Category { Id = 2, Name = "Bánh ngọt", Count = 45 },
+            new Category { Id = 3, Name = "Gia vị", Count = 30 },
+            new Category { Id = 4, Name = "Vở", Count = 85 },
+        };
+
+        // Tạo 50 sản phẩm giả
+        var rng = new Random();
+        for (int i = 1; i <= 50; i++)
+        {
+            var isSale = rng.Next(0, 2) == 1; 
+            var price = rng.Next(50, 500) * 1000;
+
+            allProducts.Add(new Product
+            {
+                Id = i,
+                Name = i % 3 == 0
+                    ? $"Sản phẩm demo tên rất dài để test chức năng cắt chữ xem có hoạt động tốt không số {i}"
+                    : $"Sản phẩm mẫu {i}",
+                Price = isSale ? price * 0.8m : price,
+                OriginalPrice = price,
+                Stock = rng.Next(0, 20),
+                ImageUrl = $"/uploads/SP_2577b44d52004619b75dd96cf1c4cb8e.jpg",
+            });
+        }
+    }
+}
+

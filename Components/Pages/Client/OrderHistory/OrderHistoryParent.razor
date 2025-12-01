@@ -11,30 +11,7 @@
             <p class="text-muted">Theo dõi và quản lý các đơn hàng của bạn.</p>
         </div>
     </div>
-    @* Thanh lọc, tìm kiếm đơn hàng *@
-    <div class="row mb-4 g-3 align-items-center">
-        <!-- Bộ lọc trạng thái -->
-        <div class="col-auto d-flex align-items-center">
-            <select class="form-select">
-                <option value="">Tất cả trạng thái</option>
-                <option value="processing">Đang xử lý</option>
-                <option value="shipping">Đang giao</option>
-                <option value="completed">Hoàn thành</option>
-                <option value="cancelled">Đã hủy</option>
-            </select>
-        </div>
-
-        <!-- Ô tìm kiếm -->
-        <div class="col-auto d-flex align-items-center flex-grow-1">
-            <div class="input-group flex-grow-1">
-                <input type="text" class="form-control" placeholder="Tìm theo mã đơn hàng...">
-                <button class="btn btn-primary">
-                    <i class="bi bi-search"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
+   
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         @* Table danh sách đơn hàng *@
         <div class="table-responsive">
@@ -94,72 +71,7 @@
 @* Modal xem chi tiết đơn hàng *@
 @if (selectedOrder != null)
 {
-    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5);" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-            <div class="modal-content border-0 rounded-4">
-                <div class="modal-header border-0 bg-light rounded-top-4">
-                    <h5 class="modal-title fw-bold text-primary">
-                        Chi tiết đơn hàng #@selectedOrder.Code
-                    </h5>
-                    <button type="button" class="btn-close" @onclick="() => selectedOrder = null"></button>
-                </div>
-
-                <div class="modal-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded-3">
-                        <div>
-                            <small class="text-muted d-block">Ngày đặt hàng</small>
-                            <span class="fw-bold">@selectedOrder.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
-                        </div>
-                        <div class="text-end">
-                            <small class="text-muted d-block">Trạng thái</small>
-                            <span class="badge @GetStatusBadgeClass(selectedOrder.Status) text-dark-emphasis">
-                                @GetStatusLabel(selectedOrder.Status)
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="fw-bold border-bottom pb-2 mb-3">Thông tin giao hàng</h6>
-                            <p class="mb-1"><strong>Người nhận:</strong> @selectedOrder.ShippingName</p>
-                            <p class="mb-1"><strong>SĐT:</strong> @selectedOrder.ShippingPhone</p>
-                            <p class="mb-0"><strong>Địa chỉ:</strong> @selectedOrder.ShippingAddress</p>
-                        </div>
-                        <div class="col-md-6 mt-3 mt-md-0">
-                            <h6 class="fw-bold border-bottom pb-2 mb-3">Thanh toán</h6>
-                            <p class="mb-1"><strong>Phương thức:</strong> @selectedOrder.PaymentMethod</p>
-                            <p class="mb-1"><strong>Tiền sản phẩm:</strong>10.000 đ</p>
-                            <p class="mb-1"><strong>Tiền giảm: </strong>10.000 đ</p>
-                        </div>
-                    </div>
-                    @* Danh sách sản phẩm trong chi tiết đơn hàng *@
-                    <h6 class="fw-bold border-bottom pb-2 mb-3">Sản phẩm đã mua</h6>
-                    <div class="list-group list-group-flush mb-3">
-                        @foreach (var detail in selectedOrder.Details)
-                        {
-                            <div class="list-group-item px-0 d-flex align-items-center">
-                                <img src="@detail.ProductImage" class="rounded border me-3" style="width: 60px; height: 60px; object-fit: cover;">
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0 small fw-bold">@detail.ProductName</h6>
-                                    <small class="text-muted">x @detail.Quantity</small>
-                                </div>
-                                <div class="text-end fw-bold">
-                                    @((detail.Price * detail.Quantity).ToString("N0"))đ
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <div class="modal-footer border-top bg-light rounded-bottom-4 justify-content-between">
-                    <div class="fs-5">
-                        Tổng cộng: <strong class="text-primary">@selectedOrder.TotalAmount.ToString("N0")đ</strong>
-                    </div>
-                    <button class="btn btn-secondary" @onclick="() => selectedOrder = null">Đóng</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <_OrderHistoryDetailModal/>
 }
 
 @code {
