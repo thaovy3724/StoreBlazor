@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿@page "/admin/category" 
+=======
+﻿@page "/admin/category"
+>>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
 @layout AdminLayout
 @inject ICategoryService service
 @inherits BaseParent<Category>
@@ -8,8 +12,12 @@
         <h3 class="fw-bold">Quản lý Loại sản phẩm</h3>
     </div>
 
+<<<<<<< HEAD
     <_CategorySearch KeyWord ="@keyword"
                      OnSearch="HandleSearchAsync" />
+=======
+    <_CategorySearch/>
+>>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -23,9 +31,15 @@
                         </tr>
                     </thead>
                     <tbody id="categoryTableBody">
+<<<<<<< HEAD
                         @if (listResult != null && listResult.Any())
                         {
                             foreach (var item in listResult)
+=======
+                        @if (ListResult != null && ListResult.Any())
+                        {
+                            foreach (var item in ListResult)
+>>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
                             {
                                 <tr class="text-center" data-id="@item.CategoryId">
                                     <td>@($"LSP{item.CategoryId}")</td>
@@ -36,12 +50,19 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#categoryModal"
                                                 @onclick="()=>OpenEditForm(item)">
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
                                             <i class="bi bi-pencil text-success"></i>
                                         </button>
                                         <button class="btn btn-sm btn-light border btn-delete"
                                                 title="Xóa"
+<<<<<<< HEAD
                                                 @onclick="() => HandleDeleteAsync(item)">
+=======
+                                                >
+>>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
                                             <i class="bi bi-trash text-danger"></i>
                                         </button>
                                     </td>
@@ -68,16 +89,25 @@
 
 <_CategoryForm Model ="@SelectedItem"
                 IsEditMode = "@IsEditMode"
+<<<<<<< HEAD
                OnSave="HandleSaveAsync"
                 OnClose="CloseForm"/>
 @code {
     // ==== VARIABLES ====
     private List<Category> listResult = new();
     private ServiceResult serviceResult = new();
+=======
+                OnClose="CloseForm"/>
+
+@code {
+    // ==== VARIABLES ====
+    private List<Category> ListResult = new();
+>>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
 
     // ==== LOAD DATA ====
     protected override async Task OnInitializedAsync()
     {
+<<<<<<< HEAD
         await LoadDataAsync();
     }
 
@@ -91,6 +121,14 @@
     }
 
     // ==== OPEN FORM ====
+=======
+        ListResult = await service.GetAllCategoryAsync();
+    }
+
+    // ==== OPEN FORM ====
+    private bool IsEditMode = false;
+
+>>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
     private void OpenEditForm(Category item)
     {
         IsEditMode = true;
@@ -98,6 +136,7 @@
     }
 
     // === SAVE DATA ====
+<<<<<<< HEAD
     private async Task HandleSaveAsync(Category model)
     {
         if (IsEditMode)
@@ -136,5 +175,7 @@
             listResult = await service.SearchByNameAsync(keyword);
         }
     }
+=======
+>>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
 
 }

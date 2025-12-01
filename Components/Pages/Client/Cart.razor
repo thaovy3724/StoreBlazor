@@ -1,0 +1,343 @@
+﻿@page "/client/cart"
+@layout ClientLayout
+@* @inject NavigationManager Nav *@
+
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h3 class="fw-bold text-primary">
+                <i class="bi "></i>Giỏ hàng của bạn
+            </h3>
+        </div>
+    </div>
+
+    @if (cartItems == null || cartItems.Count == 0)
+    {
+        // Khi giỏ hàng trống
+        <div class="text-center py-5 bg-white rounded-3 shadow-sm">
+            <i class="bi bi-cart-x text-muted" style="font-size: 5rem;"></i>
+            <h4 class="mt-3 fw-bold text-muted">Giỏ hàng của bạn đang trống</h4>
+            <p class="text-secondary">Hãy chọn sản phẩm bạn muốn mua nhé!</p>
+            <a href="/client/index" class="btn btn-primary px-4 py-2 mt-2 rounded-pill">
+                <i class="bi bi-arrow-left me-2"></i>Tiếp tục mua sắm
+            </a>
+        </div>
+    }
+    else
+    {
+        // Có sản phẩm
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                    <div class="card-header bg-white py-3">
+                        <div class="row fw-bold small text-uppercase">
+                            <div class="col-6">Sản phẩm</div>
+                            <div class="col-3 text-center">Số lượng</div>
+                            <div class="col-3 text-end">Tạm tính</div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @foreach (var item in cartItems)
+                        {
+                            <div class="p-3 border-bottom cart-item-row">
+                                <div class="row align-items-center">
+                                    <div class="col-12 col-md-6 mb-3 mb-md-0 d-flex gap-3 align-items-center">
+                                        <div class="bg-light rounded p-2 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                            <img src="@item.Product.ImageUrl" alt="@item.Product.Name" class="img-fluid" style="max-height: 100%;">
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1 fw-bold text-dark product-name-limit">@item.Product.Name</h6>
+                                            <small class="text-muted d-block mb-2">Đơn giá: @item.Product.Price.ToString("N0")đ</small>
+
+                                            <button class="btn btn-link text-danger text-decoration-none p-0 small"
+                                                    @onclick="() => RemoveItem(item.Product.Id)">
+                                                <i class="bi bi-trash me-1"></i>Xóa
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-6 col-md-3 d-flex justify-content-center">
+                                        <div class="input-group input-group-sm" style="width: 110px;">
+                                            <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, -1)">-</button>
+                                            <input type="text" class="form-control text-center bg-white" value="@item.Quantity" readonly>
+                                            <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, 1)">+</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-6 col-md-3 text-end">
+                                        <span class="fw-bold text-primary">
+                                            @((item.Product.Price * item.Quantity).ToString("N0"))đ
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer bg-white p-3">
+                        <a href="/client/index" class="text-decoration-none text-muted fw-semibold">
+                            <i class="bi bi-arrow-left me-2"></i>Tiếp tục mua hàng
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @* Tạm tính giỏ hàng *@
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-3 position-sticky" style="top: 20px;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4">Cộng giỏ hàng</h5>
+
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Tạm tính:</span>
+                            <span class="fw-bold">@SubTotal.ToString("N0")đ</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4 align-items-center">
+                            <span class="fw-bold fs-5">Tổng tiền:</span>
+                            <span class="fw-bold fs-4 text-primary">@TotalAmount.ToString("N0")đ</span>
+                        </div>
+                        @* Mã giảm giá *@
+                        <div class="input-group mb-3">
+                            <button class="btn btn-outline-secondary" type="button" @onclick="() => showCouponModal = true" title="Chọn mã giảm giá">
+                                <i class="bi bi-ticket-perforated-fill text-primary"></i> Chọn mã giảm giá
+                            </button>
+                        </div>
+                        @if (appliedCoupon != null)
+                        {
+                            <div class="alert alert-success d-flex justify-content-between align-items-center py-2 px-3 small">
+                                <span><i class="bi bi-check-circle me-1"></i>Đã dùng mã: <strong>@appliedCoupon.Code</strong> (-@appliedCoupon.DiscountAmount.ToString("N0")đ)</span>
+                                <button type="button" class="btn-close btn-close-white small" @onclick="RemoveCoupon"></button>
+                            </div>
+                        }
+                        <button class="btn btn-primary w-100 py-2 rounded-3 fw-bold shadow-sm" @onclick="ProceedToCheckout">
+                            TIẾN HÀNH THANH TOÁN
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+@* modal chọn mã giảm giá *@
+@if (showCouponModal)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 rounded-4">
+                <div class="modal-header border-0 bg-light rounded-top-4">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-ticket-perforated me-2 text-primary"></i>Kho Voucher</h5>
+                    <button type="button" class="btn-close" @onclick="() => showCouponModal = false"></button>
+                </div>
+
+                <div class="modal-body bg-light">
+                    <div class="mb-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" placeholder="Tìm tên mã giảm giá...">
+                            <button class="btn btn-outline-secondary">Tìm</button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var coupon in availableCoupons)
+                        {
+                            <div class="card coupon-card border-0 shadow-sm @(coupon.MinOrderValue > SubTotal ? "opacity-50" : "")">
+                                <div class="row g-0 align-items-center">
+                                    <div class="col-3 bg-primary bg-opacity-10 d-flex flex-column align-items-center justify-content-center py-3 border-end border-dashed" style="min-height: 100px;">
+                                        <i class="bi bi-gift-fill fs-3 text-primary"></i>
+                                        <small class="fw-bold text-primary mt-1">GIẢM</small>
+                                    </div>
+                                    <div class="col-9">
+                                        <div class="card-body p-2 ps-3">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title fw-bold mb-1">Giảm @coupon.DiscountAmount.ToString("N0")đ</h6>
+                                                    <p class="card-text text-muted x-small mb-1">Đơn tối thiểu @coupon.MinOrderValue.ToString("N0")đ</p>
+                                                    <small class="text-danger x-small border border-danger px-1 rounded">HSD: @coupon.ExpiryDate.ToString("dd/MM")</small>
+                                                </div>
+
+                                                @if (coupon.MinOrderValue > SubTotal)
+                                                {
+                                                    /* Chưa đủ điều kiện */
+                                                    <button class="btn btn-sm btn-light text-muted disabled border-0" style="font-size: 0.75rem;">
+                                                        Mua thêm
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    /* Đủ điều kiện */
+                                                    <button class="btn btn-sm btn-primary px-3"
+                                                            @onclick="() => SelectCouponFromModal(coupon)">
+                                                        Dùng ngay
+                                                    </button>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top-0 pt-0 bg-light rounded-bottom-4">
+                    <button class="btn btn-secondary w-100" @onclick="() => showCouponModal = false">Đóng lại</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public class Product
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public decimal Price { get; set; }
+        public string ImageUrl { get; set; } = "";
+    }
+
+    public class CartItem
+    {
+        public Product Product { get; set; } = new();
+        public int Quantity { get; set; }
+    }
+
+    public class Coupon
+    {
+        public string Code { get; set; } = "";
+        public decimal DiscountAmount { get; set; }
+        public decimal MinOrderValue { get; set; }
+        public DateTime ExpiryDate { get; set; }
+    }
+
+    private List<CartItem> cartItems = new List<CartItem>();
+
+    private bool showCouponModal = false;
+    private string inputCouponCode = "";
+    private Coupon? appliedCoupon = null; 
+    private List<Coupon> availableCoupons = new List<Coupon>();
+
+    private decimal SubTotal => cartItems.Sum(x => x.Product.Price * x.Quantity);
+
+    // Tổng tiền sau khi trừ giảm giá
+    private decimal TotalAmount
+    {
+        get
+        {
+            decimal total = SubTotal;
+            if (appliedCoupon != null)
+            {
+                total -= appliedCoupon.DiscountAmount;
+            }
+            return total > 0 ? total : 0; 
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        LoadDummyCart();
+        LoadCoupons(); 
+    }
+
+    // CÁC HÀM XỬ LÝ GIỎ HÀNG 
+    private void UpdateQuantity(CartItem item, int change)
+    {
+        item.Quantity += change;
+        if (item.Quantity < 1) item.Quantity = 1;
+
+        // Kiểm tra lại mã giảm giá nếu tổng tiền thay đổi (có thể bị không đủ điều kiện nữa)
+        ValidateCoupon();
+    }
+
+    private void RemoveItem(int productId)
+    {
+        var item = cartItems.FirstOrDefault(x => x.Product.Id == productId);
+        if (item != null)
+        {
+            cartItems.Remove(item);
+            ValidateCoupon(); // Kiểm tra lại mã giảm giá
+        }
+    }
+
+    // CÁC HÀM XỬ LÝ COUPON 
+
+    // Chọn mã từ Modal
+    private void SelectCouponFromModal(Coupon coupon)
+    {
+        inputCouponCode = coupon.Code;
+        showCouponModal = false; 
+        ApplyCoupon(); 
+    }
+
+    // Áp dụng mã (từ nút bấm hoặc sau khi chọn modal)
+    private void ApplyCoupon()
+    {
+        if (string.IsNullOrWhiteSpace(inputCouponCode)) return;
+
+        // Tìm mã trong danh sách (So sánh không phân biệt hoa thường)
+        var coupon = availableCoupons.FirstOrDefault(c => c.Code.Equals(inputCouponCode, StringComparison.OrdinalIgnoreCase));
+
+        if (coupon != null)
+        {
+            if (SubTotal >= coupon.MinOrderValue)
+            {
+                appliedCoupon = coupon;
+                // Reset ô input cho đẹp
+                inputCouponCode = "";
+            }
+            else
+            {
+                // Logic xử lý lỗi (VD: hiện thông báo Toast)
+                Console.WriteLine("Đơn hàng chưa đủ giá trị tối thiểu!");
+                appliedCoupon = null;
+            }
+        }
+        else
+        {
+            Console.WriteLine("Mã giảm giá không tồn tại!");
+            appliedCoupon = null;
+        }
+    }
+
+    // Xóa mã đã chọn
+    private void RemoveCoupon()
+    {
+        appliedCoupon = null;
+    }
+
+    // Kiểm tra lại điều kiện mã khi tăng/giảm số lượng SP
+    private void ValidateCoupon()
+    {
+        if (appliedCoupon != null && SubTotal < appliedCoupon.MinOrderValue)
+        {
+            appliedCoupon = null; // Tự động hủy mã nếu không đủ tiền
+        }
+    }
+
+    private void ProceedToCheckout()
+    {
+        // Nav.NavigateTo("/client/checkout");
+    }
+
+    // DUMMY DATA 
+    private void LoadDummyCart()
+    {
+        cartItems = new List<CartItem>
+        {
+            new CartItem { Product = new Product { Id = 1, Name = "Sách Clean Architecture", Price = 350000, ImageUrl = "/uploads/SP_2577b44d52004619b75dd96cf1c4cb8e.jpg" }, Quantity = 1 },
+            new CartItem { Product = new Product { Id = 2, Name = "Bút máy Parker", Price = 1200000, ImageUrl = "/uploads/SP_2577b44d52004619b75dd96cf1c4cb8e.jpg" }, Quantity = 2 },
+            new CartItem { Product = new Product { Id = 3, Name = "Vở học sinh (Lốc 10)", Price = 85000, ImageUrl = "/uploads/SP_2577b44d52004619b75dd96cf1c4cb8e.jpg" }, Quantity = 1 }
+        };
+    }
+
+    private void LoadCoupons()
+    {
+        availableCoupons = new List<Coupon>
+        {
+            new Coupon { Code = "WELCOME", DiscountAmount = 50000, MinOrderValue = 0, ExpiryDate = DateTime.Now.AddDays(30) },
+            new Coupon { Code = "TET2025", DiscountAmount = 200000, MinOrderValue = 1500000, ExpiryDate = DateTime.Now.AddDays(15) }, // Cần đơn 1.5tr mới dùng đc
+            new Coupon { Code = "FREESHIP", DiscountAmount = 30000, MinOrderValue = 300000, ExpiryDate = DateTime.Now.AddDays(5) }
+        };
+    }
+}

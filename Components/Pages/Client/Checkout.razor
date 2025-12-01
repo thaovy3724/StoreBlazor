@@ -1,0 +1,176 @@
+﻿@page "/client/checkout"
+@layout ClientLayout
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h3 class="fw-bold text-primary">
+                <i class="bi bi-credit-card-2-front-fill me-2"></i>Thanh toán
+            </h3>
+        </div>
+    </div>
+
+    <EditForm Model="@checkoutModel" OnValidSubmit="HandleCheckout">
+        <DataAnnotationsValidator />
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-geo-alt-fill me-2 text-danger"></i>Thông tin giao hàng</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            @* Tên, số điện thoại mặc định account đăng nhập *@
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Họ và tên <span class="text-danger"></span></label>
+                                <InputText @bind-Value="checkoutModel.FullName" class="form-control" readonly/>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Số điện thoại <span class="text-danger"></span></label>
+                                <InputText @bind-Value="checkoutModel.PhoneNumber" class="form-control" readonly />
+                            </div>
+                            @* Nhập địa chỉ giao hàng *@
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Địa chỉ nhận hàng <span class="text-danger">*</span></label>
+                                <InputTextArea @bind-Value="checkoutModel.Address" class="form-control" rows="3" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..." />
+                                <ValidationMessage For="@(() => checkoutModel.Address)" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @* Col Thông tin thanh toán *@
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    @* Tiền thanh toán *@
+                    <div class="card-header bg-white py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-bag-check-fill me-2 text-primary"></i>Đơn hàng của bạn</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tạm tính (3 sản phẩm)</span>
+                            <span class="fw-semibold">1.635.000đ</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Phí vận chuyển</span>
+                            <span class="text-success">Miễn phí</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Giảm giá</span>
+                            <span class="text-danger">-0đ</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold fs-5">Tổng thanh toán</span>
+                            <span class="fw-bold fs-4 text-primary">1.635.000đ</span>
+                        </div>
+                    </div>
+                </div>
+                @* Hình thức thanh toán *@
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-wallet-fill me-2 text-warning"></i>Phương thức thanh toán</h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="payment-methods d-flex flex-column gap-3">
+
+                            <label class="payment-option card p-3 border rounded-3 cursor-pointer @(checkoutModel.PaymentMethod == "COD" ? "selected-payment" : "")">
+                                <div class="d-flex align-items-center">
+                                    <input type="radio" name="paymentMethod"
+                                           checked="@(checkoutModel.PaymentMethod == "COD")"
+                                           @onchange="@(() => checkoutModel.PaymentMethod = "COD")"
+                                           class="form-check-input me-3 mt-0">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold"><i class="bi bi-cash-coin me-2"></i>Thanh toán khi nhận hàng (COD)</div>
+                                        <small class="text-muted">Thanh toán tiền mặt cho shipper khi nhận được hàng.</small>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-option card p-3 border rounded-3 cursor-pointer @(checkoutModel.PaymentMethod == "VNPAY" ? "selected-payment" : "")">
+                                <div class="d-flex align-items-center">
+                                    <input type="radio" name="paymentMethod"
+                                           checked="@(checkoutModel.PaymentMethod == "VNPAY")"
+                                           @onchange="@(() => checkoutModel.PaymentMethod = "VNPAY")"
+                                           class="form-check-input me-3 mt-0">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold text-primary">
+                                            <i class="bi bi-credit-card-2-front me-2"></i>VNPAY
+                                        </div>
+                                        <small class="text-muted">Thanh toán qua ứng dụng ngân hàng hoặc ví VNPAY.</small>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-option card p-3 border rounded-3 cursor-pointer @(checkoutModel.PaymentMethod == "MOMO" ? "selected-payment" : "")">
+                                <div class="d-flex align-items-center">
+                                    <input type="radio" name="paymentMethod"
+                                           checked="@(checkoutModel.PaymentMethod == "MOMO")"
+                                           @onchange="@(() => checkoutModel.PaymentMethod = "MOMO")"
+                                           class="form-check-input me-3 mt-0">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold text-pink">
+                                            <i class="bi bi-wallet2 me-2"></i>Ví MoMo
+                                        </div>
+                                        <small class="text-muted">Thanh toán siêu tốc qua ứng dụng MoMo.</small>
+                                    </div>
+                                </div>
+                            </label>
+
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3 mt-4 fw-bold rounded-3 shadow-sm fs-5">
+                            ĐẶT HÀNG NGAY
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private CheckoutForm checkoutModel = new CheckoutForm();
+
+    private void HandleCheckout()
+    {
+        // Xử lý logic đặt hàng tại đây
+        Console.WriteLine($"Đặt hàng thành công!");
+        Console.WriteLine($"Người nhận: {checkoutModel.FullName}");
+        Console.WriteLine($"Địa chỉ: {checkoutModel.Address}");
+        Console.WriteLine($"Thanh toán: {checkoutModel.PaymentMethod}");
+
+        if (checkoutModel.PaymentMethod == "VNPAY")
+        {
+            // Chuyển hướng sang cổng thanh toán VNPAY
+            // NavigationManager.NavigateTo("/payment/vnpay/...");
+        }
+        else if (checkoutModel.PaymentMethod == "MOMO")
+        {
+            // Chuyển hướng sang cổng thanh toán MOMO
+        }
+        else
+        {
+            // Chuyển hướng trang cảm ơn
+            // NavigationManager.NavigateTo("/thank-you");
+        }
+    }
+
+    public class CheckoutForm
+    {
+        [Required(ErrorMessage = "Vui lòng nhập họ tên")]
+        public string FullName { get; set; } = "";
+
+        [Required(ErrorMessage = "Vui lòng nhập số điện thoại")]
+        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
+        public string PhoneNumber { get; set; } = "";
+
+        [Required(ErrorMessage = "Vui lòng nhập địa chỉ giao hàng")]
+        public string Address { get; set; } = "";
+
+        public string Note { get; set; } = "";
+
+        public string PaymentMethod { get; set; } = "COD"; 
+    }
+}
