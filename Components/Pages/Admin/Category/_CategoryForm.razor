@@ -2,11 +2,7 @@
 <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-<<<<<<< HEAD
             <form id="categoryForm" @onsubmit="HandleOnSubmit">
-=======
-            <form id="categoryForm">
->>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
                 @* @Html.AntiForgeryToken() *@
                 @* <input type="hidden" id="categoryId" name="categoryId" @bind="Model.CategoryId" /> *@
 
@@ -21,15 +17,9 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Tên loại sản phẩm</label>
-<<<<<<< HEAD
                         <input type="text" class="form-control" id="typename" name="categoryName" 
                         @bind="Model.CategoryName">
                         <div class="invalid-feedback" id="typename-msg">@NameError</div>
-=======
-                        <input type="text" class="form-control" id="typename" name="categoryName"
-                        @bind="Model.CategoryName">
-                        <div class="invalid-feedback" id="typename-msg"></div>
->>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
                     </div>
                 </div>
 
@@ -55,7 +45,6 @@
         OnClose.InvokeAsync();
     }
 
-<<<<<<< HEAD
     // ==== ONSUBMIT ====
     [Parameter]
     public EventCallback<Category> OnSave { get; set; }
@@ -95,8 +84,4 @@
         }
         return isValid;
     }
-=======
-    // ==== SAVE DATA ====
-
->>>>>>> 4589f5fe6f438f0040c39c4ed8666a379b6a96e5
 }
