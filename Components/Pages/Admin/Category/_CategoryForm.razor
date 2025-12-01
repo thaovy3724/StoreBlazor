@@ -2,7 +2,7 @@
 <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form id="categoryForm">
+            <form id="categoryForm" @onsubmit="HandleOnSubmit">
                 @* @Html.AntiForgeryToken() *@
                 @* <input type="hidden" id="categoryId" name="categoryId" @bind="Model.CategoryId" /> *@
 
@@ -17,9 +17,9 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Tên loại sản phẩm</label>
-                        <input type="text" class="form-control" id="typename" name="categoryName"
+                        <input type="text" class="form-control" id="typename" name="categoryName" 
                         @bind="Model.CategoryName">
-                        <div class="invalid-feedback" id="typename-msg"></div>
+                        <div class="invalid-feedback" id="typename-msg">@NameError</div>
                     </div>
                 </div>
 
@@ -45,6 +45,43 @@
         OnClose.InvokeAsync();
     }
 
-    // ==== SAVE DATA ====
+    // ==== ONSUBMIT ====
+    [Parameter]
+    public EventCallback<Category> OnSave { get; set; }
 
+    private async Task HandleOnSubmit()
+    {
+        // validate
+        if(ValidateForm())
+        {
+            // submit data
+            await OnSave.InvokeAsync(Model);
+        }
+    }
+
+    // ==== ERROR HANDLING ====
+    private string? NameError;
+
+    private bool ValidateForm()
+    {
+        string name = Model.CategoryName;
+        bool isValid = true;
+
+        if (string.IsNullOrEmpty(name))
+        {
+            NameError = "Tên loại không được để trống";
+            isValid = false;
+        }
+        else if (name.Length > 100)
+        {
+            NameError = "Tên loại tối đa 100 ký tự";
+            isValid = false;
+        }
+        else if (!Regex.IsMatch(name, @"^[\p{L}\s]+$"))
+        {
+            NameError = "Tên loại chỉ được chứa chữ cái và khoảng trắng";
+            isValid = false;
+        }
+        return isValid;
+    }
 }

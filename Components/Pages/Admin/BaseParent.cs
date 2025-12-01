@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using StoreBlazor.DTO.Admin;
 
 namespace StoreBlazor.Components.Pages.Admin
 {
@@ -8,10 +10,23 @@ namespace StoreBlazor.Components.Pages.Admin
         protected T SelectedItem { get; set; } = new();
 
         protected bool IsEditMode { get; set; }
+
+        [Inject]
+        protected IJSRuntime JS { get; set; } = default!;
         protected void CloseForm()
         {
             SelectedItem = new();
             IsEditMode = false;
+        }
+
+        protected async Task ShowAlertAsync(ServiceResult serviceResult)
+        {
+            await JS.InvokeVoidAsync("showAlert", serviceResult.Message, serviceResult.Type);
+        }
+
+        protected async Task<bool> ConfirmDeleteAsync()
+        {
+            return await JS.InvokeAsync<bool>("showDeleteAlert");
         }
 
     }

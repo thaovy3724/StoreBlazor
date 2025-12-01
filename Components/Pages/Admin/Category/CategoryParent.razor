@@ -1,4 +1,4 @@
-﻿@page "/admin/category"
+﻿@page "/admin/category" 
 @layout AdminLayout
 @inject ICategoryService service
 @inherits BaseParent<Category>
@@ -8,7 +8,8 @@
         <h3 class="fw-bold">Quản lý Loại sản phẩm</h3>
     </div>
 
-    <_CategorySearch/>
+    <_CategorySearch KeyWord ="@keyword"
+                     OnSearch="HandleSearchAsync" />
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -22,9 +23,9 @@
                         </tr>
                     </thead>
                     <tbody id="categoryTableBody">
-                        @if (ListResult != null && ListResult.Any())
+                        @if (listResult != null && listResult.Any())
                         {
-                            foreach (var item in ListResult)
+                            foreach (var item in listResult)
                             {
                                 <tr class="text-center" data-id="@item.CategoryId">
                                     <td>@($"LSP{item.CategoryId}")</td>
@@ -35,11 +36,12 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#categoryModal"
                                                 @onclick="()=>OpenEditForm(item)">
+
                                             <i class="bi bi-pencil text-success"></i>
                                         </button>
                                         <button class="btn btn-sm btn-light border btn-delete"
                                                 title="Xóa"
-                                                >
+                                                @onclick="() => HandleDeleteAsync(item)">
                                             <i class="bi bi-trash text-danger"></i>
                                         </button>
                                     </td>
@@ -66,21 +68,29 @@
 
 <_CategoryForm Model ="@SelectedItem"
                 IsEditMode = "@IsEditMode"
+               OnSave="HandleSaveAsync"
                 OnClose="CloseForm"/>
-
 @code {
     // ==== VARIABLES ====
-    private List<Category> ListResult = new();
+    private List<Category> listResult = new();
+    private ServiceResult serviceResult = new();
 
     // ==== LOAD DATA ====
     protected override async Task OnInitializedAsync()
     {
-        ListResult = await service.GetAllCategoryAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        // load data
+        listResult = await service.GetAllCategoryAsync();
+
+        // pagination
+
     }
 
     // ==== OPEN FORM ====
-    private bool IsEditMode = false;
-
     private void OpenEditForm(Category item)
     {
         IsEditMode = true;
@@ -88,5 +98,43 @@
     }
 
     // === SAVE DATA ====
+    private async Task HandleSaveAsync(Category model)
+    {
+        if (IsEditMode)
+        {
+            serviceResult = await service.UpdateAsync(model);
+        }
+        else
+        {
+            serviceResult = await service.CreateAsync(model);
+        }
+        await ShowAlertAsync(serviceResult);
+        await LoadDataAsync();
+    }
+
+    // ==== DELETE ====
+    private async Task HandleDeleteAsync(Category model)
+    {
+        if (!await ConfirmDeleteAsync()) return;
+        
+        serviceResult = await service.DeleteAsync(model);
+        await ShowAlertAsync(serviceResult);
+
+        await LoadDataAsync();
+    }
+
+    // ==== SEARCH ====
+    private string keyword = string.Empty; 
+    private async Task HandleSearchAsync(string keyword)
+    {
+        if (string.IsNullOrEmpty(keyword))
+        {
+            await LoadDataAsync();
+        }
+        else
+        {
+            listResult = await service.SearchByNameAsync(keyword);
+        }
+    }
 
 }
