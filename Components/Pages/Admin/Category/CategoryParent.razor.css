@@ -113,6 +113,7 @@ body {
     border: 1px solid #dee2e6;
     border-radius: 6px;
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .modern-pagination-light .page-item.active .page-link {

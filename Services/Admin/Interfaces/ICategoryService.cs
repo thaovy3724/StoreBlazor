@@ -2,14 +2,14 @@
 using StoreBlazor.Models;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
-namespace StoreBlazor.Services.Interfaces
+namespace StoreBlazor.Services.Admin.Interfaces
 {
     public interface ICategoryService
     {
-        Task<List<Category>> GetAllCategoryAsync();
+        Task<PageResult<Category>> GetAllCategoryAsync(int page);
         Task<ServiceResult> CreateAsync(Category model);
         Task<ServiceResult> UpdateAsync(Category model);
         Task<ServiceResult> DeleteAsync(Category model);
-        Task<List<Category>> SearchByNameAsync(string keyword);
+        Task<PageResult<Category>> SearchByNameAsync(string keyword, int page);
     }
 }
