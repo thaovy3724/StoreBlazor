@@ -8,8 +8,8 @@
         <h3 class="fw-bold">Quản lý Loại sản phẩm</h3>
     </div>
 
-    <CategorySearch KeyWord ="@keyword"
-                     OnSearch="HandleSearchAsync" />
+    <CategorySearch @bind-KeyWord ="@keyword"
+                    OnSearch="LoadPageAsync"/>
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -57,11 +57,9 @@
                     </tbody>
                 </table>
             </div>
-            @* <!-- Phân trang-->
-            <div id="paginationContainer">
-                @await Html.PartialAsync("Pagination", (object)Model)
-            </div> *@
-            <Pagination/>
+            <Pagination CurrentPage="@CurrentPage"
+                        TotalPages="@TotalPages"
+                        OnPageChange="LoadPageAsync" />
         </div>
     </div>
 </div>
@@ -74,20 +72,29 @@
     // ==== VARIABLES ====
     private List<Category> listResult = new();
     private ServiceResult serviceResult = new();
+    private string keyword = string.Empty;
 
     // ==== LOAD DATA ====
     protected override async Task OnInitializedAsync()
     {
-        await LoadDataAsync();
+        await LoadPageAsync(1);
     }
 
-    private async Task LoadDataAsync()
+    protected override async Task LoadPageAsync(int page)
     {
-        // load data
-        listResult = await service.GetAllCategoryAsync();
+        PageResult<Category> result = new();
+        if(keyword == string.Empty)
+        {
+            result = await service.GetAllCategoryAsync(page);
+        }
+        else
+        {
+            result = await service.SearchByNameAsync(keyword, page);
+        }
 
-        // pagination
-
+        listResult = result.Items;
+        CurrentPage = page;
+        TotalPages = result.TotalPages;
     }
 
     // ==== OPEN FORM ====
@@ -113,7 +120,7 @@
             serviceResult = await service.CreateAsync(model);
         }
         await ShowAlertAsync(serviceResult);
-        await LoadDataAsync();
+        await LoadPageAsync(CurrentPage);
     }
 
     // ==== DELETE ====
@@ -124,20 +131,6 @@
         serviceResult = await service.DeleteAsync(model);
         await ShowAlertAsync(serviceResult);
 
-        await LoadDataAsync();
-    }
-
-    // ==== SEARCH ====
-    private string keyword = string.Empty; 
-    private async Task HandleSearchAsync(string keyword)
-    {
-        if (string.IsNullOrEmpty(keyword))
-        {
-            await LoadDataAsync();
-        }
-        else
-        {
-            listResult = await service.SearchByNameAsync(keyword);
-        }
+        await LoadPageAsync(CurrentPage);
     }
 }

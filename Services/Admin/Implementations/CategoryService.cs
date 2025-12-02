@@ -1,29 +1,23 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using StoreBlazor.Data;
 using StoreBlazor.DTO.Admin;
 using StoreBlazor.Models;
-using StoreBlazor.Services.Interfaces;
+using StoreBlazor.Services.Admin.Interfaces;
 
-namespace StoreBlazor.Services.Implementations
+namespace StoreBlazor.Services.Admin.Implementations
 {
-    public class CategoryService : ICategoryService
+    public class CategoryService : BasePaginationService, ICategoryService
     {
-        private readonly ApplicationDbContext _dbContext;
-        public CategoryService(ApplicationDbContext dbContext)
+        public CategoryService(ApplicationDbContext dbContext) : base(dbContext)
         {
-            _dbContext = dbContext;
         }
 
-        public async Task<List<Category>> GetAllCategoryAsync()
+        public Task<PageResult<Category>> GetAllCategoryAsync(int page)
         {
-            // Hàm chứa await → bắt buộc phải trả về Task<...>
-            // có await thì method phải là async
-            // Defer execution: chưa query dữ liệu ngay mà phải đợi đến khi nào có await thì mới query dữ liệu
-            var list = await _dbContext.Categories
-                            .OrderBy(c => c.CategoryId)
-                            .ToListAsync(); // dòng này mới query dữ liệu
-
-            return list;
+            var query = _dbContext.Categories
+                        .OrderBy(x => x.CategoryId);
+            return GetPagedAsync<Category>(query, page);
         }
 
         public async Task<ServiceResult> CreateAsync(Category item)
@@ -118,17 +112,15 @@ namespace StoreBlazor.Services.Implementations
             };
         }
 
-        public async Task<List<Category>> SearchByNameAsync(string keyword)
+        public Task<PageResult<Category>> SearchByNameAsync(string keyword, int page)
         {
-            // Tìm thể loại theo keyword (không phân biệt hoa thường)
             var kw = keyword.Trim().ToLower();
 
-            return await _dbContext.Categories
-                .Where(x => x.CategoryName.ToLower().Contains(kw))   // ✅ không phân biệt hoa thường
-                .OrderBy(x => x.CategoryId)
-                .ToListAsync();
+            var query = _dbContext.Categories
+                .Where(x => x.CategoryName.ToLower().Contains(kw))
+                .OrderBy(x => x.CategoryId);
+            return GetPagedAsync<Category>(query, page); 
         }
-
     }
 
 }

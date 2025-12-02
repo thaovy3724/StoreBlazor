@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using StoreBlazor.Components;
 using StoreBlazor.Data;
-using StoreBlazor.Services.Implementations;
-using StoreBlazor.Services.Interfaces;
+using StoreBlazor.Services.Admin.Implementations;
+using StoreBlazor.Services.Admin.Interfaces;
+using StoreBlazor.Services.Client.Implementations;
+using StoreBlazor.Services.Client.Interfaces;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,8 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IOrderManagerService, OrderManagerService>();
 
+
+builder.Services.AddScoped<IProductService, ProductService>();
 
 
 
