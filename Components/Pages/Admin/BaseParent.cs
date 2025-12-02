@@ -11,12 +11,16 @@ namespace StoreBlazor.Components.Pages.Admin
 
         protected bool IsEditMode { get; set; }
 
+        protected bool IsDetailMode { get; set; }
+
+
         [Inject]
         protected IJSRuntime JS { get; set; } = default!;
         protected void CloseForm()
         {
             SelectedItem = new();
             IsEditMode = false;
+            IsDetailMode = false;
         }
 
         protected async Task ShowAlertAsync(ServiceResult serviceResult)
@@ -27,6 +31,11 @@ namespace StoreBlazor.Components.Pages.Admin
         protected async Task<bool> ConfirmDeleteAsync()
         {
             return await JS.InvokeAsync<bool>("showDeleteAlert");
+        }
+
+        protected async Task<bool> ConfirmLockAsync(string title)
+        {
+            return await JS.InvokeAsync<bool>("showLockAlert",title);
         }
     }
 }

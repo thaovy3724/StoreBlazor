@@ -8,7 +8,7 @@
         <h3 class="fw-bold">Quản lý Loại sản phẩm</h3>
     </div>
 
-    <_CategorySearch KeyWord ="@keyword"
+    <CategorySearch KeyWord ="@keyword"
                      OnSearch="HandleSearchAsync" />
 
     <div class="card shadow-sm">
@@ -66,9 +66,9 @@
     </div>
 </div>
 
-<_CategoryForm Model ="@SelectedItem"
+<CategoryForm Model ="@SelectedItem"
                 IsEditMode = "@IsEditMode"
-               OnSave="HandleSaveAsync"
+                OnSave="HandleSaveAsync"
                 OnClose="CloseForm"/>
 @code {
     // ==== VARIABLES ====
@@ -94,7 +94,11 @@
     private void OpenEditForm(Category item)
     {
         IsEditMode = true;
-        SelectedItem = item;
+        SelectedItem = new Category
+        {
+            CategoryId = item.CategoryId,
+            CategoryName = item.CategoryName
+        };
     }
 
     // === SAVE DATA ====

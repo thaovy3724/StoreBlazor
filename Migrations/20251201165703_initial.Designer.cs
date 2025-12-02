@@ -12,8 +12,8 @@ using StoreBlazor.Data;
 namespace StoreBlazor.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251128143754_InitMySql")]
-    partial class InitMySql
+    [Migration("20251201165703_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
