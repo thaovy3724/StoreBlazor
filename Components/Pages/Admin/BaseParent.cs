@@ -13,6 +13,8 @@ namespace StoreBlazor.Components.Pages.Admin
 
         [Inject]
         protected IJSRuntime JS { get; set; } = default!;
+
+        // ==== MODAL ====
         protected void CloseForm()
         {
             SelectedItem = new();
@@ -28,5 +30,11 @@ namespace StoreBlazor.Components.Pages.Admin
         {
             return await JS.InvokeAsync<bool>("showDeleteAlert");
         }
+
+        // ==== PAGINATION ====
+        protected int CurrentPage;
+        protected int TotalPages;
+
+        protected abstract Task LoadPageAsync(int page);
     }
 }

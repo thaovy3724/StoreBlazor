@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using StoreBlazor.Components;
 using StoreBlazor.Data;
-using StoreBlazor.Services.Implementations;
-using StoreBlazor.Services.Interfaces;
+using StoreBlazor.Services.Admin.Implementations;
+using StoreBlazor.Services.Admin.Interfaces;
+using StoreBlazor.Services.Client.Implementations;
+using StoreBlazor.Services.Client.Interfaces;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +18,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // instance IService
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+
 
 
 // Add services to the container.

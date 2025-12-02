@@ -101,41 +101,37 @@ body {
     gap: 4px;
 }
 
-.modern-pagination-light .page-item .page-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 34px;
-    height: 34px;
-    font-size: 14px;
-    color: #0d6efd;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-}
+    .modern-pagination-light .page-item .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 34px;
+        font-size: 14px;
+        color: #0d6efd;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
 
-.modern-pagination-light .page-item.active .page-link {
-    background-color: #0d6efd;
-    color: #fff;
-    border-color: #0d6efd;
-}
+    .modern-pagination-light .page-item.active .page-link {
+        background-color: #0d6efd;
+        color: #fff;
+        border-color: #0d6efd;
+    }
 
-.modern-pagination-light .page-item .page-link:hover {
-    background-color: #0b5ed7;
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
+    .modern-pagination-light .page-item .page-link:hover {
+        background-color: #0b5ed7;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
 
-.modern-pagination-light .page-item:first-child .page-link,
-.modern-pagination-light .page-item:last-child .page-link {
-    font-size: 16px;
-}
-
-.pagination .page-link {
-    cursor: pointer;
-}
+    .modern-pagination-light .page-item:first-child .page-link,
+    .modern-pagination-light .page-item:last-child .page-link {
+        font-size: 16px;
+    }
 
 #image-preview {
     width: 100%;
@@ -171,3 +167,4 @@ body {
     z-index: 9999; /* nằm trên tất cả */
     transition: opacity 0.3s ease;
 }
+  

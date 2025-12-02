@@ -1,0 +1,53 @@
+﻿@page "/client/index"
+@inject IProductService service
+@layout ClientLayout
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-9">
+            ﻿<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
+                @if (listResult != null && listResult.Any())
+                 {
+                    @foreach (var product in listResult)
+                        {
+                            @* Danh sach san pham *@
+                            <ProductCard Model = "@product"
+                                         OnViewDetail ="HandleOnViewDetail"/>
+                    }
+                }
+                else
+                {
+                    <div>Không có sản phẩm nào</div>
+                }
+            </div>
+
+            @* Phân trang *@
+            @* <_IndexPagination/> *@
+        </div>
+    </div>
+</div>
+<ProductDetail Model = "@selectedProduct"
+               Onclose="HandleOnclose"/>
+@code {
+    // ==== VARIABLES ====
+    private List<ProductCardDTO> listResult = new();
+
+    // ==== LOAD DATA ====
+    protected override async Task OnInitializedAsync()
+    {
+        listResult = await service.GetAllProductAsync();
+    }
+
+    // ==== VIEW DETAIL ====
+    private ProductCardDTO selectedProduct = new ProductCardDTO();
+    private void HandleOnViewDetail(ProductCardDTO item)
+    {
+        // Hiển thị chi tiết sản phẩm
+        selectedProduct = item;
+    }
+
+    private void HandleOnclose()
+    {
+        // Đóng form chi tiết sản phẩm
+        selectedProduct = new ProductCardDTO();
+    }
+}
