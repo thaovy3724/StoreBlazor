@@ -24,3 +24,17 @@ window.showDeleteAlert = async () => {
 
     return result.isConfirmed;
 };
+
+window.showLockAlert = async (title) => {
+    const result = await Swal.fire({
+        title: title,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Xác nhận',
+        cancelButtonText: 'Hủy'
+    });
+
+    return result.isConfirmed;
+};

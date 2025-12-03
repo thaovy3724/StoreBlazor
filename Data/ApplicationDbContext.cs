@@ -60,6 +60,13 @@ namespace StoreBlazor.Data
                 .HasForeignKey(p => p.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // 1 Order - 1 Promotion (PromoId là FK)
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Promotion)
+                .WithMany(p => p.Orders)
+                .HasForeignKey(o => o.PromoId)
+                .OnDelete(DeleteBehavior.SetNull); 
+
 
             base.OnModelCreating(modelBuilder);
         }

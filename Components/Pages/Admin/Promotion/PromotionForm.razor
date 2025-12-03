@@ -1,0 +1,285 @@
+﻿<div class="modal fade" id="promotionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <form id="promotionForm" @onsubmit:preventDefault="true" @onsubmit="HandleOnSubmit">
+
+            <!-- Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="promotionModalTitle">
+                    @(IsEditMode ? "Chỉnh sửa khuyến mãi"
+                                            : IsDetailMode ? "Chi tiết khuyến mãi"
+                                            : "Thêm khuyến mãi")
+                </h5>
+                <button type="button" 
+                    class="btn-close" 
+                    data-bs-dismiss="modal"
+                    @onclick="HandleOnClose"
+                    aria-label="Close"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Mã khuyến mãi*</label>
+                        <input type="text" class="form-control @(PromoCodeError != null ? "is-invalid" : "")" id="code" name="PromoCode" maxlength="20"
+                           @bind="Model.PromoCode"
+                           readonly="@(IsDetailMode)">
+                    <div class="invalid-feedback" id="">@PromoCodeError</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Loại khuyến mãi*</label>
+                    <select class="form-select @(DiscountTypeError != null ? "is-invalid" : "")"
+                            @bind="Model.DiscountType"
+                            disabled="@(IsDetailMode)">
+                        <option value="">-- Chọn loại --</option>
+                        @foreach (var type in Enum.GetValues(typeof(DiscountType)))
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </select>
+
+
+                    @if (!string.IsNullOrEmpty(DiscountTypeError))
+                    {
+                        <div class="invalid-feedback">@DiscountTypeError</div>
+                    }
+                </div>
+
+
+                <div class="mb-3">
+                    <label class="form-label">Mô tả khuyến mãi</label>
+                    <textarea class="form-control" id="description" name="Description" rows="3" placeholder="Nhập mô tả cho khuyến mãi (tùy chọn)"
+                                  @bind="Model.Description"
+                                  readonly="@(IsDetailMode)">
+                    </textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Giá trị khuyến mãi*</label>
+                        <input type="number" class="form-control @(DiscountValueError != null ? "is-invalid" : "")" id="discountValue" name="DiscountValue" min="0"
+                               @bind="DiscountValueString"
+                               readonly="@(IsDetailMode)">
+                    <div class="invalid-feedback">@DiscountValueError</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Giá trị đơn hàng tối thiểu*</label>
+                        <input type="number" class="form-control @(MinOrderAmountError != null ? "is-invalid" : "")" id="minOrderAmount" name="MinOrderAmount" min="0"
+                               @bind="MinOrderAmountString"
+                               readonly="@(IsDetailMode)">
+                    <div class="invalid-feedback">@MinOrderAmountError</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Giới hạn lần sử dụng*</label>
+                        <input type="number" class="form-control @(UsageLimitError != null ? "is-invalid" : "")" id="usageLimit" name="UsageLimit" min="0"
+                               @bind="UsageLimitString"
+                               readonly="@(IsDetailMode)">
+                    <div class="invalid-feedback">@UsageLimitError</div>
+                </div>
+                @if (IsDetailMode)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Số lần đã sử dụng</label>
+                        <input type="number" class="form-control" value="@Model.UsedCount" readonly />
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label">Ngày bắt đầu*</label>
+                        <input type="date" class="form-control @(StartDateError != null ? "is-invalid" : "")" id="startDate" name="StartDate"
+                               @bind="StartDate"
+                               readonly="@(IsDetailMode)">
+                    <div class="invalid-feedback">@StartDateError</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ngày kết thúc*</label>
+                        <input type="date" class="form-control @(EndDateError != null ? "is-invalid" : "")" id="endDate" name="EndDate"
+                               @bind="EndDate"
+                               readonly="@(IsDetailMode)">
+                    <div class="invalid-feedback">@EndDateError</div>
+                </div>
+            </div>
+
+
+            <!-- Footer -->
+            @if (!IsDetailMode)
+            {
+                <div class="modal-footer">
+                    <button type="submit" form="promotionForm" id="promotionModalSaveBtn" class="btn btn-primary" data-action="add">Lưu</button>
+                </div>
+            }
+            </form>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public Promotion Model { get; set; } = new();
+
+    [Parameter]
+    public bool IsEditMode { get; set; }
+
+    [Parameter]
+    public bool IsDetailMode { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        ClearErrors(); 
+    }
+
+    private void HandleOnClose()
+    {
+        ClearErrors();
+        OnClose.InvokeAsync();
+    }
+
+    // ==== ONSUBMIT ====
+    [Parameter]
+    public EventCallback<Promotion> OnSave { get; set; }
+
+    private async Task HandleOnSubmit()
+    {
+        // validate
+        if (ValidateForm())
+        {
+            // submit data
+            await OnSave.InvokeAsync(Model);
+        }
+        {
+         StateHasChanged(); 
+        }
+    }
+
+    // ==== ERROR HANDLING ====
+    private string? PromoCodeError;
+    private string? DiscountTypeError;
+    private string? DiscountValueError;
+    private string? MinOrderAmountError;
+    private string? UsageLimitError;
+    private string? StartDateError;
+    private string? EndDateError;
+
+    private void ClearErrors()
+    {
+        PromoCodeError = null;
+        DiscountTypeError = null;
+        DiscountValueError = null;
+        MinOrderAmountError = null;
+        UsageLimitError = null;
+        StartDateError = null;
+        EndDateError = null;
+    }
+
+
+    private bool ValidateForm()
+    {
+        ClearErrors();
+        bool isValid = true;
+
+        // --- VALIDATION RULES ---
+
+        // Mã khuyến mãi
+        if (string.IsNullOrWhiteSpace(Model.PromoCode))
+        {
+            PromoCodeError = "Vui lòng nhập mã khuyến mãi";
+            isValid = false;
+        }
+
+        // Loại khuyến mãi
+        if (Model.DiscountType == null)
+        {
+            DiscountTypeError = "Vui lòng chọn loại khuyến mãi";
+            isValid = false;
+        }
+
+        // Giá trị khuyến mãi
+        if (Model.DiscountValue <= 0)
+        {
+            DiscountValueError = "Giá trị khuyến mãi không hợp lệ";
+            isValid = false;
+        }
+
+        // Đơn hàng tối thiểu
+        if (Model.MinOrderAmount < 0)
+        {
+            MinOrderAmountError = "Giá trị đơn hàng tối thiểu không hợp lệ";
+            isValid = false;
+        }
+
+        // Giới hạn số lần sử dụng
+        if (Model.UsageLimit < 0)
+        {
+            UsageLimitError = "Giới hạn lần sử dụng phải ≥ 0";
+            isValid = false;
+        }
+
+        // Ngày bắt đầu
+        if (Model.StartDate == default)
+        {
+            StartDateError = "Vui lòng chọn ngày bắt đầu";
+            isValid = false;
+        }
+
+        // Ngày kết thúc
+        if (Model.EndDate == default)
+        {
+            EndDateError = "Vui lòng chọn ngày kết thúc";
+            isValid = false;
+        }
+
+        // start > end
+        if (Model.StartDate != default &&
+            Model.EndDate != default &&
+            Model.StartDate > Model.EndDate)
+        {
+            EndDateError = "Ngày kết thúc phải sau ngày bắt đầu";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+    // ==== BIND CHO CÁC FIELD ====
+    // Số
+    private string DiscountValueString
+    {
+        get => Model.DiscountValue > 0 ? Model.DiscountValue.ToString() : "";
+        set => Model.DiscountValue = string.IsNullOrEmpty(value) ? 0 : Convert.ToDecimal(value);
+    }
+
+    private string MinOrderAmountString
+    {
+        get => Model.MinOrderAmount >= 0 ? Model.MinOrderAmount.ToString() : "";
+        set => Model.MinOrderAmount = string.IsNullOrEmpty(value) ? 0 : Convert.ToDecimal(value);
+    }
+
+    private string UsageLimitString
+    {
+        get => Model.UsageLimit > 0 ? Model.UsageLimit.ToString() : "";
+        set => Model.UsageLimit = string.IsNullOrEmpty(value) ? 0 : Convert.ToInt32(value);
+    }
+
+    // Ngày
+    public DateTime? StartDate
+    {
+        get => Model.StartDate == default ? null : Model.StartDate;
+        set => Model.StartDate = value ?? default;
+    }
+
+    public DateTime? EndDate
+    {
+        get => Model.EndDate == default ? null : Model.EndDate;
+        set => Model.EndDate = value ?? default;
+    }
+
+
+
+
+}

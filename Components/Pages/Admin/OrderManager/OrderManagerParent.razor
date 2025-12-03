@@ -1,0 +1,166 @@
+﻿@page "/admin/order"
+@using StoreBlazor.DTO.Admin.OrderManager
+@layout AdminLayout
+@inject IOrderManagerService service
+@inherits BaseParent<Order>
+
+<div class="container-fluid p-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold">Lịch sử đơn hàng</h3>
+    </div>
+    <!-- Thanh lọc -->
+    <OrderManagerFilter/>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light thead-separator ">
+                        <tr class="text-center">
+                            <th style="width:100px;">ID</th>
+                            <th>Tên khách hàng</th>
+                            <th>Ngày tạo đơn</th>
+                            <th>Tổng giá trị đơn hàng</th>
+                            <th>Trạng thái đơn hàng</th>
+                            <th style="width:150px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderList">
+                        @if (listResult == null || !listResult.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center">Chưa có đơn hàng</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var order in listResult)
+                            {
+                                <tr class="text-center">
+                                    <td class="text-center">@order.OrderId</td>
+                                    <td>@order.CustomerName</td>
+                                    <td>@order.OrderDate.ToString("dd/MM/yyyy hh:mm:ss tt")</td>
+                                    <td>@String.Format("{0:N0} đ", order.TotalAmount)</td>
+                                    <td>
+                                        @if (@order.Status == OrderStatus.Pending)
+                                        {
+                                            <span class="badge rounded-pill px-3 py-2 fw-semibold" style="background-color:#ffc1071a; color:#b8860b; border:1px solid #ffc107;">
+                                                Chờ xử lý
+                                            </span>
+                                        }
+                                        else if (@order.Status == OrderStatus.Paid)
+                                        {
+                                            <span class="badge rounded-pill px-3 py-2 fw-semibold" style="background-color:#0d6efd1a; color:#0d6efd; border:1px solid #0d6efd;">
+                                                Đã thanh toán
+                                            </span>
+                                        }
+                                        else if (@order.Status == OrderStatus.Cancelled)
+                                        {
+                                            <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                                                  style="background-color: #dc35451a; color: #dc3545; border: 1px solid #dc3545;">
+                                                Đã hủy
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (order.Status == OrderStatus.Pending)
+                                        {
+                                            <!-- Nút xem -->
+                                            <button class="btn btn-sm btn-light border me-1 btn-view" title="Xem"
+                                                    @onclick="() => OpenDetailForm(order.OrderId)"
+                                                    data-bs-toggle="modal" data-bs-target="#orderHistoryModal"
+                                                    >
+                                                <i class="bi bi-eye text-primary"></i>
+                                            </button>
+                                            <!-- Hủy đơn hàng -->
+                                            <button class="btn btn-sm btn-light border me-1" title="Hủy đơn hàng" @onclick="() => CancelOrder(order.OrderId)">
+                                                <i class="bi bi-x-circle text-danger"></i>
+                                            </button>
+                                            <!-- Approve đơn hàng -->
+                                            <button class="btn btn-sm btn-light border me-1" title="Xác nhận đơn hàng" @onclick="() => ApproveOrder(order.OrderId)">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <!-- Nút xem -->
+                                            <button class="btn btn-sm btn-light border me-1 btn-view" title="Xem"
+                                                    @onclick="() => OpenDetailForm(order.OrderId)"
+                                                    data-bs-toggle="modal" data-bs-target="#orderHistoryModal"
+                                                   >
+                                                <i class="bi bi-eye text-primary"></i>
+                                            </button>
+                                            <!-- Nút in -->
+                                            <button class="btn btn-sm btn-light border me-1 btn-print" data-order-id="@order.OrderId" title="In hóa đơn">
+                                                <i class="bi bi-printer text-secondary"></i>
+                                            </button>
+                                        }
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <!-- Phân trang-->
+            <Pagination CurrentPage="@CurrentPage"
+                        TotalPages="@TotalPages"
+                        OnPageChange="LoadPageAsync" />
+        </div>
+    </div>
+</div>
+
+<!-- Modal dùng chung -->
+<OrderManagerForm Model="@SelectedOrderDetail"
+                  IsDetailMode="@IsDetailMode"
+                  OnClose="CloseForm" />
+
+@code {
+    // ==== VARIABLES ====
+    private OrderDetailDto? SelectedOrderDetail { get; set; } = null;
+
+    private List<OrderTableDto> listResult = new();
+    private ServiceResult serviceResult = new();
+
+    // ==== LOAD DATA ====
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPageAsync(1);
+    }
+
+    protected override async Task LoadPageAsync(int page)
+    {
+        PageResult<OrderTableDto> result = new();
+
+        result = await service.GetAllOrdersForTableAsync(page);
+
+        listResult = result.Items;
+        CurrentPage = page;
+        TotalPages = result.TotalPages;
+    } 
+    // === SAVE DATA - APPROVE/CANCEL ORDER ====
+    private async Task CancelOrder(int orderId)
+    {
+        var result = await service.CancelAsync(orderId);
+        await ShowAlertAsync(result);
+        await LoadPageAsync(CurrentPage);
+    }
+
+    private async Task ApproveOrder(int orderId)
+    {
+        var result = await service.ApproveAsync(orderId);
+        await ShowAlertAsync(result);
+        await LoadPageAsync(CurrentPage);
+    }
+    // === OPEN DETAIL FORM ===
+    private async Task OpenDetailForm(int orderId)
+    {
+        SelectedOrderDetail = await service.GetOrderDetailAsync(orderId);
+
+        IsDetailMode = true;
+        StateHasChanged();
+    }
+}

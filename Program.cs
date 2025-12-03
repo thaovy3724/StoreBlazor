@@ -18,6 +18,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // instance IService
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddScoped<IOrderManagerService, OrderManagerService>();
+
+
 builder.Services.AddScoped<IProductService, ProductService>();
 
 

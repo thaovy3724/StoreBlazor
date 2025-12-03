@@ -11,6 +11,9 @@ namespace StoreBlazor.Components.Pages.Admin
 
         protected bool IsEditMode { get; set; }
 
+        protected bool IsDetailMode { get; set; }
+
+
         [Inject]
         protected IJSRuntime JS { get; set; } = default!;
 
@@ -19,6 +22,7 @@ namespace StoreBlazor.Components.Pages.Admin
         {
             SelectedItem = new();
             IsEditMode = false;
+            IsDetailMode = false;
         }
 
         protected async Task ShowAlertAsync(ServiceResult serviceResult)
@@ -36,5 +40,10 @@ namespace StoreBlazor.Components.Pages.Admin
         protected int TotalPages;
 
         protected abstract Task LoadPageAsync(int page);
+
+        protected async Task<bool> ConfirmLockAsync(string title)
+        {
+            return await JS.InvokeAsync<bool>("showLockAlert",title);
+        }
     }
 }
