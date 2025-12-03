@@ -1,9 +1,21 @@
-﻿@page "/client/index"
+﻿@page "/client"
 @inject IProductService service
 @layout ClientLayout
 <div class="container py-4">
     <div class="row">
+        @* Bộ lọc sản phẩm *@
+        <IndexFilter />
         <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                @* Hien thi so luong san pham (tim kiem) *@
+                <span class="text-muted">Hiển thị <strong>@listResult.Count</strong> sản phẩm</span>
+                @* Loc san pham *@
+                <select class="form-select w-auto form-select-sm">
+                    <option selected>Mới nhất</option>
+                    <option>Giá tăng dần</option>
+                    <option>Giá giảm dần</option>
+                </select>
+            </div>
             ﻿<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
                 @if (listResult != null && listResult.Any())
                  {

@@ -1,10 +1,8 @@
 ﻿<div class="col">
-    <div class="card h-100 product-card border-0 shadow-sm bg-white rounded-3"
-         @onclick="() => HandleOnViewDetail(Model)"
-            style="cursor: pointer;">
+    <div class="card h-100 product-card border-0 shadow-sm bg-white rounded-3">
 
         <div class="img-wrapper bg-light rounded-top-3 position-relative">
-            <img src="@product.ProductImage" alt="@product.ProductName">
+            <img src="/uploads/@product.ProductImage" alt="@product.ProductName">
         </div>
 
         <div class="card-body d-flex flex-column p-3">
@@ -31,7 +29,11 @@
                 <div>
                     <span class="d-block fw-bold text-primary fs-5">@product.Price.ToString("N0")đ</span>
                 </div>
-                <button class="btn btn-outline-primary btn-sm rounded-circle" title="Xem nhanh">
+                <button class="btn btn-outline-primary btn-sm rounded-circle" 
+                    title="Xem nhanh"
+                    data-bs-toggle="modal"
+                    data-bs-target="#productDetailModal"
+                    @onclick="() => HandleOnViewDetail(Model)">
                     <i class="bi bi-eye"></i>
                 </button>
             </div>
@@ -45,7 +47,7 @@
     [Parameter]
     public EventCallback<ProductCardDTO> OnViewDetail { get; set; }
 
-    private Product product;
+    private Product product { get; set; } = new Product();
     private int quantity;
 
     protected override void OnInitialized()
