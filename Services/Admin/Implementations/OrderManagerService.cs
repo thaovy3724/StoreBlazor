@@ -3,23 +3,22 @@ using StoreBlazor.Data;
 using StoreBlazor.DTO.Admin;
 using StoreBlazor.DTO.Admin.OrderManager;
 using StoreBlazor.Models;
-using StoreBlazor.Services.Interfaces;
+using StoreBlazor.Services.Admin.Interfaces;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
-namespace StoreBlazor.Services.Implementations
+namespace StoreBlazor.Services.Admin.Implementations
 {
-    public class OrderManagerService:IOrderManagerService
+    public class OrderManagerService: BasePaginationService, IOrderManagerService
     {
-        private readonly ApplicationDbContext _dbContext;
-        public OrderManagerService(ApplicationDbContext dbContext)
+        public OrderManagerService(ApplicationDbContext dbContext) : base(dbContext)
         {
-            _dbContext = dbContext;
         }
 
 
-        public async Task<List<OrderTableDto>> GetAllOrdersForTableAsync()
+        public async Task<PageResult<OrderTableDto>> GetAllOrdersForTableAsync(int page)
         {
-            var data = await _dbContext.Orders
-                .Include(o => o.Customer)     
+            var query = _dbContext.Orders
+                .Include(o => o.Customer)
                 .OrderByDescending(o => o.OrderId)
                 .Select(o => new OrderTableDto
                 {
@@ -28,10 +27,10 @@ namespace StoreBlazor.Services.Implementations
                     OrderDate = o.OrderDate,
                     TotalAmount = o.TotalAmount,
                     Status = o.Status
-                })
-                .ToListAsync();
+                });
 
-            return data;
+            return await GetPagedAsync(query, page);
+
         }
         public async Task<OrderDetailDto?> GetOrderDetailAsync(int orderId)
         {

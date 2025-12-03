@@ -4,11 +4,11 @@ using StoreBlazor.Models;
 using System.Drawing;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
-namespace StoreBlazor.Services.Interfaces
+namespace StoreBlazor.Services.Admin.Interfaces
 {
     public interface IOrderManagerService
     {
-        Task<List<OrderTableDto>> GetAllOrdersForTableAsync();
+        Task<PageResult<OrderTableDto>> GetAllOrdersForTableAsync(int page);
         Task<ServiceResult> ApproveAsync(int orderId);
         Task<ServiceResult> CancelAsync(int orderId);
         Task<OrderDetailDto?> GetOrderDetailAsync(int orderId);

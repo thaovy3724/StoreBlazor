@@ -3,11 +3,11 @@ using StoreBlazor.DTO.Admin.OrderManager;
 using StoreBlazor.Models;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
-namespace StoreBlazor.Services.Interfaces
+namespace StoreBlazor.Services.Admin.Interfaces
 {
     public interface IPromotionService
     {
-        Task<List<Promotion>> GetAllPromotionAsync();
+        Task<PageResult<Promotion>> GetAllPromotionAsync(int page);
         Task<ServiceResult> CreateAsync(Promotion model);
         Task<ServiceResult> UpdateAsync(Promotion model);
         Task<ServiceResult> LockAsync(Promotion model);

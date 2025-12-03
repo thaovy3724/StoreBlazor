@@ -2,28 +2,23 @@
 using StoreBlazor.Data;
 using StoreBlazor.DTO.Admin;
 using StoreBlazor.Models;
-using StoreBlazor.Services.Interfaces;
+using StoreBlazor.Services.Admin.Interfaces;
 
-namespace StoreBlazor.Services.Implementations
+namespace StoreBlazor.Services.Admin.Implementations
 {
-    public class PromotionService : IPromotionService
+    public class PromotionService : BasePaginationService, IPromotionService
     {
-        private readonly ApplicationDbContext _dbContext;
-        public PromotionService(ApplicationDbContext dbContext)
+        public PromotionService(ApplicationDbContext dbContext) : base(dbContext)
         {
-            _dbContext = dbContext;
         }
 
-        public async Task<List<Promotion>> GetAllPromotionAsync()
+        public async Task<PageResult<Promotion>> GetAllPromotionAsync(int page)
         {
-            // Hàm chứa await → bắt buộc phải trả về Task<...>
-            // có await thì method phải là async
-            // Defer execution: chưa query dữ liệu ngay mà phải đợi đến khi nào có await thì mới query dữ liệu
-            var list = await _dbContext.Promotions
-                            .OrderBy(p => p.PromoId)
-                            .ToListAsync(); // dòng này mới query dữ liệu
+            var query = _dbContext.Promotions
+                .OrderBy(p => p.PromoId)
+                .AsQueryable(); 
 
-            return list;
+            return await GetPagedAsync(query, page); ;
         }
 
         public async Task<ServiceResult> CreateAsync(Promotion item)

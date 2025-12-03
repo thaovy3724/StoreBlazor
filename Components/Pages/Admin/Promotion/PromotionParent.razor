@@ -112,7 +112,9 @@
             </div>
 
             <!-- Phân trang -->
-            <Pagination/>
+            <Pagination CurrentPage="@CurrentPage"
+                        TotalPages="@TotalPages"
+                        OnPageChange="LoadPageAsync" />
         </div>
     </div>
 </div>
@@ -131,14 +133,17 @@
     // ==== LOAD DATA ====
     protected override async Task OnInitializedAsync()
     {
-        await LoadDataAsync();
+        await LoadPageAsync(1);
     }
-    private async Task LoadDataAsync()
+    protected override async Task LoadPageAsync(int page)
     {
-        // load data
-        listResult = await service.GetAllPromotionAsync();
+        PageResult<Promotion> result = new();
 
-        // pagination
+        result = await service.GetAllPromotionAsync(page);
+
+        listResult = result.Items;
+        CurrentPage = page;
+        TotalPages = result.TotalPages;
 
     }
     // ==== OPEN EDIT FORM ====
@@ -179,7 +184,7 @@
             serviceResult = await service.CreateAsync(model);
         }
         await ShowAlertAsync(serviceResult);
-        await LoadDataAsync();
+        await LoadPageAsync(CurrentPage);
     }
     // == LOCK PROMOTION ==
     private async Task HandleLockAsync(Promotion model)
@@ -193,7 +198,7 @@
         serviceResult = await service.LockAsync(model);
         await ShowAlertAsync(serviceResult);
 
-        await LoadDataAsync();
+        await LoadPageAsync(CurrentPage);
     }
      // ==== SEARCH ====
     

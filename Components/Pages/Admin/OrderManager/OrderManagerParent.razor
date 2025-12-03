@@ -106,7 +106,9 @@
                 </table>
             </div>
             <!-- Phân trang-->
-            <Pagination/>
+            <Pagination CurrentPage="@CurrentPage"
+                        TotalPages="@TotalPages"
+                        OnPageChange="LoadPageAsync" />
         </div>
     </div>
 </div>
@@ -126,29 +128,32 @@
     // ==== LOAD DATA ====
     protected override async Task OnInitializedAsync()
     {
-        await LoadDataAsync();
+        await LoadPageAsync(1);
     }
-    private async Task LoadDataAsync()
+
+    protected override async Task LoadPageAsync(int page)
     {
-        // load data
-        listResult = await service.GetAllOrdersForTableAsync();
+        PageResult<OrderTableDto> result = new();
 
-        // pagination
+        result = await service.GetAllOrdersForTableAsync(page);
 
+        listResult = result.Items;
+        CurrentPage = page;
+        TotalPages = result.TotalPages;
     } 
     // === SAVE DATA - APPROVE/CANCEL ORDER ====
     private async Task CancelOrder(int orderId)
     {
         var result = await service.CancelAsync(orderId);
         await ShowAlertAsync(result);
-        await LoadDataAsync();
+        await LoadPageAsync(CurrentPage);
     }
 
     private async Task ApproveOrder(int orderId)
     {
         var result = await service.ApproveAsync(orderId);
         await ShowAlertAsync(result);
-        await LoadDataAsync();
+        await LoadPageAsync(CurrentPage);
     }
     // === OPEN DETAIL FORM ===
     private async Task OpenDetailForm(int orderId)
