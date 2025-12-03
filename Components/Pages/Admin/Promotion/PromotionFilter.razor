@@ -1,0 +1,48 @@
+﻿@* <div class="d-flex flex-wrap gap-2 align-items-center flex-grow-1">
+    <!-- Lọc trạng thái -->
+    <select id="filterStatus" class="form-select form-select-sm" style="width: 180px;">
+        <option value="-1">Tất cả trạng thái</option>
+        @foreach (var s in Model.StatusList)
+        {
+            string text = s switch
+            {
+                PromotionStatus.Active => "Hoạt động",
+                PromotionStatus.Inactive => "Đã khóa",
+                _ => s.ToString()
+            };
+            if (Model.FilterStatus == s.ToString())
+            {
+                <option value="@s" selected>@text</option>
+            }
+            else
+            {
+                <option value="@s">@text</option>
+            }
+        }
+    </select>
+
+    <!-- Lọc từ ngày -->
+    <div class="input-group input-group-sm" style="width: 200px;">
+        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+        <input type="date" id="filterFromDate" class="form-control" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))">
+    </div>
+
+    <!-- Lọc đến ngày -->
+    <div class="input-group input-group-sm" style="width: 200px;">
+        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+        <input type="date" id="filterToDate" class="form-control" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))">
+    </div>
+
+    <!-- Ô tìm kiếm -->
+    <div class="input-group input-group-sm" style="width: 300px;">
+        <input type="text" id="searchInput" class="form-control" placeholder="Nhập mã khuyến mãi" value="@Model.SearchTerm">
+        <button id="btnSearch" class="btn btn-primary btn-search" type="button">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+</div>
+
+
+@code {
+
+} *@

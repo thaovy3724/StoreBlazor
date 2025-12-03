@@ -1,0 +1,51 @@
+﻿@* <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+    <!-- Thanh lọc bên trái -->
+    <div class="d-flex flex-wrap gap-2 align-items-center flex-grow-1">
+
+        <!-- Lọc theo trạng thái -->
+        @{
+            var statusDict = new Dictionary<OrderStatus, string> {
+                { OrderStatus.Pending, "Chờ xử lý" },
+                { OrderStatus.Paid, "Đã thanh toán" },
+                { OrderStatus.Cancelled, "Đã hủy" }
+                };
+        }
+
+        <select class="form-select form-select-sm filter-status" name="status" style="width: 180px;">
+            <option value="-1">Tất cả trạng thái</option>
+            @foreach (var kvp in statusDict)
+            {
+                var key = (int)kvp.Key;
+                if (Model.Status.HasValue && key == Model.Status.Value)
+                {
+                    <option value="@key" selected>@kvp.Value</option>
+                }
+                else
+                {
+                    <option value="@key">@kvp.Value</option>
+                }
+            }
+        </select>
+
+        <!-- Lọc theo khoảng giá -->
+        <div class="input-group input-group-sm filter-price-group" style="width: 260px;">
+            <span class="input-group-text">Giá từ</span>
+            <input type="number" class="form-control filter-price-min" value="@(Model.PriceFrom)" name="priceMin" placeholder="0" min="0">
+            <span class="input-group-text">đến</span>
+            <input type="number" class="form-control filter-price-max" value="@(Model.PriceTo)" name="priceMax" placeholder="0" min="0">
+        </div>
+
+        <!-- Ô tìm kiếm -->
+        <div class="input-group input-group-sm filter-search-group" style="width: 300px;">
+            <input type="text" class="form-control" id="filter-order-id" value="@Model.Search" name="orderId" placeholder="Nhập mã đơn hàng">
+            <button class="btn btn-primary btn-search-order" id="btnSearch" type="button">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </div>
+</div> *@
+
+
+@code {
+
+}

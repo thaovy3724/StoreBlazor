@@ -11,6 +11,14 @@
             <i class="bi bi-tags-fill text-primary"></i>
             <span>Quản lý loại sản phẩm</span>
         </a>
+        <a class="nav-link" href="/admin/promotion">
+            <i class="bi bi-gift-fill text-primary"></i>
+            <span>Quản lý khuyến mãi</span>
+        </a>
+        <a class="nav-link" href="/admin/order">
+            <i class="bi bi-receipt-cutoff text-primary"></i>
+            <span>Quản lý đơn hàng</span>
+        </a>
         @* @if (HttpContextAccessor.HttpContext.Session.GetString("Role") == "Admin")
         {
             <a class="nav-link" href="/admin/user">

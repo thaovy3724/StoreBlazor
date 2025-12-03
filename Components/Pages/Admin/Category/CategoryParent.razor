@@ -66,7 +66,7 @@
 
 <CategoryForm Model ="@SelectedItem"
                 IsEditMode = "@IsEditMode"
-               OnSave="HandleSaveAsync"
+                OnSave="HandleSaveAsync"
                 OnClose="CloseForm"/>
 @code {
     // ==== VARIABLES ====
@@ -101,7 +101,11 @@
     private void OpenEditForm(Category item)
     {
         IsEditMode = true;
-        SelectedItem = item;
+        SelectedItem = new Category
+        {
+            CategoryId = item.CategoryId,
+            CategoryName = item.CategoryName
+        };
     }
 
     // === SAVE DATA ====

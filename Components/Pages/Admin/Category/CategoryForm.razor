@@ -2,12 +2,14 @@
 <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form id="categoryForm" @onsubmit="HandleOnSubmit">
+            <form id="categoryForm" @onsubmit:preventDefault="true" @onsubmit="HandleOnSubmit">
                 @* @Html.AntiForgeryToken() *@
                 @* <input type="hidden" id="categoryId" name="categoryId" @bind="Model.CategoryId" /> *@
 
                 <div class="modal-header">
-                    <h5 class="modal-title" id="categoryModalTitle">Quản lý loại sản phẩm</h5>
+                    <h5 class="modal-title" id="categoryModalTitle">
+                        @(IsEditMode ? "Chỉnh sửa loại sản phẩm" : "Thêm loại sản phẩm")
+                    </h5>
                     <button type="button" class="btn-close" 
                             data-bs-dismiss="modal" 
                             @onclick="HandleOnClose"
@@ -17,8 +19,8 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Tên loại sản phẩm</label>
-                        <input type="text" class="form-control" id="typename" name="categoryName" 
-                        @bind="Model.CategoryName">
+                        <input type="text" class="form-control @(NameError != null ? "is-invalid" : "")" id="typename" name="categoryName"
+                               @bind="Model.CategoryName">
                         <div class="invalid-feedback" id="typename-msg">@NameError</div>
                     </div>
                 </div>
@@ -40,8 +42,14 @@
     [Parameter]
     public EventCallback OnClose { get; set; }
 
+    protected override void OnParametersSet()
+    {
+        ClearErrors();
+    }
+
     private void HandleOnClose()
     {
+        ClearErrors();
         OnClose.InvokeAsync();
     }
 
@@ -57,10 +65,19 @@
             // submit data
             await OnSave.InvokeAsync(Model);
         }
+        else
+        {
+            StateHasChanged(); 
+        }
     }
 
     // ==== ERROR HANDLING ====
     private string? NameError;
+
+    private void ClearErrors()
+    {
+        NameError = null;
+    }
 
     private bool ValidateForm()
     {
