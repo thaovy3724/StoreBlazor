@@ -1,28 +1,31 @@
-﻿﻿    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog">
+﻿﻿<div class="modal fade" id="productDetailModal" style="background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content border-0 rounded-4 overflow-hidden">
                 <div class="modal-header border-0 pb-0">
-                    <button type="button" class="btn-close" @onclick="HandleOnClose" aria-label="Close"></button>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"
+                        @onclick="HandleOnClose"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3 mb-md-0">
                             <div class="bg-light rounded-3 p-4 d-flex align-items-center justify-content-center h-100">
-                            <img src="@product.ProductImage" class="img-fluid rounded" style="max-height: 300px; object-fit: contain;" alt="@product.ProductName">
+                                <img src="/uploads/@Model.Product.ProductImage" class="img-fluid rounded" style="max-height: 300px; object-fit: contain;" alt="@Model.Product.ProductName">
                             </div>
                         </div>
 
                         <div class="col-md-6">
-                        <h4 class="fw-bold mb-2">@product.ProductName</h4>
+                        <h4 class="fw-bold mb-2">@Model.Product.ProductName</h4>
                             <div class="mb-3">
-                            <span class="fs-4 fw-bold text-primary me-2">@product.Price.ToString("N0")đ</span>
+                            <span class="fs-4 fw-bold text-primary me-2">@Model.Product.Price.ToString("N0")đ</span>
                             </div>
 
                             <div class="d-flex align-items-center gap-2 mb-4">
                                 <span class="fw-semibold">Tình trạng:</span>
-                                @if (quantity > 0)
+                            @if (Model.Quantity > 0)
                                 {
-                                    <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Còn hàng (@quantity)</span>
+                                <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Còn hàng (@Model.Quantity)</span>
                                 }
                                 else
                                 {
@@ -32,38 +35,29 @@
 
                             <div class="d-flex gap-3 align-items-center mb-4">
                                 <div class="input-group input-group-sm" style="width: 120px;">
-                                    <button class="btn btn-outline-secondary" @onclick="() => quantity = Math.Max(1, quantity - 1)">-</button>
-                                    <input type="text" class="form-control text-center" value="@quantity" readonly>
-                                    <button class="btn btn-outline-secondary" @onclick="() => quantity++">+</button>
+                                <button class="btn btn-outline-secondary" @onclick="() => Model.Quantity = Math.Max(1, Model.Quantity - 1)">-</button>
+                                <input type="text" class="form-control text-center" value="@Model.Quantity" readonly>
+                                <button class="btn btn-outline-secondary" @onclick="() => Model.Quantity++">+</button>
                                 </div>
                             </div>
 
                             <div class="d-grid gap-2">
-                                @* <button class="btn btn-primary py-2" @onclick="() => AddToCart(selectedProduct)">
+                                <button class="btn btn-primary py-2">
                                     <i class="bi bi-cart-plus me-2"></i> Thêm vào giỏ hàng
-                                </button> *@
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+</div>
 @code {
     [Parameter]
     public ProductCardDTO Model { get; set; } = new ProductCardDTO();
 
     [Parameter]
     public EventCallback OnClose { get; set; }
-
-    private Product product = new Product();
-    private int quantity;
-
-    protected override void OnInitialized()
-    {
-        product = Model.Product;
-        quantity = Model.Quantity;
-    }
 
     private async Task HandleOnClose()
     {
