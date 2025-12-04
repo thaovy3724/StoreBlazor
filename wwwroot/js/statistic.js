@@ -4,7 +4,7 @@ let topChart;
 // Cập nhật biểu đồ đường (Line Chart)
 window.updateLineChart = function (labels, values, title) {
     const ctx = document.getElementById('revenueChart');
-    if (!ctx) return; // Bảo vệ: Thoát nếu không tìm thấy canvas
+    if (!ctx) return; 
 
     if (revenueChart) {
         revenueChart.destroy();
@@ -60,24 +60,23 @@ window.updateLineChart = function (labels, values, title) {
 window.updatePieChart = function (labels, values, title) {
     const ctx = document.getElementById('myChartTop');
     const noDataMessage = document.getElementById('noDataMessageTop');
-    if (!ctx) return; // Bảo vệ: Thoát nếu không tìm thấy canvas
+    if (!ctx) return; 
 
     if (topChart) {
         topChart.destroy();
     }
 
     if (!labels || labels.length === 0 || !values || values.length === 0) {
-        // 2a. Ẩn Canvas, Hiển thị thông báo
+       
         ctx.style.display = 'none';
         if (noDataMessage) {
             noDataMessage.style.display = 'flex';
         }
-        topChart = null; // Đặt lại biến biểu đồ
-        return; // Dừng việc vẽ biểu đồ
+        topChart = null; 
+        return; 
     }
 
-    // 3. Nếu có dữ liệu: Hiển thị Canvas, Ẩn thông báo
-    ctx.style.display = 'block'; // Hiển thị lại canvas
+    ctx.style.display = 'block'; 
     if (noDataMessage) {
         noDataMessage.style.display = 'none';
     }
@@ -140,7 +139,6 @@ window.updatePieChart = function (labels, values, title) {
     });
 };
 
-// Initialize tooltips (giữ nguyên logic ban đầu của bạn)
 document.addEventListener("DOMContentLoaded", function () {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
