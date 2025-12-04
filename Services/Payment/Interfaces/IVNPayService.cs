@@ -1,6 +1,6 @@
 ﻿using StoreBlazor.DTO.Payment;
 
-namespace StoreBlazor.Services.Payment.Interfaces
+namespace StoreBlazor.Services.Payment
 {
     public interface IVNPayService
     {

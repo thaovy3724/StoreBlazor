@@ -6,7 +6,7 @@ using StoreBlazor.Services.Admin.Interfaces;
 using StoreBlazor.Services.Client.Implementations;
 using StoreBlazor.Services.Client.Interfaces;
 using StoreBlazor.Services.Payment.Implementations;
-using StoreBlazor.Services.Payment.Interfaces;
+using StoreBlazor.Services.Payment;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);

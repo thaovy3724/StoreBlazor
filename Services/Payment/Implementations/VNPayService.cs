@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using StoreBlazor.DTO.Payment;
-using StoreBlazor.Services.Payment.Interfaces;
+using StoreBlazor.Services.Payment;
 using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
@@ -17,12 +17,22 @@ namespace StoreBlazor.Services.Payment.Implementations
             _configuration = configuration;
         }
 
+        private string GetConfigValue(params string[] keys)
+        {
+            foreach (var k in keys)
+            {
+                var v = _configuration[k];
+                if (!string.IsNullOrEmpty(v)) return v;
+            }
+            throw new InvalidOperationException($"Missing VNPay configuration. Searched keys: {string.Join(", ", keys)}");
+        }
+
         public string CreatePaymentUrl(VNPayRequestDto request)
         {
-            var vnp_TmnCode = _configuration["PaymentConfig:VNPay:TmnCode"];
-            var vnp_HashSecret = _configuration["PaymentConfig:VNPay:HashSecret"];
-            var vnp_Url = _configuration["PaymentConfig:VNPay:Url"];
-            var vnp_ReturnUrl = _configuration["PaymentConfig:VNPay:ReturnUrl"];
+            var vnp_TmnCode = GetConfigValue("VnPay:TmnCode", "PaymentConfig:VNPay:TmnCode");
+            var vnp_HashSecret = GetConfigValue("VnPay:HashSecret", "PaymentConfig:VNPay:HashSecret");
+            var vnp_Url = GetConfigValue("VnPay:BaseUrl", "PaymentConfig:VNPay:Url");
+            var vnp_ReturnUrl = GetConfigValue("VnPay:PaymentBackReturnUrl", "PaymentConfig:VNPay:ReturnUrl");
 
             // Tạo dữ liệu request
             var vnpay = new VNPayLibrary();
@@ -45,7 +55,10 @@ namespace StoreBlazor.Services.Payment.Implementations
 
         public VNPayResponseDto ProcessCallback(Dictionary<string, string> queryParams)
         {
-            var vnp_HashSecret = _configuration["PaymentConfig:VNPay:HashSecret"];
+            var vnp_HashSecret = _configuration["VnPay:HashSecret"] ?? _configuration["PaymentConfig:VNPay:HashSecret"];
+            if (string.IsNullOrEmpty(vnp_HashSecret))
+                throw new InvalidOperationException("Missing VNPay HashSecret configuration for callback validation.");
+
             var vnpay = new VNPayLibrary();
 
             foreach (var param in queryParams)
@@ -56,7 +69,12 @@ namespace StoreBlazor.Services.Payment.Implementations
                 }
             }
 
-            var vnp_SecureHash = queryParams["vnp_SecureHash"];
+            var vnp_SecureHash = queryParams.ContainsKey("vnp_SecureHash") ? queryParams["vnp_SecureHash"] : null;
+            if (string.IsNullOrEmpty(vnp_SecureHash))
+            {
+                return new VNPayResponseDto { Success = false, Message = "Missing vnp_SecureHash" };
+            }
+
             bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, vnp_HashSecret);
 
             if (!checkSignature)
@@ -68,18 +86,18 @@ namespace StoreBlazor.Services.Payment.Implementations
                 };
             }
 
-            var responseCode = queryParams["vnp_ResponseCode"];
-            var transactionStatus = queryParams["vnp_TransactionStatus"];
+            var responseCode = queryParams.ContainsKey("vnp_ResponseCode") ? queryParams["vnp_ResponseCode"] : "";
+            var transactionStatus = queryParams.ContainsKey("vnp_TransactionStatus") ? queryParams["vnp_TransactionStatus"] : "";
 
             return new VNPayResponseDto
             {
                 Success = responseCode == "00" && transactionStatus == "00",
-                OrderId = queryParams["vnp_TxnRef"],
+                OrderId = queryParams.ContainsKey("vnp_TxnRef") ? queryParams["vnp_TxnRef"] : "",
                 TransactionId = queryParams.ContainsKey("vnp_TransactionNo") ? queryParams["vnp_TransactionNo"] : "",
                 Message = responseCode == "00" ? "Giao dịch thành công" : "Giao dịch thất bại",
                 vnp_ResponseCode = responseCode,
                 vnp_TransactionStatus = transactionStatus,
-                vnp_TxnRef = queryParams["vnp_TxnRef"],
+                vnp_TxnRef = queryParams.ContainsKey("vnp_TxnRef") ? queryParams["vnp_TxnRef"] : "",
                 vnp_Amount = queryParams.ContainsKey("vnp_Amount") ? queryParams["vnp_Amount"] : "",
                 vnp_BankCode = queryParams.ContainsKey("vnp_BankCode") ? queryParams["vnp_BankCode"] : "",
                 vnp_OrderInfo = queryParams.ContainsKey("vnp_OrderInfo") ? queryParams["vnp_OrderInfo"] : ""
@@ -168,6 +186,9 @@ namespace StoreBlazor.Services.Payment.Implementations
 
         private string HmacSHA512(string key, string inputData)
         {
+            if (inputData == null) inputData = string.Empty;
+            if (key == null) throw new ArgumentNullException(nameof(key), "VNPay secret key is null. Check configuration.");
+
             var hash = new StringBuilder();
             var keyBytes = Encoding.UTF8.GetBytes(key);
             var inputBytes = Encoding.UTF8.GetBytes(inputData);

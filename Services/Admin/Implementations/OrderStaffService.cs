@@ -4,7 +4,7 @@ using StoreBlazor.DTO.Admin;
 using StoreBlazor.DTO.Payment;
 using StoreBlazor.Models;
 using StoreBlazor.Services.Admin.Interfaces;
-using StoreBlazor.Services.Payment.Interfaces;
+using StoreBlazor.Services.Payment;
 
 namespace StoreBlazor.Services.Admin.Implementations
 {
@@ -86,10 +86,10 @@ namespace StoreBlazor.Services.Admin.Implementations
         {
             if (string.IsNullOrWhiteSpace(keyword)) return new List<CustomerSuggestionDto>();
 
-            var kw = keyword.Trim().ToLower();
+            var kw = keyword.Trim();
 
             return await _dbContext.Customers
-                .Where(c => c.Phone != null && c.Phone.Contains(kw))
+                .Where(c => c.Phone != null && EF.Functions.Like(c.Phone, $"%{kw}%"))
                 .Take(5)
                 .Select(c => new CustomerSuggestionDto
                 {
@@ -373,6 +373,51 @@ namespace StoreBlazor.Services.Admin.Implementations
             {
                 await transaction.RollbackAsync();
                 return new ServiceResult { Type = "error", Message = "Có lỗi xảy ra: " + ex.Message };
+            }
+        }
+        public async Task<ServiceResult> UpdateOrderStatusAfterPaymentAsync(
+    int orderId,
+    PaymentMethod paymentMethod,
+    string transactionId)
+        {
+            try
+            {
+                var order = await _dbContext.Orders.FindAsync(orderId);
+
+                if (order == null)
+                {
+                    return new ServiceResult { Type = "error", Message = "Đơn hàng không tồn tại" };
+                }
+
+                // Cập nhật trạng thái đơn hàng
+                order.Status = OrderStatus.Paid;
+
+                // Tạo Payment record
+                var payment = new StoreBlazor.Models.Payment
+                {
+                    OrderId = orderId,
+                    Amount = order.TotalAmount - order.DiscountAmount,
+                    PaymentDate = DateTime.Now,
+                    PaymentMethod = paymentMethod
+                    // Có thể lưu transactionId vào field mới nếu cần
+                };
+
+                _dbContext.Payments.Add(payment);
+                await _dbContext.SaveChangesAsync();
+
+                return new ServiceResult
+                {
+                    Type = "success",
+                    Message = "Cập nhật trạng thái thành công"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult
+                {
+                    Type = "error",
+                    Message = "Lỗi cập nhật: " + ex.Message
+                };
             }
         }
     }

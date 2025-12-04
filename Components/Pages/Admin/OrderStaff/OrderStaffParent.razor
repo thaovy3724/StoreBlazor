@@ -1,6 +1,9 @@
 ﻿@page "/admin/orderstaff"
 @layout AdminLayout
 @inject IOrderStaffService service
+@inject IVNPayService vnpayService
+@inject IMoMoService momoService
+@inject NavigationManager Nav
 @inject IJSRuntime JS
 
 <div class="container-fluid p-1 vh-100">
@@ -141,10 +144,11 @@
                     <div class="mb-3">
                         <label class="form-label fw-medium">Khách hàng</label>
                         <div class="input-group">
-                            <input type="text" class="form-control" 
+                            <!-- input: đảm bảo binding cập nhật trên oninput -->
+                            <input type="text" class="form-control"
                                    placeholder="Nhập số điện thoại"
                                    @bind="customerPhone"
-                                   @oninput="SearchCustomer">
+                                   @bind:event="oninput" />
                             <button class="btn btn-outline-primary" 
                                     data-bs-toggle="modal" 
                                     data-bs-target="#modalAddCustomer">
@@ -223,6 +227,42 @@
         </div>
     </div>
 </div>
+<!-- Modal hiển thị kết quả thanh toán -->
+<div class="modal fade" id="modalPaymentResult" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="ClosePaymentResultModal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                @if (paymentResult != null)
+                {
+                    @if (paymentResult.Success)
+                    {
+                        <i class="bi bi-check-circle text-success" style="font-size: 5rem;"></i>
+                        <h4 class="mt-3 fw-bold text-success">Thanh toán thành công!</h4>
+                        <p class="text-muted mb-2">Mã đơn hàng: <strong>#@paymentResult.OrderId</strong></p>
+                        @if (!string.IsNullOrEmpty(paymentResult.TransactionId))
+                        {
+                            <p class="text-muted">Mã giao dịch: <strong>@paymentResult.TransactionId</strong></p>
+                        }
+                    }
+                    else
+                    {
+                        <i class="bi bi-x-circle text-danger" style="font-size: 5rem;"></i>
+                        <h4 class="mt-3 fw-bold text-danger">Thanh toán thất bại!</h4>
+                        <p class="text-muted">@paymentResult.Message</p>
+                    }
+                }
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal" @onclick="ClosePaymentResultModal">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Form Modal -->
 <OrderStaffForm Promotions="@promotions"
                 TotalAmount="@TotalAmount"
@@ -231,6 +271,7 @@
                 OnCustomerAdded="HandleCustomerAdded"
                 OnPromotionSelected="HandlePromotionSelected"
                 OnPaymentConfirmed="ProcessPayment" />
+
 @code {
     // ===== STATE =====
     private List<ProductCardDto> products = new();
@@ -238,16 +279,33 @@
     private List<CartItemDto> cartItems = new();
     private List<PromotionDto> promotions = new();
     private List<CustomerSuggestionDto> customerSuggestions = new();
+
     private CustomerSuggestionDto? selectedCustomer;
     private PromotionDto? selectedPromotion;
 
     private int? selectedCategoryId = -1;
     private string searchKeyword = string.Empty;
-    private string customerPhone = string.Empty;
+
+    private string _customerPhone = string.Empty;
+    private string customerPhone
+    {
+        get => _customerPhone;
+        set
+        {
+            if (_customerPhone == value) return;
+            _customerPhone = value;
+            // Chạy SearchCustomer trên UI sync context để Blazor re-render sau khi hoàn tất
+            _ = InvokeAsync(SearchCustomer);
+        }
+    }
+
     private bool showScanner = false;
 
     private int CurrentPage = 1;
     private int TotalPages = 1;
+
+    // Payment Result
+    private PaymentResultDto? paymentResult;
 
     // ===== COMPUTED =====
     private decimal TotalAmount => cartItems.Sum(c => c.Subtotal);
@@ -260,6 +318,83 @@
         categories = await service.GetAllCategoriesAsync();
         promotions = await service.GetActivePromotionsAsync();
         await LoadProductsAsync(1);
+
+        // Xử lý callback từ VNPay/MoMo
+        await HandlePaymentCallbackAsync();
+    }
+
+    // ===== XỬ LÝ CALLBACK =====
+    private async Task HandlePaymentCallbackAsync()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        // Check VNPay callback
+        if (query.AllKeys.Contains("vnp_ResponseCode"))
+        {
+            var queryParams = query.AllKeys.ToDictionary(k => k ?? "", k => query[k] ?? "");
+            var response = vnpayService.ProcessCallback(queryParams);
+
+            paymentResult = new PaymentResultDto
+            {
+                Success = response.Success,
+                OrderId = response.OrderId,
+                TransactionId = response.TransactionId,
+                Message = response.Message
+            };
+
+            if (response.Success)
+            {
+                // Cập nhật trạng thái đơn hàng
+                await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(response.OrderId), PaymentMethod.BankTransfer, response.TransactionId);
+            }
+
+            // Hiển thị modal kết quả
+            await ShowPaymentResultModal();
+
+            // Xóa query params khỏi URL
+            Nav.NavigateTo("/admin/orderstaff", false);
+        }
+        // Check MoMo callback
+        else if (query.AllKeys.Contains("resultCode"))
+        {
+            var resultCode = query["resultCode"];
+            var orderId = query["orderId"] ?? "";
+            var transId = query["transId"] ?? "";
+
+            paymentResult = new PaymentResultDto
+            {
+                Success = resultCode == "0",
+                OrderId = orderId,
+                TransactionId = transId,
+                Message = resultCode == "0" ? "Thanh toán thành công" : "Thanh toán thất bại"
+            };
+
+            if (paymentResult.Success)
+            {
+                // Cập nhật trạng thái đơn hàng
+                await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(orderId), PaymentMethod.EWallet, transId);
+            }
+
+            // Hiển thị modal kết quả
+            await ShowPaymentResultModal();
+
+            // Xóa query params khỏi URL
+            Nav.NavigateTo("/admin/orderstaff", false);
+        }
+    }
+
+    private async Task ShowPaymentResultModal()
+    {
+        await Task.Delay(100); // Đợi render xong
+        await JS.InvokeVoidAsync("showModal", "modalPaymentResult");
+    }
+
+    private async Task ClosePaymentResultModal()
+    {
+        paymentResult = null;
+        ClearCart();
+        await LoadProductsAsync(CurrentPage);
     }
 
     // ===== PRODUCT METHODS =====
@@ -360,10 +495,12 @@
         {
             customerSuggestions.Clear();
             selectedCustomer = null;
+            await InvokeAsync(StateHasChanged);
             return;
         }
-        await JS.InvokeVoidAsync("console.log", customerSuggestions);
+
         customerSuggestions = await service.SearchCustomerAsync(customerPhone);
+        await InvokeAsync(StateHasChanged);
     }
 
     private void SelectCustomer(CustomerSuggestionDto customer)
@@ -380,7 +517,6 @@
 
         if (result.Type == "success")
         {
-            // Tự động chọn khách vừa thêm
             selectedCustomer = new CustomerSuggestionDto
             {
                 CustomerId = customer.CustomerId,
@@ -418,30 +554,42 @@
             }).ToList()
         };
 
-        // TODO: Get userId from session/auth
+        // Get IP Address
+        var ipAddress = "127.0.0.1"; // TODO: Get from HttpContext
+
+        // Get userId from session (TODO: implement auth)
         int userId = 1;
 
-        if (paymentMethod == PaymentMethod.Cash || paymentMethod == PaymentMethod.Card)
-        {
-            var result = await service.CreateOrderAsync(orderDto, userId);
-            await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
+        var result = await service.CreateOrderWithPaymentAsync(orderDto, userId, ipAddress);
 
-            if (result.Type == "success")
+        if (result.Type == "success")
+        {
+            // Nếu là VNPay/MoMo, result.Message chứa URL redirect
+            if (paymentMethod == PaymentMethod.BankTransfer || paymentMethod == PaymentMethod.EWallet)
             {
+                // Redirect đến cổng thanh toán (sẽ callback về /admin/orderstaff)
+                Nav.NavigateTo(result.Message, true);
+            }
+            else
+            {
+                // Thanh toán trực tiếp (Cash/Card)
+                await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
                 ClearCart();
                 await LoadProductsAsync(CurrentPage);
             }
         }
-        else if (paymentMethod == PaymentMethod.BankTransfer || paymentMethod == PaymentMethod.EWallet)
+        else
         {
-            var result = await service.CreateOrderWithPaymentAsync(orderDto, userId, "127.0.0.1");
             await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
-
-            if (result.Type == "success")
-            {
-                ClearCart();
-                await LoadProductsAsync(CurrentPage);
-            }
         }
+    }
+
+    // ===== DTO FOR PAYMENT RESULT =====
+    private class PaymentResultDto
+    {
+        public bool Success { get; set; }
+        public string OrderId { get; set; } = string.Empty;
+        public string TransactionId { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
     }
 }

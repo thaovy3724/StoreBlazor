@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using StoreBlazor.DTO.Payment;
-using StoreBlazor.Services.Payment.Interfaces;
+using StoreBlazor.Services.Payment;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -18,14 +18,24 @@ namespace StoreBlazor.Services.Payment.Implementations
             _httpClient = httpClient;
         }
 
+        private string GetConfigValue(params string[] keys)
+        {
+            foreach (var k in keys)
+            {
+                var v = _configuration[k];
+                if (!string.IsNullOrEmpty(v)) return v;
+            }
+            throw new InvalidOperationException($"Missing MoMo configuration. Searched keys: {string.Join(", ", keys)}");
+        }
+
         public async Task<MoMoResponseDto> CreatePaymentAsync(MoMoRequestDto request)
         {
-            var partnerCode = _configuration["PaymentConfig:MoMo:PartnerCode"];
-            var accessKey = _configuration["PaymentConfig:MoMo:AccessKey"];
-            var secretKey = _configuration["PaymentConfig:MoMo:SecretKey"];
-            var endpoint = _configuration["PaymentConfig:MoMo:Endpoint"];
-            var returnUrl = _configuration["PaymentConfig:MoMo:ReturnUrl"];
-            var ipnUrl = _configuration["PaymentConfig:MoMo:IpnUrl"];
+            var partnerCode = GetConfigValue("MoMo:PartnerCode", "PaymentConfig:MoMo:PartnerCode");
+            var accessKey = GetConfigValue("MoMo:AccessKey", "PaymentConfig:MoMo:AccessKey");
+            var secretKey = GetConfigValue("MoMo:SecretKey", "PaymentConfig:MoMo:SecretKey");
+            var endpoint = GetConfigValue("MoMo:Endpoint", "PaymentConfig:MoMo:Endpoint");
+            var returnUrl = GetConfigValue("MoMo:ReturnUrl", "PaymentConfig:MoMo:ReturnUrl");
+            var ipnUrl = GetConfigValue("MoMo:IpnUrl", "PaymentConfig:MoMo:IpnUrl");
 
             var requestId = Guid.NewGuid().ToString();
             var orderId = request.OrderId;
@@ -90,7 +100,9 @@ namespace StoreBlazor.Services.Payment.Implementations
 
         public bool ValidateSignature(Dictionary<string, string> data, string signature)
         {
-            var secretKey = _configuration["PaymentConfig:MoMo:SecretKey"];
+            var secretKey = _configuration["MoMo:SecretKey"] ?? _configuration["PaymentConfig:MoMo:SecretKey"];
+            if (string.IsNullOrEmpty(secretKey))
+                throw new InvalidOperationException("Missing MoMo SecretKey configuration for signature validation.");
 
             var rawHash = $"accessKey={data["accessKey"]}&amount={data["amount"]}&extraData={data["extraData"]}&message={data["message"]}&orderId={data["orderId"]}&orderInfo={data["orderInfo"]}&orderType={data["orderType"]}&partnerCode={data["partnerCode"]}&payType={data["payType"]}&requestId={data["requestId"]}&responseTime={data["responseTime"]}&resultCode={data["resultCode"]}&transId={data["transId"]}";
 
@@ -101,6 +113,9 @@ namespace StoreBlazor.Services.Payment.Implementations
 
         private string HmacSHA256(string inputData, string key)
         {
+            if (inputData == null) inputData = string.Empty;
+            if (key == null) throw new ArgumentNullException(nameof(key), "MoMo secret key is null. Check configuration.");
+
             var keyBytes = Encoding.UTF8.GetBytes(key);
             var inputBytes = Encoding.UTF8.GetBytes(inputData);
 
