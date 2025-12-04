@@ -42,6 +42,13 @@ window.showModal = function (modalId) {
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
 }
+window.replaceUrl = (url) => {
+    try {
+        history.replaceState(null, '', url);
+    } catch (e) {
+        console.error('replaceUrl error', e);
+    }
+};
 ﻿// Sử dụng thư viện JsBarcode
 window.generateBarcode = function (barcodeValue) {
     try {
