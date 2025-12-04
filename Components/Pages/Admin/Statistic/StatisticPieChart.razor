@@ -1,0 +1,124 @@
+﻿@using StoreBlazor.DTO.Statistic
+@inject IJSRuntime JS
+
+<div class="col-md-4 border rounded-3 p-3 bg-white">
+    @* Biểu đồ thống kê TOP  *@
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-start align-items-center mb-2 w-100">
+                <label for="startDatePie" class="me-2 d-flex justify-content-center align-items-center">
+                    Ngày:
+                </label>
+                <input type="date"
+                       id="startDatePie"
+                       @bind="StartDate"
+                       @bind:after="OnFilterChange"
+                       style="max-width: 170px;"
+                       class="form-control me-2">
+                <span class="fs-3 me-2">-</span>
+                <input type="date"
+                       id="endDatePie"
+                       @bind="EndDate"
+                       @bind:after="OnFilterChange"
+                       style="max-width: 170px;"
+                       class="form-control me-2">
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="input-group rounded-3">
+                @* Nút Top  *@
+                <span class="input-group-text">Top</span>
+                @* Input nhập số  *@
+                <input type="number"
+                       id="topLimit"
+                       @bind="TopLimit"
+                       @bind:after="OnFilterChange"
+                       class="form-control"
+                       style="max-width: 60px;"
+                       min="1"
+                       max="5">
+                @* Select menu  *@
+                <select class="form-select"
+                        id="topType"
+                        @bind="TopType"
+                        @bind:after="OnFilterChange"
+                        style="max-width: 306px;">
+                    <option value="1">Sản phẩm bán chạy nhất</option>
+                    <option value="2">Sản phẩm ít bán chạy nhất</option>
+                    <option value="3">Khách hàng chi tiêu nhiều nhất</option>
+                    <option value="4">Khách hàng chi tiêu ít nhất</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <canvas id="myChartTop"></canvas>
+
+            <div id="noDataMessageTop"
+                 class="mt-5 text-secondary fw-bold text-center"
+                 style="display: flex; justify-content: center; align-items: center; height: 350px;">
+                Không có dữ liệu thống kê.
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<(int type, int limit, DateTime? start, DateTime? end)> OnFilterChanged { get; set; }
+
+    private int TopType = 1;
+    private int TopLimit = 5;
+    private DateTime? StartDate;
+    private DateTime? EndDate;
+    private bool isChartInitialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isChartInitialized = true;
+            await LoadChart();
+        }
+    }
+
+    private async Task OnFilterChange()
+    {
+        if (isChartInitialized)
+        {
+            await LoadChart();
+        }
+    }
+
+    private async Task LoadChart()
+    {
+        await OnFilterChanged.InvokeAsync((TopType, TopLimit, StartDate, EndDate));
+    }
+
+    public async Task UpdateChart(List<TopDataDTO> data)
+    {
+        if (TopLimit > 5)
+        {
+            await JS.InvokeVoidAsync("showAlert", "Giới hạn quá lớn! Tối đa là 5", "warning");
+            return;
+        }
+
+        var labels = data.Select(x => x.Label).ToArray();
+        var values = data.Select(x => x.Value).ToArray();
+        var title = GetTopTitle(TopType);
+
+        await JS.InvokeVoidAsync("updatePieChart", labels, values, title);
+    }
+
+    private string GetTopTitle(int type)
+    {
+        return type switch
+        {
+            1 => "Top sản phẩm bán chạy nhất",
+            2 => "Top sản phẩm ít bán chạy nhất",
+            3 => "Top khách hàng chi tiêu nhiều nhất",
+            4 => "Top khách hàng chi tiêu ít nhất",
+            _ => "Biểu đồ TOP"
+        };
+    }
+}

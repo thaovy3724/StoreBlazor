@@ -1,0 +1,369 @@
+﻿@using StoreBlazor.DTO.Admin.Product
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form id="ProductForm" @onsubmit:preventDefault="true" @onsubmit="HandleOnSubmit">
+
+                <!-- Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalTitle">
+                        @((IsDetailMode ? "Xem" : IsEditMode ? "Sửa" : "Thêm mới") + " sản phẩm")
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="HandleOnClose"></button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- hình ảnh -->
+                        <div class="col-md-3 text-center">
+                            <div id="image-preview" class="mb-3" style="min-height: 150px; display: flex; align-items: center; justify-content: center; border: 2px dashed #ddd; border-radius: 4px; padding: 10px;">
+                                @if (IsLoadingImage)
+                                {
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Đang tải...</span>
+                                    </div>
+                                }
+                                else if (!string.IsNullOrEmpty(Model?.ProductImage))
+                                {
+                                    string imgSrc = Model.ProductImage.StartsWith("data:", StringComparison.OrdinalIgnoreCase)
+                                    ? Model.ProductImage
+                                    : $"/uploads/{Model.ProductImage}";
+
+                                    <img src="@imgSrc" style="width:100%; height:auto; border-radius:4px;" alt="Product Image" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Click để tải ảnh</span>
+                                }
+                            </div>
+                            @if (!IsDetailMode)
+                            {
+                                <InputFile OnChange="@HandleImageChange"
+                                           id="product-image"
+                                           class="@($"hidden-input {(ProductImageError != null ? "is-invalid" : "")}")"
+                                           accept="image/*" />
+
+                                @if (ProductImageError != null)
+                                {
+                                    <div class="text-danger small mt-1">@ProductImageError</div>
+                                }
+
+                                <button type="button" class="btn btn-primary w-100" id="upload-btn" disabled="@IsLoadingImage">
+                                    <i class="bi bi-upload"></i>
+                                    @(IsLoadingImage ? "Đang tải..." : "Tải ảnh lên")
+                                </button>
+                            }
+                        </div>
+
+                        <!-- thông tin sản phẩm -->
+                        <div class="col-md-9">
+                            <div class="mb-3">
+                                <label class="form-label">Tên sản phẩm</label>
+                                <input type="text" @bind="Model.ProductName" readonly="@(IsDetailMode)"
+                                       class="form-control @(ProductNameError != null ? "is-invalid" : "")"
+                                       name="ProductName" id="product-name" placeholder="Nhập tên sản phẩm">
+                                <div class="invalid-feedback">@ProductNameError</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Loại sản phẩm</label>
+                                <select class="form-select @(CategoryNameError != null ? "is-invalid" : "")"
+                                        @bind="Model.CategoryId" disabled="@(IsDetailMode)"
+                                        name="CategoryId" id="product-category">
+                                    <option value="-1">-- Chọn loại sản phẩm --</option>
+                                    @foreach (var category in Categories)
+                                    {
+                                        <option value="@category.CategoryId">@category.CategoryName</option>
+                                    }
+                                </select>
+                                <div class="invalid-feedback">@CategoryNameError</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Giá</label>
+                                <input type="number" @bind="Model.Price" readonly="@(IsDetailMode)"
+                                       class="form-control @(PriceError != null ? "is-invalid" : "")"
+                                       name="Price" id="product-price" placeholder="Nhập giá">
+                                <div class="invalid-feedback">@PriceError</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Đơn vị</label>
+                                <input type="text" @bind="Model.Unit" readonly="@(IsDetailMode)"
+                                       class="form-control @(UnitError != null ? "is-invalid" : "")"
+                                       name="Unit" id="product-unit" placeholder="Nhập đơn vị">
+                                <div class="invalid-feedback">@UnitError</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Barcode</label>
+                                <input type="text" @bind="Model.Barcode" readonly="@(IsDetailMode)"
+                                       class="form-control @(BarcodeError != null ? "is-invalid" : "")"
+                                       name="Barcode" id="product-barcode" placeholder="Nhập barcode">
+                                <div class="invalid-feedback">@BarcodeError</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Tồn kho</label>
+                                <input type="number" @bind="Model.Inventory.Quantity" readonly="@(IsDetailMode)"
+                                       class="form-control @(QuantityError != null ? "is-invalid" : "")"
+                                       name="InventoryQuantity" id="product-inventory" placeholder="Nhập tồn kho">
+                                <div class="invalid-feedback">@QuantityError</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="product-supplier">Nhà cung cấp</label>
+                                <select class="form-select @(SupplierIdNameError != null ? "is-invalid" : "")"
+                                        @bind="Model.SupplierId" disabled="@(IsDetailMode)"
+                                        name="SupplierId" id="product-supplier">
+                                    <option value="-1">-- Chọn nhà cung cấp --</option>
+                                    @foreach (var supplier in Suppliers)
+                                    {
+                                        <option value="@supplier.SupplierId">@supplier.Name</option>
+                                    }
+                                </select>
+                                <div class="invalid-feedback">@SupplierIdNameError</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                @if (!IsDetailMode)
+                {
+                    <div class="modal-footer">
+                        <button type="submit" id="productModalSaveBtn"
+                                class="btn btn-primary"
+                                disabled="@IsLoadingImage">
+                            Lưu
+                        </button>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Inject] IJSRuntime JS { get; set; }
+
+    [Parameter]
+    public ProductFormDto? Model { get; set; } = new();
+
+    [Parameter]
+    public bool IsEditMode { get; set; }
+
+    [Parameter]
+    public bool IsDetailMode { get; set; }
+
+    [Parameter]
+    public List<Category> Categories { get; set; } = new();
+
+    [Parameter]
+    public List<Supplier> Suppliers { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    // Loading state
+    private bool IsLoadingImage = false;
+
+    private void HandleOnClose()
+    {
+        ClearErrors();
+        IsLoadingImage = false;
+        OnClose.InvokeAsync();
+    }
+
+    // ==== ONSUBMIT ====
+    [Parameter]
+    public EventCallback<ProductFormDto> OnSave { get; set; }
+
+    private async Task HandleOnSubmit()
+    {
+        if (ValidateForm())
+        {
+            await OnSave.InvokeAsync(Model);
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    // ==== ERROR HANDLING ====
+    private string? ProductImageError;
+    private string? ProductNameError;
+    private string? CategoryNameError;
+    private string? PriceError;
+    private string? UnitError;
+    private string? BarcodeError;
+    private string? QuantityError;
+    private string? SupplierIdNameError;
+
+    private void ClearErrors()
+    {
+        ProductImageError = null;
+        ProductNameError = null;
+        CategoryNameError = null;
+        PriceError = null;
+        UnitError = null;
+        BarcodeError = null;
+        QuantityError = null;
+        SupplierIdNameError = null;
+    }
+
+    private bool ValidateForm()
+    {
+        ClearErrors();
+        bool isValid = true;
+
+        // Validation cho CREATE: Bắt buộc phải có ImageFile
+        if (!IsEditMode)
+        {
+            if (Model?.ImageFile == null)
+            {
+                ProductImageError = "Vui lòng tải ảnh sản phẩm";
+                isValid = false;
+            }
+        }
+        // Validation cho EDIT: Phải có ít nhất ProductImage (ảnh cũ) hoặc ImageFile (ảnh mới)
+        else
+        {
+            if (string.IsNullOrWhiteSpace(Model?.ProductImage) && Model?.ImageFile == null)
+            {
+                ProductImageError = "Vui lòng tải ảnh sản phẩm";
+                isValid = false;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(Model?.ProductName))
+        {
+            ProductNameError = "Tên sản phẩm không được để trống";
+            isValid = false;
+        }
+
+        if (Model?.CategoryId == null || Model.CategoryId == -1)
+        {
+            CategoryNameError = "Vui lòng chọn loại sản phẩm";
+            isValid = false;
+        }
+
+        if (Model?.Price == null || Model.Price <= 0)
+        {
+            PriceError = "Giá phải là số dương";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(Model?.Unit))
+        {
+            UnitError = "Đơn vị không được để trống";
+            isValid = false;
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(Model.Unit, @"^[a-zA-ZÀ-ỹ\s]+$"))
+        {
+            UnitError = "Đơn vị chỉ được chứa chữ";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(Model?.Barcode))
+        {
+            BarcodeError = "Barcode không được để trống";
+            isValid = false;
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(Model.Barcode, @"^[0-9]+$"))
+        {
+            BarcodeError = "Barcode chỉ được chứa số";
+            isValid = false;
+        }
+
+        if (Model?.Inventory?.Quantity == null || Model.Inventory.Quantity < 0)
+        {
+            QuantityError = "Tồn kho phải là số nguyên dương";
+            isValid = false;
+        }
+
+        if (Model?.SupplierId == null || Model.SupplierId == -1)
+        {
+            SupplierIdNameError = "Vui lòng chọn nhà cung cấp";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // === XỬ LÝ ẢNH - OPTIMIZED ===
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("product.initUploadButton");
+        }
+    }
+
+    private async Task HandleImageChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file == null)
+            return;
+
+        // 1. Kiểm tra kích thước file (max 5MB)
+        const long maxFileSize = 5 * 1024 * 1024; // 5MB
+        if (file.Size > maxFileSize)
+        {
+            ProductImageError = "Kích thước ảnh không được vượt quá 5MB";
+            StateHasChanged();
+            return;
+        }
+
+        // 2. Kiểm tra định dạng file
+        var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType.ToLower()))
+        {
+            ProductImageError = "Chỉ chấp nhận file ảnh (JPG, PNG, GIF, WEBP)";
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            // 3. Hiển thị loading
+            IsLoadingImage = true;
+            ProductImageError = null;
+            StateHasChanged();
+
+            // 4. Đọc file với buffer size tối ưu (512KB chunks)
+            const int bufferSize = 512 * 1024;
+            using var memoryStream = new MemoryStream();
+            using var stream = file.OpenReadStream(maxFileSize);
+
+            var buffer = new byte[bufferSize];
+            int bytesRead;
+
+            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            {
+                await memoryStream.WriteAsync(buffer, 0, bytesRead);
+            }
+
+            // 5. Chuyển sang Base64 để preview
+            var imageBytes = memoryStream.ToArray();
+            var base64 = Convert.ToBase64String(imageBytes);
+
+            // 6. Cập nhật Model
+            Model.ImageFile = file;
+            Model.ProductImage = $"data:{file.ContentType};base64,{base64}";
+
+            // 7. Tắt loading
+            IsLoadingImage = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            ProductImageError = $"Lỗi khi tải ảnh: {ex.Message}";
+            IsLoadingImage = false;
+            StateHasChanged();
+        }
+    }
+}

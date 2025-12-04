@@ -69,6 +69,53 @@ namespace StoreBlazor.Services.Admin.Implementations
 
             return dto;
         }
+        public Task<PageResult<OrderTableDto>> FilterAsync(string keyword, int status, decimal? priceFrom, decimal? priceTo, int page)
+        {
+            var query = _dbContext.Orders
+                .Include(o => o.Customer)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                if (int.TryParse(keyword, out int orderId))
+                {
+                    query = query.Where(o => o.OrderId == orderId);
+                }
+                else
+                {
+                    query = query.Where(o => o.Customer != null && o.Customer.Name.Contains(keyword)
+                                          || o.Customer == null && "Khách lẻ".Contains(keyword));
+                }
+            }
+
+            if (status != -1)
+            {
+                query = query.Where(o => (int)o.Status == status);
+            }
+
+            if (priceFrom.HasValue)
+            {
+                query = query.Where(o => o.TotalAmount >= priceFrom.Value);
+            }
+
+            if (priceTo.HasValue)
+            {
+                query = query.Where(o => o.TotalAmount <= priceTo.Value);
+            }
+
+            query = query.OrderByDescending(o => o.OrderDate);
+
+            var dtoQuery = query.Select(o => new OrderTableDto
+            {
+                OrderId = o.OrderId,
+                CustomerName = o.Customer != null ? o.Customer.Name : "Khách lẻ",
+                OrderDate = o.OrderDate,
+                TotalAmount = o.TotalAmount,
+                Status = o.Status
+            });
+
+            return GetPagedAsync<OrderTableDto>(dtoQuery, page);
+        }
 
 
 

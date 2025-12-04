@@ -12,6 +12,8 @@ namespace StoreBlazor.Services.Admin.Interfaces
         Task<ServiceResult> ApproveAsync(int orderId);
         Task<ServiceResult> CancelAsync(int orderId);
         Task<OrderDetailDto?> GetOrderDetailAsync(int orderId);
-
+        Task<PageResult<OrderTableDto>> FilterAsync(string keyword, int status, decimal? priceFrom, decimal? priceTo, int page);
     }
+
 }
+

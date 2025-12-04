@@ -153,8 +153,9 @@
             // submit data
             await OnSave.InvokeAsync(Model);
         }
+        else
         {
-         StateHasChanged(); 
+            StateHasChanged();
         }
     }
 

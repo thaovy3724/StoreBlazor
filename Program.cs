@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using StoreBlazor.Components;
 using StoreBlazor.Data;
@@ -27,10 +28,15 @@ builder.Services.AddScoped<IVNPayService, VNPayService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IMoMoService, MoMoService>();
 
+builder.Services.AddScoped<IProductManagerService, ProductManagerService>();
+builder.Services.AddScoped<IStatisticService, StatisticService>();
 
 builder.Services.AddScoped<IProductService, ProductService>();
 
-
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10485760; // 10MB
+});
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
