@@ -2,7 +2,7 @@
 @inject IJSRuntime JS
 
 <div class="col-md-4 border rounded-3 p-3 bg-white">
-    <!-- Biểu đồ thống kê TOP -->
+    @* Biểu đồ thống kê TOP  *@
     <div class="row">
         <div class="col-md-12">
             <div class="d-flex justify-content-start align-items-center mb-2 w-100">
@@ -26,9 +26,9 @@
         </div>
         <div class="col-md-12">
             <div class="input-group rounded-3">
-                <!-- Nút "Top" -->
+                @* Nút Top  *@
                 <span class="input-group-text">Top</span>
-                <!-- Input nhập số -->
+                @* Input nhập số  *@
                 <input type="number"
                        id="topLimit"
                        @bind="TopLimit"
@@ -37,7 +37,7 @@
                        style="max-width: 60px;"
                        min="1"
                        max="5">
-                <!-- Select menu -->
+                @* Select menu  *@
                 <select class="form-select"
                         id="topType"
                         @bind="TopType"
@@ -82,7 +82,6 @@
         }
     }
 
-    // Hàm này sẽ được gọi mỗi khi user thay đổi bất kỳ filter nào
     private async Task OnFilterChange()
     {
         if (isChartInitialized)

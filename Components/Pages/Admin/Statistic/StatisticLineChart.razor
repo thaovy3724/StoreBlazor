@@ -47,11 +47,10 @@
     private DateTime? StartDate;
     private DateTime? EndDate;
 
-    // CÁC TRƯỜNG MỚI ĐỂ LƯU TRỮ DỮ LIỆU
     private object[]? ChartLabels;
     private object[]? ChartValues;
     private string? ChartTitle;
-    private bool shouldUpdateChart = false; // Cờ kiểm soát việc gọi JS Interop
+    private bool shouldUpdateChart = false; 
 
     private bool isChartInitialized = false;
 
@@ -60,15 +59,14 @@
         if (firstRender)
         {
             SelectedYear = DateTime.Now.Year;
-            isChartInitialized = true; // Đánh dấu canvas đã sẵn sàng
+            isChartInitialized = true; 
         }
 
-        // Chỉ gọi JS khi canvas đã được render và có dữ liệu
         if (isChartInitialized && shouldUpdateChart && ChartLabels != null && ChartValues != null)
         {
             try
             {
-                await Task.Delay(100); // Đợi một chút để chắc chắn canvas sẵn sàng
+                await Task.Delay(100); 
                 await JS.InvokeVoidAsync("updateLineChart", ChartLabels, ChartValues, ChartTitle);
                 shouldUpdateChart = false;
             }
