@@ -1,0 +1,200 @@
+﻿/* Order */
+.product-card {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+    .product-card img {
+        max-width: 100%;
+        height: 150px;
+        object-fit: cover;
+        margin-bottom: 10px;
+    }
+
+    .product-card p {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
+    }
+
+.product-price {
+    background: linear-gradient(30deg, rgba(4, 96, 235, 0.25), rgba(13,110,253,0.1));
+    /* background:rgb(5, 13, 40); */
+    color: #012a68;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.total-box {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 5px;
+}
+/* Hiệu ứng khi chọn sản phẩm */
+.product-card.selected {
+    border: 1px solid #0d6efd;
+}
+
+.product-card {
+    cursor: pointer;
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    border-radius: 6px;
+}
+
+    .product-card:hover {
+        box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    }
+/* ScollPane Cart */
+.cart-wrapper {
+    max-height: 370px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+    .cart-wrapper::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .cart-wrapper::-webkit-scrollbar-thumb {
+        background-color: #ccc;
+        border-radius: 10px;
+    }
+
+        .cart-wrapper::-webkit-scrollbar-thumb:hover {
+            background-color: #999;
+        }
+/* Barcode */
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#reader {
+    width: 600px;
+}
+
+#result {
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+#reader__dashboard_section {
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
+    font-family: "Segoe UI", Roboto, sans-serif;
+}
+
+#reader__dashboard_section_csr {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+#html5-qrcode-select-camera {
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 5px 10px;
+    background-color: #fff;
+    font-size: 0.9rem;
+    color: #212529;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+    #html5-qrcode-select-camera:hover {
+        border-color: #0d6efd;
+    }
+
+#html5-qrcode-button-camera-start,
+#html5-qrcode-button-camera-stop {
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+#html5-qrcode-button-camera-start {
+    background-color: #0d6efd;
+}
+
+    #html5-qrcode-button-camera-start:hover {
+        background-color: #0b5ed7;
+    }
+
+#html5-qrcode-button-camera-stop {
+    background-color: #dc3545;
+}
+
+    #html5-qrcode-button-camera-stop:hover {
+        background-color: #bb2d3b;
+    }
+
+#html5-qrcode-input-range-zoom {
+    accent-color: #0d6efd;
+    width: 120px !important;
+    height: 6px;
+    border-radius: 10px;
+}
+
+#reader__dashboard_section label button,
+#html5-qrcode-button-file-selection {
+    border: 1px solid #ced4da;
+    background: #e9ecef;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #212529;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+    #reader__dashboard_section label button:hover,
+    #html5-qrcode-button-file-selection:hover {
+        background: #dee2e6;
+        border-color: #adb5bd;
+    }
+
+#reader__dashboard_section div[style*="border: 6px dashed"] {
+    border: 2px dashed #adb5bd !important;
+    border-radius: 8px;
+    background-color: #fff;
+    padding: 12px;
+    color: #6c757d;
+    font-size: 0.9rem;
+    width: 90% !important;
+    max-width: 500px;
+}
+
+#html5-qrcode-anchor-scan-type-change {
+    display: none !important;
+}
+
+    #html5-qrcode-anchor-scan-type-change:hover {
+        color: #0b5ed7 !important;
+        text-decoration: none !important;
+    }

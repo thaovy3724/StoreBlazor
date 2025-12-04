@@ -134,9 +134,6 @@ namespace StoreBlazor.Migrations
                         .HasColumnType("int")
                         .HasColumnName("promo_id");
 
-                    b.Property<int?>("PromotionPromoId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -155,7 +152,7 @@ namespace StoreBlazor.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("PromotionPromoId");
+                    b.HasIndex("PromoId");
 
                     b.HasIndex("UserId");
 
@@ -446,7 +443,8 @@ namespace StoreBlazor.Migrations
 
                     b.HasOne("StoreBlazor.Models.Promotion", "Promotion")
                         .WithMany("Orders")
-                        .HasForeignKey("PromotionPromoId");
+                        .HasForeignKey("PromoId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("StoreBlazor.Models.User", "User")
                         .WithMany()

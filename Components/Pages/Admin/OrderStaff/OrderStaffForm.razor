@@ -1,0 +1,368 @@
+﻿@inject IJSRuntime JS
+
+<!-- ==================== MODAL THÊM KHÁCH HÀNG ==================== -->
+<div class="modal fade" id="modalAddCustomer" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Tên khách hàng*</label>
+                    <input type="text" class="form-control @(NameError != null ? "is-invalid" : "")"
+                           @bind="NewCustomer.Name">
+                    <div class="invalid-feedback">@NameError</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại*</label>
+                    <input type="text" class="form-control @(PhoneError != null ? "is-invalid" : "")"
+                           @bind="NewCustomer.Phone">
+                    <div class="invalid-feedback">@PhoneError</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" @bind="NewCustomer.Email">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Địa chỉ</label>
+                    <textarea class="form-control" rows="3" @bind="NewCustomer.Address"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" @onclick="SubmitAddCustomer">
+                    Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODAL KHUYẾN MÃI ==================== -->
+<div class="modal fade" id="modalPromotion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Danh sách khuyến mãi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr class="text-center">
+                            <th style="width: 50px;">Chọn</th>
+                            <th>Mã KM</th>
+                            <th>Mô tả</th>
+                            <th>Đơn tối thiểu</th>
+                            <th>Giá trị</th>
+                            <th>Hết hạn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var promo in Promotions)
+                        {
+                            var isApplicable = promo.IsApplicable(TotalAmount);
+                            <tr class="@(!isApplicable ? "table-secondary" : "")">
+                                <td class="text-center">
+                                    <input type="radio" name="selectedPromo"
+                                           value="@promo.PromoId"
+                                           disabled="@(!isApplicable)"
+                                           checked="@(TempSelectedPromoId == promo.PromoId)"
+                                           @onchange="() => TempSelectedPromoId = promo.PromoId">
+                                </td>
+                                <td>@promo.PromoCode</td>
+                                <td>@promo.Description</td>
+                                <td>@promo.MinOrderAmount.ToString("N0")đ</td>
+                                <td>
+                                    @if (promo.DiscountType == DiscountType.Percent)
+                                    {
+                                        <span>@promo.DiscountValue%</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@promo.DiscountValue.ToString("N0")đ</span>
+                                    }
+                                </td>
+                                <td>@promo.EndDate.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" @onclick="ApplyPromotion">
+                    Áp dụng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODAL THANH TOÁN ==================== -->
+<div class="modal fade" id="modalPayment" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chọn hình thức thanh toán</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- COL TRÁI: Danh sách phương thức -->
+                    <div class="col-md-4 border-end">
+                        <div class="list-group">
+                            <button class="list-group-item list-group-item-action @(SelectedPaymentMethod == PaymentMethod.Cash ? "active" : "")"
+                                    @onclick="() => SelectPaymentMethod(PaymentMethod.Cash)">
+                                <i class="bi bi-cash-coin me-2"></i> Tiền mặt
+                            </button>
+                            <button class="list-group-item list-group-item-action @(SelectedPaymentMethod == PaymentMethod.EWallet ? "active" : "")"
+                                    @onclick="() => SelectPaymentMethod(PaymentMethod.EWallet)">
+                                <i class="bi bi-wallet2 me-2"></i> Ví điện tử
+                            </button>
+                            <button class="list-group-item list-group-item-action @(SelectedPaymentMethod == PaymentMethod.Card ? "active" : "")"
+                                    @onclick="() => SelectPaymentMethod(PaymentMethod.Card)">
+                                <i class="bi bi-credit-card me-2"></i> Thẻ
+                            </button>
+                            <button class="list-group-item list-group-item-action @(SelectedPaymentMethod == PaymentMethod.BankTransfer ? "active" : "")"
+                                    @onclick="() => SelectPaymentMethod(PaymentMethod.BankTransfer)">
+                                <i class="bi bi-bank me-2"></i> Chuyển khoản
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- COL PHẢI: Nội dung thanh toán -->
+                    <div class="col-md-8">
+                        @if (SelectedPaymentMethod == PaymentMethod.Cash)
+                        {
+                            <h5 class="mb-3">
+                                <i class="bi bi-cash-stack me-2"></i>Thanh toán tiền mặt
+                            </h5>
+                            <div class="card shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Tổng tiền hàng:</span>
+                                        <strong>@TotalAmount.ToString("N0")đ</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Giảm giá:</span>
+                                        <strong class="text-danger">-@DiscountAmount.ToString("N0")đ</strong>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Khách cần thanh toán:</span>
+                                        <strong class="text-success fs-5">@FinalAmount.ToString("N0")đ</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-success w-100" @onclick="ConfirmPayment">
+                                <i class="bi bi-check-circle me-2"></i> Xác nhận thanh toán
+                            </button>
+                        }
+                        else if (SelectedPaymentMethod == PaymentMethod.Card)
+                        {
+                            <h5><i class="bi bi-credit-card me-2"></i>Thanh toán bằng thẻ</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Số thẻ</label>
+                                <input type="text" class="form-control @(CardNumberError != null ? "is-invalid" : "")"
+                                       placeholder="1234 5678 9012 3456"
+                                       maxlength="19"
+                                       @bind="CardNumber">
+                                <div class="invalid-feedback">@CardNumberError</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Ngày hết hạn</label>
+                                    <input type="text" class="form-control @(CardExpiryError != null ? "is-invalid" : "")"
+                                           placeholder="MM/YY"
+                                           maxlength="5"
+                                           @bind="CardExpiry">
+                                    <div class="invalid-feedback">@CardExpiryError</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">CVV</label>
+                                    <input type="password" class="form-control @(CardCvvError != null ? "is-invalid" : "")"
+                                           placeholder="***"
+                                           maxlength="4"
+                                           @bind="CardCvv">
+                                    <div class="invalid-feedback">@CardCvvError</div>
+                                </div>
+                            </div>
+                            <button class="btn btn-success w-100" @onclick="ConfirmPayment">
+                                <i class="bi bi-credit-card-2-front me-2"></i> Xác nhận thanh toán
+                            </button>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <p class="text-muted">Chức năng đang phát triển</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i> Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // ===== PARAMETERS =====
+    [Parameter] public List<PromotionDto> Promotions { get; set; } = new();
+    [Parameter] public decimal TotalAmount { get; set; }
+    [Parameter] public decimal DiscountAmount { get; set; }
+    [Parameter] public decimal FinalAmount { get; set; }
+
+    [Parameter] public EventCallback<Customer> OnCustomerAdded { get; set; }
+    [Parameter] public EventCallback<PromotionDto?> OnPromotionSelected { get; set; }
+    [Parameter] public EventCallback<PaymentMethod> OnPaymentConfirmed { get; set; }
+
+    // ===== STATE - CUSTOMER =====
+    private Customer NewCustomer = new();
+    private string? NameError;
+    private string? PhoneError;
+
+    // ===== STATE - PROMOTION =====
+    private int? TempSelectedPromoId;
+
+    // ===== STATE - PAYMENT =====
+    private PaymentMethod SelectedPaymentMethod = PaymentMethod.Cash;
+    private string CardNumber = string.Empty;
+    private string CardExpiry = string.Empty;
+    private string CardCvv = string.Empty;
+    private string? CardNumberError;
+    private string? CardExpiryError;
+    private string? CardCvvError;
+
+    // ===== CUSTOMER METHODS =====
+    private async Task SubmitAddCustomer()
+    {
+        ClearCustomerErrors();
+
+        if (!ValidateCustomer())
+        {
+            StateHasChanged();
+            return;
+        }
+
+        await OnCustomerAdded.InvokeAsync(NewCustomer);
+
+        // Reset form
+        NewCustomer = new Customer();
+        await JS.InvokeVoidAsync("hideModal", "modalAddCustomer");
+    }
+
+    private void ClearCustomerErrors()
+    {
+        NameError = null;
+        PhoneError = null;
+    }
+
+    private bool ValidateCustomer()
+    {
+        bool isValid = true;
+
+        if (string.IsNullOrWhiteSpace(NewCustomer.Name))
+        {
+            NameError = "Vui lòng nhập tên khách hàng";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(NewCustomer.Phone))
+        {
+            PhoneError = "Vui lòng nhập số điện thoại";
+            isValid = false;
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(NewCustomer.Phone, @"^0\d{9}$"))
+        {
+            PhoneError = "Số điện thoại không hợp lệ";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // ===== PROMOTION METHODS =====
+    private async Task ApplyPromotion()
+    {
+        var selectedPromo = Promotions.FirstOrDefault(p => p.PromoId == TempSelectedPromoId);
+        await OnPromotionSelected.InvokeAsync(selectedPromo);
+        await JS.InvokeVoidAsync("hideModal", "modalPromotion");
+    }
+
+    // ===== PAYMENT METHODS =====
+    private void SelectPaymentMethod(PaymentMethod method)
+    {
+        SelectedPaymentMethod = method;
+        ClearPaymentErrors();
+    }
+
+    private async Task ConfirmPayment()
+    {
+        if (SelectedPaymentMethod == PaymentMethod.Card)
+        {
+            if (!ValidateCard())
+            {
+                StateHasChanged();
+                return;
+            }
+        }
+
+        await OnPaymentConfirmed.InvokeAsync(SelectedPaymentMethod);
+        await JS.InvokeVoidAsync("hideModal", "modalPayment");
+
+        // Reset payment form
+        ResetPaymentForm();
+    }
+
+    private void ClearPaymentErrors()
+    {
+        CardNumberError = null;
+        CardExpiryError = null;
+        CardCvvError = null;
+    }
+
+    private bool ValidateCard()
+    {
+        ClearPaymentErrors();
+        bool isValid = true;
+
+        // Validate card number (16 digits)
+        var cardDigits = CardNumber.Replace(" ", "");
+        if (string.IsNullOrWhiteSpace(cardDigits) || cardDigits.Length != 16)
+        {
+            CardNumberError = "Số thẻ phải có 16 chữ số";
+            isValid = false;
+        }
+
+        // Validate expiry (MM/YY)
+        if (!System.Text.RegularExpressions.Regex.IsMatch(CardExpiry, @"^(0[1-9]|1[0-2])\/\d{2}$"))
+        {
+            CardExpiryError = "Định dạng: MM/YY";
+            isValid = false;
+        }
+
+        // Validate CVV (3-4 digits)
+        if (string.IsNullOrWhiteSpace(CardCvv) || CardCvv.Length < 3 || CardCvv.Length > 4)
+        {
+            CardCvvError = "CVV phải có 3-4 chữ số";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    private void ResetPaymentForm()
+    {
+        SelectedPaymentMethod = PaymentMethod.Cash;
+        CardNumber = string.Empty;
+        CardExpiry = string.Empty;
+        CardCvv = string.Empty;
+        ClearPaymentErrors();
+    }
+}

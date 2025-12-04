@@ -7,7 +7,7 @@ namespace StoreBlazor.Services.Admin.Implementations
 {
     public class BasePaginationService : BaseService
     {
-        private int PageSize = 1;
+        private int PageSize = 5;
 
         public BasePaginationService(ApplicationDbContext dbContext) : base(dbContext)
         {

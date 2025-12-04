@@ -1,0 +1,99 @@
+﻿@inject IJSRuntime JS
+
+<!-- Thanh lọc + tìm kiếm -->
+<div class="row mt-3 mb-2">
+    <div class="col-4">
+        <select class="form-select form-select-sm" @onchange="OnCategoryChanged">
+            <option value="-1">Tất cả</option>
+            @foreach (var cat in Categories)
+            {
+                <option value="@cat.CategoryId" selected="@(cat.CategoryId == SelectedCategoryId)">
+                    @cat.CategoryName
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="col-6">
+        <div class="input-group input-group-sm">
+            <input type="text" class="form-control"
+                   placeholder="Nhập tên sản phẩm"
+                   @bind="SearchKeyword"
+                   @bind:event="oninput"
+                   @onkeydown="OnSearchKeyDown">
+            <button class="btn btn-primary" @onclick="HandleSearch">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="col-2">
+        <button class="btn btn-sm btn-primary w-100" @onclick="ToggleScanner">
+            <i class="bi bi-upc-scan"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Barcode Scanner -->
+@if (ShowScanner)
+{
+    <div id="reader" class="mb-3"></div>
+}
+
+@code {
+    [Parameter] public List<Category> Categories { get; set; } = new();
+    [Parameter] public int? SelectedCategoryId { get; set; }
+    [Parameter] public string SearchKeyword { get; set; } = string.Empty;
+    [Parameter] public bool ShowScanner { get; set; }
+
+    [Parameter] public EventCallback<int?> OnCategoryChange { get; set; }
+    [Parameter] public EventCallback<string> SearchKeywordChanged { get; set; }
+    [Parameter] public EventCallback OnSearch { get; set; }
+    [Parameter] public EventCallback OnScannerToggle { get; set; }
+    [Parameter] public EventCallback<string> OnBarcodeScanned { get; set; }
+
+    private async Task OnCategoryChanged(ChangeEventArgs e)
+    {
+        int? categoryId = int.Parse(e.Value?.ToString() ?? "-1");
+        if (categoryId == -1) categoryId = null;
+
+        await OnCategoryChange.InvokeAsync(categoryId);
+    }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleSearch();
+        }
+    }
+
+    private async Task HandleSearch()
+    {
+        await SearchKeywordChanged.InvokeAsync(SearchKeyword);
+        await OnSearch.InvokeAsync();
+    }
+
+    private async Task ToggleScanner()
+    {
+        await OnScannerToggle.InvokeAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (ShowScanner)
+        {
+            await JS.InvokeVoidAsync("initBarcodeScanner", DotNetObjectReference.Create(this));
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("stopBarcodeScanner");
+        }
+    }
+
+    [JSInvokable]
+    public async Task HandleBarcodeScanned(string barcode)
+    {
+        await OnBarcodeScanned.InvokeAsync(barcode);
+    }
+}

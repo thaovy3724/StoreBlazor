@@ -20,6 +20,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IOrderManagerService, OrderManagerService>();
+builder.Services.AddScoped<IOrderStaffService, OrderStaffService>();
 
 
 builder.Services.AddScoped<IProductService, ProductService>();

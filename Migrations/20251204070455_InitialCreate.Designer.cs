@@ -12,8 +12,8 @@ using StoreBlazor.Data;
 namespace StoreBlazor.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251201165703_initial")]
-    partial class initial
+    [Migration("20251204070455_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -137,9 +137,6 @@ namespace StoreBlazor.Migrations
                         .HasColumnType("int")
                         .HasColumnName("promo_id");
 
-                    b.Property<int?>("PromotionPromoId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -158,7 +155,7 @@ namespace StoreBlazor.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("PromotionPromoId");
+                    b.HasIndex("PromoId");
 
                     b.HasIndex("UserId");
 
@@ -449,7 +446,8 @@ namespace StoreBlazor.Migrations
 
                     b.HasOne("StoreBlazor.Models.Promotion", "Promotion")
                         .WithMany("Orders")
-                        .HasForeignKey("PromotionPromoId");
+                        .HasForeignKey("PromoId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("StoreBlazor.Models.User", "User")
                         .WithMany()

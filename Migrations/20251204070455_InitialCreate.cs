@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace StoreBlazor.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -172,8 +172,7 @@ namespace StoreBlazor.Migrations
                     status = table.Column<string>(type: "varchar(10)", maxLength: 10, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     total_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
-                    discount_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
-                    PromotionPromoId = table.Column<int>(type: "int", nullable: true)
+                    discount_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -184,10 +183,11 @@ namespace StoreBlazor.Migrations
                         principalTable: "customers",
                         principalColumn: "customer_id");
                     table.ForeignKey(
-                        name: "FK_orders_promotions_PromotionPromoId",
-                        column: x => x.PromotionPromoId,
+                        name: "FK_orders_promotions_promo_id",
+                        column: x => x.promo_id,
                         principalTable: "promotions",
-                        principalColumn: "promo_id");
+                        principalColumn: "promo_id",
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_orders_users_user_id",
                         column: x => x.user_id,
@@ -294,9 +294,9 @@ namespace StoreBlazor.Migrations
                 column: "customer_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_orders_PromotionPromoId",
+                name: "IX_orders_promo_id",
                 table: "orders",
-                column: "PromotionPromoId");
+                column: "promo_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_orders_user_id",
