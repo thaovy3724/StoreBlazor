@@ -421,13 +421,27 @@
         // TODO: Get userId from session/auth
         int userId = 1;
 
-        var result = await service.CreateOrderAsync(orderDto, userId);
-        await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
-
-        if (result.Type == "success")
+        if (paymentMethod == PaymentMethod.Cash || paymentMethod == PaymentMethod.Card)
         {
-            ClearCart();
-            await LoadProductsAsync(CurrentPage);
+            var result = await service.CreateOrderAsync(orderDto, userId);
+            await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
+
+            if (result.Type == "success")
+            {
+                ClearCart();
+                await LoadProductsAsync(CurrentPage);
+            }
+        }
+        else if (paymentMethod == PaymentMethod.BankTransfer || paymentMethod == PaymentMethod.EWallet)
+        {
+            var result = await service.CreateOrderWithPaymentAsync(orderDto, userId, "127.0.0.1");
+            await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
+
+            if (result.Type == "success")
+            {
+                ClearCart();
+                await LoadProductsAsync(CurrentPage);
+            }
         }
     }
 }

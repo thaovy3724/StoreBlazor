@@ -1,15 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoreBlazor.Data;
 using StoreBlazor.DTO.Admin;
+using StoreBlazor.DTO.Payment;
 using StoreBlazor.Models;
 using StoreBlazor.Services.Admin.Interfaces;
+using StoreBlazor.Services.Payment.Interfaces;
 
 namespace StoreBlazor.Services.Admin.Implementations
 {
     public class OrderStaffService : BasePaginationService, IOrderStaffService
     {
-        public OrderStaffService(ApplicationDbContext dbContext) : base(dbContext)
+        private readonly IVNPayService _vnpayService;
+        private readonly IMoMoService _momoService;
+
+        public OrderStaffService(
+         ApplicationDbContext dbContext,
+         IVNPayService vnpayService,
+         IMoMoService momoService) : base(dbContext)
         {
+            _vnpayService = vnpayService;
+            _momoService = momoService;
         }
 
         // ===== SẢN PHẨM =====
@@ -202,7 +212,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                 }
 
                 // 4. Tạo Payment
-                var payment = new Payment
+                var payment = new StoreBlazor.Models.Payment
                 {
                     OrderId = order.OrderId,
                     Amount = orderDto.TotalAmount - orderDto.DiscountAmount,
@@ -241,6 +251,128 @@ namespace StoreBlazor.Services.Admin.Implementations
                     Type = "error",
                     Message = "Có lỗi xảy ra: " + ex.Message
                 };
+            }
+        }
+        public async Task<ServiceResult> CreateOrderWithPaymentAsync(
+        OrderCreateDto orderDto,
+        int userId,
+        string ipAddress)
+        {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                // 1. Tạo Order trong database
+                var order = new Order
+                {
+                    CustomerId = orderDto.CustomerId,
+                    UserId = userId,
+                    PromoId = orderDto.PromoId,
+                    OrderDate = DateTime.Now,
+                    Status = OrderStatus.Pending, // Chờ thanh toán
+                    TotalAmount = orderDto.TotalAmount,
+                    DiscountAmount = orderDto.DiscountAmount
+                };
+
+                _dbContext.Orders.Add(order);
+                await _dbContext.SaveChangesAsync();
+
+                // 2. Tạo OrderItems
+                foreach (var item in orderDto.Items)
+                {
+                    var orderItem = new OrderItem
+                    {
+                        OrderId = order.OrderId,
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        Price = item.Price,
+                        Subtotal = item.Subtotal
+                    };
+                    _dbContext.OrderItems.Add(orderItem);
+
+                    // Cập nhật tồn kho
+                    var inventory = await _dbContext.Inventories
+                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
+                    if (inventory == null || inventory.Quantity < item.Quantity)
+                    {
+                        await transaction.RollbackAsync();
+                        return new ServiceResult { Type = "error", Message = $"Sản phẩm '{item.ProductName}' không đủ số lượng" };
+                    }
+                    inventory.Quantity -= item.Quantity;
+                    inventory.UpdatedAt = DateTime.Now;
+                }
+
+                await _dbContext.SaveChangesAsync();
+
+                // 3. Xử lý thanh toán theo phương thức
+                string paymentUrl = string.Empty;
+
+                if (orderDto.PaymentMethod == PaymentMethod.BankTransfer)
+                {
+                    // VNPay
+                    var vnpayRequest = new VNPayRequestDto
+                    {
+                        OrderId = order.OrderId.ToString(),
+                        Amount = orderDto.FinalAmount,
+                        OrderInfo = $"Thanh toan don hang #{order.OrderId}",
+                        IpAddress = ipAddress
+                    };
+                    paymentUrl = _vnpayService.CreatePaymentUrl(vnpayRequest);
+                }
+                else if (orderDto.PaymentMethod == PaymentMethod.EWallet)
+                {
+                    // MoMo
+                    var momoRequest = new MoMoRequestDto
+                    {
+                        OrderId = order.OrderId.ToString(),
+                        Amount = orderDto.FinalAmount,
+                        OrderInfo = $"Thanh toan don hang #{order.OrderId}"
+                    };
+                    var momoResponse = await _momoService.CreatePaymentAsync(momoRequest);
+
+                    if (!momoResponse.Success)
+                    {
+                        await transaction.RollbackAsync();
+                        return new ServiceResult { Type = "error", Message = momoResponse.Message };
+                    }
+                    paymentUrl = momoResponse.PayUrl;
+                }
+                else
+                {
+                    // Thanh toán trực tiếp (Cash/Card)
+                    order.Status = OrderStatus.Paid;
+                    var payment = new StoreBlazor.Models.Payment
+                    {
+                        OrderId = order.OrderId,
+                        Amount = orderDto.FinalAmount,
+                        PaymentDate = DateTime.Now,
+                        PaymentMethod = orderDto.PaymentMethod
+                    };
+                    _dbContext.Payments.Add(payment);
+                }
+
+                // Cập nhật UsedCount của Promotion
+                if (orderDto.PromoId.HasValue)
+                {
+                    var promo = await _dbContext.Promotions.FindAsync(orderDto.PromoId.Value);
+                    if (promo != null) promo.UsedCount++;
+                }
+
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return new ServiceResult
+                {
+                    Type = "success",
+                    Message = !string.IsNullOrEmpty(paymentUrl)
+                        ? paymentUrl  // Trả về URL để redirect
+                        : $"Đặt hàng thành công! Mã đơn: #{order.OrderId}"
+                };
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return new ServiceResult { Type = "error", Message = "Có lỗi xảy ra: " + ex.Message };
             }
         }
     }

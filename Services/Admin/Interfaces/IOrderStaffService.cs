@@ -21,5 +21,7 @@ namespace StoreBlazor.Services.Admin.Interfaces
 
         // Đặt hàng
         Task<ServiceResult> CreateOrderAsync(OrderCreateDto orderDto, int userId);
+
+        Task<ServiceResult> CreateOrderWithPaymentAsync(OrderCreateDto orderDto, int userId, string ipAddress);
     }
 }

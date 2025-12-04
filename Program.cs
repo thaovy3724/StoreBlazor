@@ -5,6 +5,8 @@ using StoreBlazor.Services.Admin.Implementations;
 using StoreBlazor.Services.Admin.Interfaces;
 using StoreBlazor.Services.Client.Implementations;
 using StoreBlazor.Services.Client.Interfaces;
+using StoreBlazor.Services.Payment.Implementations;
+using StoreBlazor.Services.Payment.Interfaces;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,9 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IOrderManagerService, OrderManagerService>();
 builder.Services.AddScoped<IOrderStaffService, OrderStaffService>();
+builder.Services.AddScoped<IVNPayService, VNPayService>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IMoMoService, MoMoService>();
 
 
 builder.Services.AddScoped<IProductService, ProductService>();

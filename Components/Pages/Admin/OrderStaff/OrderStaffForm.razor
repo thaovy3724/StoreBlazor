@@ -193,6 +193,53 @@
                                 <i class="bi bi-credit-card-2-front me-2"></i> Xác nhận thanh toán
                             </button>
                         }
+                        else if (SelectedPaymentMethod == PaymentMethod.BankTransfer)
+                        {
+                            <div class="text-center">
+                                <h5><i class="bi bi-bank me-2"></i>Thanh toán qua VNPay</h5>
+                                <p class="text-muted">Chuyển hướng đến cổng thanh toán VNPay</p>
+
+                                <div class="card shadow-sm mb-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Số tiền thanh toán:</span>
+                                            <strong class="text-success fs-5">@FinalAmount.ToString("N0")đ</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-success w-100" @onclick="ConfirmVNPayPayment">
+                                    <i class="bi bi-credit-card-2-front me-2"></i> Thanh toán với VNPay
+                                </button>
+                            </div>
+                        }
+                        else if (SelectedPaymentMethod == PaymentMethod.EWallet)
+                        {
+                            <div class="text-center">
+                                <h5><i class="bi bi-wallet2 me-2"></i>Thanh toán qua ví MoMo</h5>
+                                <p class="text-muted">Quét mã QR hoặc chuyển hướng đến ứng dụng MoMo</p>
+
+                                <div class="card shadow-sm mb-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Số tiền thanh toán:</span>
+                                            <strong class="text-success fs-5">@FinalAmount.ToString("N0")đ</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(MoMoQrCodeUrl))
+                                {
+                                    <div class="my-3">
+                                        <img src="@MoMoQrCodeUrl" alt="MoMo QR" style="max-width: 250px;">
+                                    </div>
+                                }
+
+                                <button class="btn btn-success w-100" @onclick="ConfirmMoMoPayment">
+                                    <i class="bi bi-wallet2 me-2"></i> Thanh toán với MoMo
+                                </button>
+                            </div>
+                        }
                         else
                         {
                             <div class="text-center py-4">
@@ -238,6 +285,8 @@
     private string? CardNumberError;
     private string? CardExpiryError;
     private string? CardCvvError;
+
+    private string MoMoQrCodeUrl = string.Empty;
 
     // ===== CUSTOMER METHODS =====
     private async Task SubmitAddCustomer()
@@ -364,5 +413,14 @@
         CardExpiry = string.Empty;
         CardCvv = string.Empty;
         ClearPaymentErrors();
+    }
+    private async Task ConfirmMoMoPayment()
+    {
+        await OnPaymentConfirmed.InvokeAsync(PaymentMethod.EWallet);
+    }
+
+    private async Task ConfirmVNPayPayment()
+    {
+        await OnPaymentConfirmed.InvokeAsync(PaymentMethod.BankTransfer);
     }
 }
