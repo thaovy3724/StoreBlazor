@@ -11,6 +11,7 @@ namespace StoreBlazor.Services.Admin.Interfaces
         Task<ServiceResult> CreateAsync(Promotion model);
         Task<ServiceResult> UpdateAsync(Promotion model);
         Task<ServiceResult> LockAsync(Promotion model);
+        Task<PageResult<Promotion>> FilterAsync(string keyword, int status, DateTime? fromDate, DateTime? toDate, int page);
 
     }
 }

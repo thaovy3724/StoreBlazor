@@ -1,7 +1,17 @@
 ﻿@inherits LayoutComponentBase
+@rendermode InteractiveServer
 
 <HeadContent>
     <link href="css/admin.css" rel="stylesheet" />
+    <link href="css/statistic.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="/css/statistic.css" />
 </HeadContent>
 
 
@@ -19,3 +29,10 @@
     @Body
 </div>
 <script src="js/toast.js"></script>
+<script src="/js/print.js"></script>
+<script src="/js/productManager.js"></script>
+<script src="/js/statistic.js"></script>
+<script src="js/barcode.js"></script>
+
+
+

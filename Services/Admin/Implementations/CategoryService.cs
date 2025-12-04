@@ -16,7 +16,7 @@ namespace StoreBlazor.Services.Admin.Implementations
         public Task<PageResult<Category>> GetAllCategoryAsync(int page)
         {
             var query = _dbContext.Categories
-                        .OrderBy(x => x.CategoryId);
+                        .OrderByDescending(x => x.CategoryId);
             return GetPagedAsync<Category>(query, page);
         }
 
@@ -90,7 +90,7 @@ namespace StoreBlazor.Services.Admin.Implementations
 
         public async Task<ServiceResult> DeleteAsync(Category item)
         {
-            // 1. Tìm thể loại cần cập nhật
+            // 1. Tìm thể loại cần xóa
             var entity = await _dbContext.Categories
                 .FirstOrDefaultAsync(x => x.CategoryId == item.CategoryId);
 
@@ -103,14 +103,30 @@ namespace StoreBlazor.Services.Admin.Implementations
                 };
             }
 
+            // 2. Kiểm tra xem có Product nào đang dùng Category này không
+            bool hasProducts = await _dbContext.Products
+                .AnyAsync(p => p.CategoryId == entity.CategoryId);
+
+            if (hasProducts)
+            {
+                return new ServiceResult
+                {
+                    Type = "error",
+                    Message = "Không thể xóa! Vì vẫn còn sản phẩm thuộc loại này."
+                };
+            }
+
+            // 3. Xóa nếu không bị khóa ngoại
             _dbContext.Categories.Remove(entity);
             await _dbContext.SaveChangesAsync();
+
             return new ServiceResult
             {
                 Type = "success",
                 Message = "Xóa loại sản phẩm thành công!"
             };
         }
+
 
         public Task<PageResult<Category>> SearchByNameAsync(string keyword, int page)
         {

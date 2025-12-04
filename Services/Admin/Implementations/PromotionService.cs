@@ -15,10 +15,39 @@ namespace StoreBlazor.Services.Admin.Implementations
         public async Task<PageResult<Promotion>> GetAllPromotionAsync(int page)
         {
             var query = _dbContext.Promotions
-                .OrderBy(p => p.PromoId)
+                .OrderByDescending(p => p.PromoId)
                 .AsQueryable(); 
 
             return await GetPagedAsync(query, page); ;
+        }
+        public Task<PageResult<Promotion>> FilterAsync(string keyword, int status, DateTime? fromDate, DateTime? toDate, int page)
+        {
+            var query = _dbContext.Promotions
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                query = query.Where(p => p.PromoCode.Contains(keyword));
+            }
+
+            if (status != -1)
+            {
+                query = query.Where(p => (int)p.Status == status);
+            }
+
+            if (fromDate.HasValue)
+            {
+                query = query.Where(p => p.StartDate >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(p => p.EndDate <= toDate.Value);
+            }
+
+            query = query.OrderByDescending(p => p.PromoId);
+
+            return GetPagedAsync<Promotion>(query, page);
         }
 
         public async Task<ServiceResult> CreateAsync(Promotion item)
@@ -47,7 +76,7 @@ namespace StoreBlazor.Services.Admin.Implementations
         }
         public async Task<ServiceResult> UpdateAsync(Promotion item)
         {
-            // 1. Tìm Promotion cần cập nhật
+            // ìm Promotion cần cập nhật
             var entity = await _dbContext.Promotions
                 .FirstOrDefaultAsync(p => p.PromoId == item.PromoId);
 
@@ -60,7 +89,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                 };
             }
 
-            // 2. Kiểm tra trùng mã (trừ chính nó ra)
+            // Kiểm tra trùng mã (trừ chính nó ra)
             var newPromoCode = item.PromoCode.Trim();
             var existingPromotion = await _dbContext.Promotions
                 .FirstOrDefaultAsync(p =>
@@ -76,7 +105,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                 };
             }
 
-            // 3. Cập nhật tất cả các field
+            // Cập nhật tất cả các field
             entity.PromoCode = newPromoCode;
             entity.DiscountType = item.DiscountType;
             entity.DiscountValue = item.DiscountValue;
@@ -86,7 +115,7 @@ namespace StoreBlazor.Services.Admin.Implementations
             entity.EndDate = item.EndDate;
             entity.Description = item.Description;
 
-            // 4. Lưu thay đổi
+            // Lưu thay đổi
             await _dbContext.SaveChangesAsync();
 
             return new ServiceResult
@@ -98,7 +127,7 @@ namespace StoreBlazor.Services.Admin.Implementations
 
         public async Task<ServiceResult> LockAsync(Promotion item)
         {
-            // 1. Tìm Promotion cần khóa/mở khóa
+            // Tìm Promotion cần khóa/mở khóa
             var entity = await _dbContext.Promotions
                 .FirstOrDefaultAsync(p => p.PromoId == item.PromoId);
 
@@ -111,12 +140,12 @@ namespace StoreBlazor.Services.Admin.Implementations
                 };
             }
 
-            // 2. Toggle trạng thái
+            // Toggle trạng thái
             entity.Status = entity.Status == PromotionStatus.Active
                             ? PromotionStatus.Inactive
                             : PromotionStatus.Active;
 
-            // 3. Lưu vào database
+            // Lưu vào database
             await _dbContext.SaveChangesAsync();
 
             return new ServiceResult
