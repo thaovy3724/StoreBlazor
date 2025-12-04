@@ -147,21 +147,11 @@
                                         <span class="order-history-finalamount fw-bold text-danger">@(((Model?.TotalAmount ?? 0) - (Model?.DiscountAmount ?? 0)).ToString("N0")) đ</span>
                                     </div>
                                 </div>
-                                <div class="card-footer text-end">
-                                    <button type="button" class="btn btn-outline-primary btn-sm me btn-print">
-                                        <i class="bi bi-printer"></i> In hóa đơn
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
                 }
                 </div>
-
-            <!-- Footer -->
-            <div class="modal-footer">
-                <button type="submit" form="orderHistoryForm" id="orderHistoryModalSaveBtn" class="btn btn-primary">Lưu</button>
-            </div>
         </div>
     </div>
 </div>

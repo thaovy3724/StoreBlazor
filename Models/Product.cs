@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Components.Forms;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StoreBlazor.Models
@@ -26,7 +27,7 @@ namespace StoreBlazor.Models
         public int SupplierId { get; set; }
 
         [Required]
-        [Column("price")]
+        [Column("price", TypeName = "decimal(10,2)")]
         public decimal Price { get; set; }
 
         [Column("unit")]
@@ -48,5 +49,8 @@ namespace StoreBlazor.Models
         public Supplier Supplier { get; set; }
 
         public Inventory Inventory { get; set; }
+
+        [NotMapped]
+        public IBrowserFile? ImageFile { get; set; }
     }
 }

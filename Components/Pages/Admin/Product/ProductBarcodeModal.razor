@@ -1,0 +1,56 @@
+﻿@inject IJSRuntime JS
+
+<div class="modal fade" id="barcodeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Barcode - @ProductName</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center" id="barcodeImageContainer">
+                @if (!string.IsNullOrEmpty(BarcodeValue))
+                {
+                    <div id="barcode-display">
+                        <svg id="barcode-svg"></svg>
+                        <p class="mt-2 fw-bold">@BarcodeValue</p>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">Chưa có barcode</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" @onclick="PrintBarcode">
+                    <i class="bi bi-printer"></i> In Barcode
+                </button>
+                <button type="button" class="btn btn-success" @onclick="DownloadBarcode">
+                    <i class="bi bi-download"></i> Tải Barcode
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string BarcodeValue { get; set; } = string.Empty;
+    [Parameter] public string ProductName { get; set; } = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!string.IsNullOrEmpty(BarcodeValue))
+        {
+            await JS.InvokeVoidAsync("generateBarcode", BarcodeValue);
+        }
+    }
+
+    private async Task PrintBarcode()
+    {
+        await JS.InvokeVoidAsync("printBarcode");
+    }
+
+    private async Task DownloadBarcode()
+    {
+        await JS.InvokeVoidAsync("downloadBarcode", BarcodeValue, ProductName);
+    }
+}

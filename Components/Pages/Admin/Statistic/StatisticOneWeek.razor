@@ -1,0 +1,119 @@
+﻿@using StoreBlazor.DTO.Statistic
+@if (Statistics != null)
+{
+    <div class="row g-4">
+        <!-- Doanh thu -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card card-hover-primary shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-muted text-uppercase fw-bold small">Doanh thu</div>
+                            <div class="stat-value text-primary">@String.Format("{0:N0} đ", Statistics.Revenue)</div>
+                            <div class="stat-change @(Statistics.RevenueChange >= 0 ? "text-success" : "text-danger")">
+                                <i class="fas @(Statistics.RevenueChange >= 0 ? "fa-arrow-up" : "fa-arrow-down") trend-icon"></i>
+                                <span>@Statistics.RevenueChange% so với tuần trước</span>
+                            </div>
+                        </div>
+                        <div class="icon-circle">
+                            <i class="fas fa-dollar-sign text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-4"
+                         data-bs-toggle="tooltip"
+                         data-bs-placement="top"
+                         title="Đạt @String.Format("{0:N0}", Statistics.Revenue) / @String.Format("{0:N0}", Statistics.RevenueTarget) ₫ (@Statistics.RevenueProgress%)">
+                        <div class="progress-bar bg-primary" role="progressbar"
+                             style="width: @(Statistics.RevenueProgress)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Khách hàng mới -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card card-hover-success shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-muted text-uppercase fw-bold small">Khách hàng mới</div>
+                            <div class="stat-value text-success">@Statistics.NewCustomers</div>
+                            <div class="stat-change @(Statistics.CustomerChange >= 0 ? "text-success" : "text-danger")">
+                                <i class="fas @(Statistics.CustomerChange >= 0 ? "fa-arrow-up" : "fa-arrow-down") trend-icon"></i>
+                                <span>@Statistics.CustomerChange% so với tuần trước</span>
+                            </div>
+                        </div>
+                        <div class="icon-circle">
+                            <i class="fas fa-users text-success"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-4"
+                         data-bs-toggle="tooltip"
+                         title="Đạt @Statistics.NewCustomers / @Statistics.CustomerTarget khách hàng (@Statistics.CustomerProgress%)">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width: @(Statistics.CustomerProgress)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Đơn hàng -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card card-hover-info shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-muted text-uppercase fw-bold small">Đơn hàng</div>
+                            <div class="stat-value text-info">@Statistics.OrderCount</div>
+                            <div class="stat-change @(Statistics.OrderChange >= 0 ? "text-success" : "text-danger")">
+                                <i class="fas @(Statistics.OrderChange >= 0 ? "fa-arrow-up" : "fa-arrow-down") trend-icon"></i>
+                                <span>@Statistics.OrderChange% so với tuần trước</span>
+                            </div>
+                        </div>
+                        <div class="icon-circle">
+                            <i class="fas fa-tasks text-info"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-4"
+                         data-bs-toggle="tooltip"
+                         title="Đạt @Statistics.OrderCount / @Statistics.OrderTarget đơn hàng (@Statistics.OrderProgress%)">
+                        <div class="progress-bar bg-info" role="progressbar"
+                             style="width: @(Statistics.OrderProgress)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sản phẩm bán được -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card card-hover-warning shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-muted text-uppercase fw-bold small">Sản phẩm bán được</div>
+                            <div class="stat-value text-warning">@Statistics.SoldProducts</div>
+                            <div class="stat-change @(Statistics.SoldChange >= 0 ? "text-success" : "text-danger")">
+                                <i class="fas @(Statistics.SoldChange >= 0 ? "fa-arrow-up" : "fa-arrow-down") trend-icon"></i>
+                                <span>@Statistics.SoldChange% so với tuần trước</span>
+                            </div>
+                        </div>
+                        <div class="icon-circle">
+                            <i class="fas fa-chart-pie text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-4"
+                         data-bs-toggle="tooltip"
+                         title="Đạt @Statistics.SoldProducts / @Statistics.SoldTarget sản phẩm (@Statistics.SoldProgress%)">
+                        <div class="progress-bar bg-warning" role="progressbar"
+                             style="width: @(Statistics.SoldProgress)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public WeeklyStatisticDTO? Statistics { get; set; }
+}

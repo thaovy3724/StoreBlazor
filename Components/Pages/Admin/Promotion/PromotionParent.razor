@@ -10,7 +10,11 @@
 
     <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
         <!-- Thanh lọc bên trái -->
-        <PromotionFilter/>
+        <PromotionFilter @bind-KeyWord="@keyword"
+                         @bind-FilterStatus="@filterStatus"
+                         @bind-FromDate="@fromDate"
+                         @bind-ToDate="@toDate"
+                         OnSearch="LoadPageAsync" />
         <!-- Nút Thêm mới bên phải -->
         <button class="btn btn-primary btn-sm btn-add" data-bs-toggle="modal" data-bs-target="#promotionModal" data-action="view_add">
             <i class="bi bi-plus-circle"></i> Thêm mới
@@ -130,6 +134,11 @@
     private List<Promotion> listResult = new();
     private ServiceResult serviceResult = new();
 
+    private string keyword = string.Empty;
+    private int filterStatus = -1;
+    private DateTime? fromDate = null;
+    private DateTime? toDate = null;
+
     // ==== LOAD DATA ====
     protected override async Task OnInitializedAsync()
     {
@@ -139,13 +148,20 @@
     {
         PageResult<Promotion> result = new();
 
-        result = await service.GetAllPromotionAsync(page);
+        if (!string.IsNullOrEmpty(keyword) || filterStatus != -1 || fromDate.HasValue || toDate.HasValue)
+        {
+            result = await service.FilterAsync(keyword, filterStatus, fromDate, toDate, page);
+        }
+        else
+        {
+            result = await service.GetAllPromotionAsync(page);
+        }
 
         listResult = result.Items;
         CurrentPage = page;
         TotalPages = result.TotalPages;
-
     }
+
     // ==== OPEN EDIT FORM ====
     private void OpenEditForm(Promotion item)
     {
@@ -165,6 +181,7 @@
         };
     }
     // === OPEN DETAIL FORM ===
+
     private void OpenDetailForm(Promotion item)
     {
         IsEditMode = false;
