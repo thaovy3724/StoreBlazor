@@ -30,6 +30,7 @@ builder.Services.AddScoped<IMoMoService, MoMoService>();
 
 builder.Services.AddScoped<IProductManagerService, ProductManagerService>();
 builder.Services.AddScoped<IStatisticService, StatisticService>();
+builder.Services.AddScoped<IRegisterService, RegisterService>();
 
 builder.Services.AddScoped<IProductService, ProductService>();
 

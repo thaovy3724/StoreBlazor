@@ -1,67 +1,96 @@
 ﻿@page "/client/register"
 @layout ClientLayout
+@using StoreBlazor.DTO.Client
+@using StoreBlazor.Services.Client.Interfaces
+@inject IRegisterService RegisterService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <div class="container py-5">
     <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
         <div class="col-md-10 col-lg-6">
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="card-body p-5">
-
                     <div class="text-center">
                         <h3 class="fw-bold text-primary">Tạo tài khoản mới</h3>
                         <p class="text-muted">Nhập thông tin của bạn để trải nghiệm mua sắm tốt nhất.</p>
                     </div>
 
-                    <form>
+                    @if (!string.IsNullOrEmpty(alertMessage))
+                    {
+                        <div class="alert alert-@alertType alert-dismissible fade show" role="alert">
+                            <i class="bi bi-@(alertType == "success" ? "check-circle" : "exclamation-triangle") me-2"></i>
+                            @alertMessage
+                            <button type="button" class="btn-close" @onclick="ClearAlert"></button>
+                        </div>
+                    }
+
+                    <EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
+                        <DataAnnotationsValidator />
+
+
                         <div class="row g-3 mb-3">
                             <div class="col-12">
                                 <div class="form-floating">
-                                    <input type="text" class="form-control" id="regName" placeholder="Nguyễn Văn A">
+                                    <InputText @bind-Value="registerModel.Name" class="form-control" id="regName" placeholder="Nguyễn Văn A" />
                                     <label for="regName"><i class="bi bi-person me-1"></i>Họ và tên</label>
                                 </div>
+                                <ValidationMessage For="@(() => registerModel.Name)" class="text-danger small mt-1" />
                             </div>
 
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input type="tel" class="form-control" id="regPhone" >
+                                    <InputText @bind-Value="registerModel.Phone" class="form-control" id="regPhone" placeholder="0901234567" />
                                     <label for="regPhone"><i class="bi bi-telephone me-1"></i>Số điện thoại</label>
                                 </div>
+                                <ValidationMessage For="@(() => registerModel.Phone)" class="text-danger small mt-1" />
                             </div>
 
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input type="email" class="form-control" id="regEmail" >
+                                    <InputText @bind-Value="registerModel.Email" class="form-control" id="regEmail"  />
                                     <label for="regEmail"><i class="bi bi-envelope me-1"></i>Địa chỉ Email</label>
                                 </div>
+                                <ValidationMessage For="@(() => registerModel.Email)" class="text-danger small mt-1" />
                             </div>
 
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input type="password" class="form-control" id="regPass">
+                                    <InputText type="password" @bind-Value="registerModel.Password" class="form-control" id="regPass" placeholder="Mật khẩu" />
                                     <label for="regPass"><i class="bi bi-lock me-1"></i>Mật khẩu</label>
                                 </div>
+                                <ValidationMessage For="@(() => registerModel.Password)" class="text-danger small mt-1" />
                             </div>
 
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input type="password" class="form-control" id="regConfirmPass" >
+                                    <InputText type="password" @bind-Value="registerModel.ConfirmPassword" class="form-control" id="regConfirmPass"  />
                                     <label for="regConfirmPass"><i class="bi bi-check2-circle me-1"></i>Xác nhận mật khẩu</label>
                                 </div>
+                                <ValidationMessage For="@(() => registerModel.ConfirmPassword)" class="text-danger small mt-1" />
                             </div>
 
                             <div class="col-md-12 mt-3">
                                 <div class="form-floating">
-                                    <textarea class="form-control" placeholder="Nhập địa chỉ" id="testAreaAddress" style="height: 100px"></textarea>
+                                    <InputTextArea @bind-Value="registerModel.Address" class="form-control" id="testAreaAddress" style="height: 100px" />
                                     <label for="testAreaAddress"><i class="bi bi-geo-alt-fill me-1"></i>Địa chỉ</label>
                                 </div>
+                                <ValidationMessage For="@(() => registerModel.Address)" class="text-danger small mt-1" />
                             </div>
-
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm mt-3">
-                            ĐĂNG KÝ TÀI KHOẢN
+                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm mt-3" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Đang xử lý...</span>
+                            }
+                            else
+                            {
+                                <span>ĐĂNG KÝ TÀI KHOẢN</span>
+                            }
                         </button>
-                    </form>
+                    </EditForm>
 
                     <div class="text-center mt-4">
                         <p class="text-muted small mb-0">
@@ -69,7 +98,6 @@
                             <a href="/client/login" class="text-primary fw-bold text-decoration-none">Đăng nhập ngay</a>
                         </p>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -77,5 +105,45 @@
 </div>
 
 @code {
+    private RegisterDTO registerModel = new RegisterDTO();
+    private string alertMessage = string.Empty;
+    private string alertType = string.Empty;
+    private bool isLoading = false;
 
+
+    private async Task HandleRegister()
+    {
+        isLoading = true;
+        StateHasChanged(); // Gọi đồng bộ để UI cập nhật ngay lập tức
+        ClearAlert();
+
+        try
+        {
+            var result = await RegisterService.RegisterAsync(registerModel);
+
+            alertType = result.Type;
+            alertMessage = result.Message;
+
+            if (result.Type == "success")
+            {
+                await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
+                Navigation.NavigateTo("/client/login");
+            }
+        }
+        catch (Exception ex)
+        {
+            alertType = "error";
+            alertMessage = $"Có lỗi xảy ra: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged(); // Cập nhật lại UI sau khi hoàn thành
+        }
+    }
+    private void ClearAlert()
+    {
+        alertMessage = string.Empty;
+        alertType = string.Empty;
+    }
 }
