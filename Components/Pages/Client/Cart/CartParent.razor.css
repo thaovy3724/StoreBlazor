@@ -1,4 +1,4 @@
-﻿/* Giới hạn tên sản phẩm hiển thị tối đa 2 dòng */
+﻿﻿ /* Giới hạn tên sản phẩm hiển thị tối đa 2 dòng */
 .product-name-limit {
     display: -webkit-box;
     -webkit-line-clamp: 2;

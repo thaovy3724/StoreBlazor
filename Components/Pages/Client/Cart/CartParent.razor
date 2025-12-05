@@ -1,0 +1,46 @@
+﻿@page "/client/cart"
+@layout ClientLayout
+@inject ICartService service
+@* @inject NavigationManager Nav *@
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h3 class="fw-bold text-primary">
+                <i class="bi "></i>Giỏ hàng của bạn
+            </h3>
+        </div>
+    </div>
+
+    @if (Cart.Count == 0)
+    {
+       @* Khi giỏ hàng trống *@
+       <CartNull/>
+    }
+    else
+    {
+        @* Có sản phẩm *@
+        <CartNotNull/>
+    }
+</div>
+@* modal chọn mã giảm giá *@
+    <_CartDiscountModal/>
+
+@code {
+    
+    private List<CartItemDTO> Cart = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 1. Nạp giỏ từ sessionStorage/localStorage biến Cart trong CartService
+        await service.InitializeAsync();
+
+        // 2. Lắng nghe thay đổi để badge tự cập nhật
+        service.OnChange += HandleCartChanged;
+    }
+
+    private void HandleCartChanged()
+    {
+        InvokeAsync(StateHasChanged); // re-render UI khi có thay đổi, chứ ko phải reload trang
+    }
+}
