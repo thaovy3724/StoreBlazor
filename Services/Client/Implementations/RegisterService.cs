@@ -18,11 +18,16 @@ namespace StoreBlazor.Services.Client.Implementations
 
         public async Task<ServiceResult> RegisterAsync(RegisterDTO registerDTO)
         {
-            // Kiểm tra trùng email trong bảng Users
-            var existingUser = await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.Username.ToLower() == registerDTO.Email.ToLower());
+            // Kiểm tra trùng email trong cả 2 bảng Users và Customers
+            var emailLower = registerDTO.Email.ToLower();
 
-            if (existingUser != null)
+            var existingUser = await _dbContext.Users
+                .AnyAsync(u => u.Username.ToLower() == emailLower);
+
+            var existingCustomer = await _dbContext.Customers
+                .AnyAsync(c => c.Email.ToLower() == emailLower);
+
+            if (existingUser || existingCustomer)
             {
                 return new ServiceResult
                 {
@@ -31,10 +36,11 @@ namespace StoreBlazor.Services.Client.Implementations
                 };
             }
 
-            // Mã hóa mật khẩu (sử dụng BCrypt)
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDTO.Password);
 
-            // Bắt đầu transaction để đảm bảo tính toàn vẹn dữ liệu
+            string hashedPassword = await Task.Run(() =>
+                BCrypt.Net.BCrypt.HashPassword(registerDTO.Password, workFactor: 8)
+            );
+
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
             try
@@ -50,9 +56,8 @@ namespace StoreBlazor.Services.Client.Implementations
                 };
 
                 _dbContext.Customers.Add(customer);
-                await _dbContext.SaveChangesAsync();
 
-                // Tạo User mới (username = email, role = Customer)
+                // Tạo User mới
                 var user = new User
                 {
                     Username = registerDTO.Email.Trim(),
@@ -63,9 +68,9 @@ namespace StoreBlazor.Services.Client.Implementations
                 };
 
                 _dbContext.Users.Add(user);
+
                 await _dbContext.SaveChangesAsync();
 
-                // Commit transaction
                 await transaction.CommitAsync();
 
                 return new ServiceResult
@@ -76,7 +81,6 @@ namespace StoreBlazor.Services.Client.Implementations
             }
             catch (Exception ex)
             {
-                // Rollback nếu có lỗi
                 await transaction.RollbackAsync();
 
                 return new ServiceResult

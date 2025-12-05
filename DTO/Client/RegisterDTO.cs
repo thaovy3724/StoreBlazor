@@ -9,9 +9,10 @@ namespace StoreBlazor.DTO.Client
         public string Name { get; set; }
 
         [Required(ErrorMessage = "Số điện thoại không được để trống!")]
-        [StringLength(20, ErrorMessage = "Số điện thoại không được vượt quá 20 ký tự!")]
-        [Phone(ErrorMessage = "Số điện thoại không hợp lệ!")]
+        [RegularExpression(@"^(03|05|07|08|09)\d{8}$", ErrorMessage = "Số điện thoại không hợp lệ!")]
         public string Phone { get; set; }
+
+
 
         [Required(ErrorMessage = "Email không được để trống!")]
         [StringLength(100, ErrorMessage = "Email không được vượt quá 100 ký tự!")]

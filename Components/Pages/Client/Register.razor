@@ -16,15 +16,6 @@
                         <p class="text-muted">Nhập thông tin của bạn để trải nghiệm mua sắm tốt nhất.</p>
                     </div>
 
-                    @if (!string.IsNullOrEmpty(alertMessage))
-                    {
-                        <div class="alert alert-@alertType alert-dismissible fade show" role="alert">
-                            <i class="bi bi-@(alertType == "success" ? "check-circle" : "exclamation-triangle") me-2"></i>
-                            @alertMessage
-                            <button type="button" class="btn-close" @onclick="ClearAlert"></button>
-                        </div>
-                    }
-
                     <EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
                         <DataAnnotationsValidator />
 
@@ -106,44 +97,23 @@
 
 @code {
     private RegisterDTO registerModel = new RegisterDTO();
-    private string alertMessage = string.Empty;
-    private string alertType = string.Empty;
     private bool isLoading = false;
-
-
     private async Task HandleRegister()
     {
         isLoading = true;
-        StateHasChanged(); // Gọi đồng bộ để UI cập nhật ngay lập tức
-        ClearAlert();
+        await Task.Yield();
 
-        try
-        {
-            var result = await RegisterService.RegisterAsync(registerModel);
+        var result = await RegisterService.RegisterAsync(registerModel);
 
-            alertType = result.Type;
-            alertMessage = result.Message;
-
-            if (result.Type == "success")
-            {
-                await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
-                Navigation.NavigateTo("/client/login");
-            }
-        }
-        catch (Exception ex)
+        if (result.Type == "success")
         {
-            alertType = "error";
-            alertMessage = $"Có lỗi xảy ra: {ex.Message}";
+            await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
+            Navigation.NavigateTo("/client/login");
         }
-        finally
+        else
         {
-            isLoading = false;
-            StateHasChanged(); // Cập nhật lại UI sau khi hoàn thành
+            await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
         }
-    }
-    private void ClearAlert()
-    {
-        alertMessage = string.Empty;
-        alertType = string.Empty;
+        isLoading = false;
     }
 }
