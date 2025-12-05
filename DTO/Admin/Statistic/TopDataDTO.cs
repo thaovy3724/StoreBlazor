@@ -1,4 +1,4 @@
-﻿namespace StoreBlazor.DTO.Statistic
+﻿namespace StoreBlazor.DTO.Admin.Statistic
 {
     public class TopDataDTO
     {

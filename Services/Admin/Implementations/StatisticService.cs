@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoreBlazor.Data;
-using StoreBlazor.DTO.Statistic;
+using StoreBlazor.DTO.Admin.Statistic;
 using StoreBlazor.Models;
 using StoreBlazor.Services.Admin.Interfaces;
 

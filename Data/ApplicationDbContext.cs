@@ -65,8 +65,7 @@ namespace StoreBlazor.Data
                 .HasOne(o => o.Promotion)
                 .WithMany(p => p.Orders)
                 .HasForeignKey(o => o.PromoId)
-                .OnDelete(DeleteBehavior.SetNull); 
-
+                .OnDelete(DeleteBehavior.SetNull);
 
             base.OnModelCreating(modelBuilder);
         }
