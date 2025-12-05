@@ -21,14 +21,14 @@
                            @bind="NewCustomer.Phone">
                     <div class="invalid-feedback">@PhoneError</div>
                 </div>
-                <div class="mb-3">
+                @* <div class="mb-3">
                     <label class="form-label">Email</label>
                     <input type="email" class="form-control" @bind="NewCustomer.Email">
-                </div>
-                <div class="mb-3">
+                </div> *@
+                @* <div class="mb-3">
                     <label class="form-label">Địa chỉ</label>
                     <textarea class="form-control" rows="3" @bind="NewCustomer.Address"></textarea>
-                </div>
+                </div> *@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" @onclick="SubmitAddCustomer">

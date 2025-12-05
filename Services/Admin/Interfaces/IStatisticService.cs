@@ -1,4 +1,4 @@
-﻿using StoreBlazor.DTO.Statistic;
+﻿using StoreBlazor.DTO.Admin.Statistic;
 
 namespace StoreBlazor.Services.Admin.Interfaces
 {
