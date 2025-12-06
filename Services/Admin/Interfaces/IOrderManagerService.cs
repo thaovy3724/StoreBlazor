@@ -15,8 +15,8 @@ namespace StoreBlazor.Services.Admin.Interfaces
         Task<PageResult<OrderTableDto>> FilterAsync(string keyword, int status, decimal? priceFrom, decimal? priceTo, int page);
 
         // Cho client
-        Task<PageResult<OrderTableDto>> GetOrdersByCustomerAsync(string customerName, int page);
-        Task<PageResult<OrderTableDto>> FilterByCustomerAsync(string customerName, string keyword, int status, int page);
+        Task<PageResult<OrderTableDto>> GetOrdersByCustomerAsync(int userId, int page);
+        Task<PageResult<OrderTableDto>> FilterByCustomerAsync(int userId, string keyword, int status, int page);
     }
 
 }

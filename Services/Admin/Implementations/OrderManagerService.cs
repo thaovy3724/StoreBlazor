@@ -151,14 +151,15 @@ namespace StoreBlazor.Services.Admin.Implementations
             };
         }
 
-        // ==== THÊM VÀO OrderManagerService.cs ====
-
-        // Lấy đơn hàng của 1 khách hàng cụ thể
-        public async Task<PageResult<OrderTableDto>> GetOrdersByCustomerAsync(string customerName, int page)
+        // Lấy đơn hàng của 1 user cụ thể
+        public async Task<PageResult<OrderTableDto>> GetOrdersByCustomerAsync(int userId, int page)
         {
+            Console.WriteLine($"[SERVICE] GetOrdersByCustomerAsync - userId: {userId}, page: {page}");
+
             var query = _dbContext.Orders
                 .Include(o => o.Customer)
-                .Where(o => o.Customer != null && o.Customer.Name == customerName) // Lọc theo tên khách hàng
+                .Include(o => o.User)
+                .Where(o => o.UserId == userId) 
                 .OrderByDescending(o => o.OrderId)
                 .Select(o => new OrderTableDto
                 {
@@ -169,15 +170,21 @@ namespace StoreBlazor.Services.Admin.Implementations
                     Status = o.Status
                 });
 
-            return await GetPagedAsync(query, page);
+            var result = await GetPagedAsync(query, page);
+            Console.WriteLine($"[SERVICE] Result - Items: {result.Items.Count}, TotalPages: {result.TotalPages}");
+
+            return result;
         }
 
-        // Lọc đơn hàng của 1 khách hàng cụ thể
-        public async Task<PageResult<OrderTableDto>> FilterByCustomerAsync(string customerName, string keyword, int status, int page)
+        // Lọc đơn hàng của 1 user cụ thể
+        public async Task<PageResult<OrderTableDto>> FilterByCustomerAsync(int userId, string keyword, int status, int page)
         {
+            Console.WriteLine($"[SERVICE] FilterByCustomerAsync - userId: {userId}, keyword: '{keyword}', status: {status}");
+
             var query = _dbContext.Orders
                 .Include(o => o.Customer)
-                .Where(o => o.Customer != null && o.Customer.Name == customerName) // Lọc theo tên khách hàng
+                .Include(o => o.User)
+                .Where(o => o.UserId == userId) 
                 .AsQueryable();
 
             // Lọc theo mã đơn hàng

@@ -1,8 +1,11 @@
 ﻿@page "/client/orderHistory"
 @layout ClientLayout
+@using StoreBlazor.Components.Pages.Admin
+@using StoreBlazor.DTO.Admin.OrderManager
 @inject IOrderManagerService service
 @inject Blazored.SessionStorage.ISessionStorageService SessionStorage
 @inherits BaseParent<Order>
+@rendermode InteractiveServer
 
 <div class="container py-5">
     <div class="row mb-4">
@@ -100,40 +103,35 @@
 
     private string keyword = string.Empty;
     private int filterStatus = -1;
-    private string currentCustomerName = string.Empty;
+    private int currentUserId = 0;
 
-    // KHAI BÁO BIẾN CỜ
     private bool isPageLoaded = false;
 
     // ==== LOAD DATA ====
-    // protected override Task OnInitializedAsync()
-    // {
-    //     KHÔNG GỌI SessionStorage ở đây nữa
-    //     return Task.CompletedTask;
-    // }
+    protected override Task OnInitializedAsync()
+    {
+        return Task.CompletedTask;
+    }
 
-    // Dùng OnAfterRenderAsync để đảm bảo SessionStorage đã sẵn sàng
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && !isPageLoaded)
         {
-            // 1. Lấy dữ liệu từ SessionStorage
-            currentCustomerName = await SessionStorage.GetItemAsync<string>("userName") ?? string.Empty;
+            currentUserId = await SessionStorage.GetItemAsync<int?>("clientId") ?? 0;
 
-            // 2. Chỉ tải dữ liệu trang nếu lấy được tên người dùng
-            if (!string.IsNullOrEmpty(currentCustomerName))
+            Console.WriteLine($"[DEBUG] currentUserId from session = {currentUserId}");
+
+            if (currentUserId > 0)
             {
                 await LoadPageAsync(1);
             }
             else
             {
-                // Xử lý trường hợp không tìm thấy session (có thể chuyển hướng đến trang Login)
-                Console.WriteLine("[DEBUG] Session 'userName' is missing after refresh.");
-                // Ví dụ: NavigationManager.NavigateTo("/client/login");
+                Console.WriteLine("[DEBUG] Session 'clientId' is missing or 0");
             }
 
-            isPageLoaded = true; // Đánh dấu đã tải
-            StateHasChanged(); // Cập nhật giao diện
+            isPageLoaded = true;
+            StateHasChanged();
         }
     }
 
@@ -141,10 +139,12 @@
     {
         PageResult<OrderTableDto> result = new();
 
-        // Kiểm tra currentCustomerName để tránh lỗi nếu session null
-        if (string.IsNullOrEmpty(currentCustomerName))
+        Console.WriteLine($"[DEBUG] LoadPage - userId: {currentUserId}, keyword: '{keyword}', status: {filterStatus}, page: {page}");
+
+        if (currentUserId == 0)
         {
-            listResult = new List<OrderTableDto>(); // Đảm bảo danh sách rỗng nếu không có người dùng
+            Console.WriteLine("[DEBUG] userId = 0, returning empty");
+            listResult = new List<OrderTableDto>();
             TotalPages = 1;
             CurrentPage = 1;
             return;
@@ -152,16 +152,22 @@
 
         if (!string.IsNullOrEmpty(keyword) || filterStatus != -1)
         {
-            result = await service.FilterByCustomerAsync(currentCustomerName, keyword, filterStatus, page);
+            Console.WriteLine("[DEBUG] Calling FilterByCustomerAsync");
+            result = await service.FilterByCustomerAsync(currentUserId, keyword, filterStatus, page);
         }
         else
         {
-            result = await service.GetOrdersByCustomerAsync(currentCustomerName, page);
+            Console.WriteLine("[DEBUG] Calling GetOrdersByCustomerAsync");
+            result = await service.GetOrdersByCustomerAsync(currentUserId, page);
         }
+
+        Console.WriteLine($"[DEBUG] Result - Items: {result.Items?.Count ?? 0}, TotalPages: {result.TotalPages}");
 
         listResult = result.Items;
         CurrentPage = page;
         TotalPages = result.TotalPages;
+
+        StateHasChanged();
     }
 
     // === OPEN DETAIL MODAL ===
