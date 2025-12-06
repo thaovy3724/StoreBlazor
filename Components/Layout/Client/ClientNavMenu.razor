@@ -1,5 +1,6 @@
 ﻿@* Components/ClientNavMenu.razor *@
-@inject NavigationManager Nav
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inject IJSRuntime JS
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3">
     <div class="container">
@@ -11,7 +12,7 @@
             <span style="letter-spacing: -0.5px;">FOMOStore</span>
         </a>
 
-          <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#clientNavbar">
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#clientNavbar">
             <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -80,38 +81,98 @@
 </nav>
 
 @code {
-    private string userName = "Ngô Đức Trọng";
+    private string userName = "Khách";
     private string searchQuery = "";
-    private int cartCount = 3;
+    private int cartCount = 0;
+    private bool isSessionReady = false;
 
-    private void Logout()
+    protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("Logout clicked");
+        await LoadUserData();
     }
 
-    private void GoToCart()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Nav.NavigateTo("/client/cart");
+        if (firstRender)
+        {
+            await LoadUserData();
+            StateHasChanged();
+        }
     }
 
-    private void SearchSubmit()
+    private async Task LoadUserData()
     {
-        Console.WriteLine($"Searching for: {searchQuery}");
+        try
+        {
+            await Task.Delay(100);
+
+            var storedName = await SessionStorage.GetItemAsync<string>("userName");
+            Console.WriteLine($"[DEBUG] Stored userName from session: {storedName}");
+            
+            if (!string.IsNullOrEmpty(storedName))
+            {
+                userName = storedName;
+            }
+
+            var storedCartCount = await SessionStorage.GetItemAsync<int?>("cartCount");
+            if (storedCartCount.HasValue && storedCartCount.Value > 0)
+            {
+                cartCount = storedCartCount.Value;
+            }
+
+            isSessionReady = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] LoadUserData - {ex.Message}");
+            userName = "Khách";
+            cartCount = 0;
+        }
     }
 
-    // Hàm lấy chữ cái đầu của tên để làm Avatar
+    private async Task Logout()
+    {
+        try
+        {
+            await SessionStorage.RemoveItemAsync("userId");
+            await SessionStorage.RemoveItemAsync("userName");
+            await SessionStorage.RemoveItemAsync("userEmail");
+            await SessionStorage.RemoveItemAsync("userRole");
+            await SessionStorage.RemoveItemAsync("cartCount");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Logout - {ex.Message}");
+        }
+
+        await JS.InvokeVoidAsync("navigateToClient", "/client/login");
+    }
+
+    private async Task GoToCart()
+    {
+        await JS.InvokeVoidAsync("navigateToClient", "/client/cart");
+    }
+
+    private async Task SearchSubmit()
+    {
+        if (!string.IsNullOrEmpty(searchQuery))
+        {
+            var url = $"/client/search?query={Uri.EscapeDataString(searchQuery)}";
+            await JS.InvokeVoidAsync("navigateToClient", url);
+        }
+    }
+
     private string GetInitials(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return "U";
         var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
-        return parts[^1][0].ToString().ToUpper(); // Lấy chữ cái đầu của tên
+        return parts[^1][0].ToString().ToUpper();
     }
 
-    // Hàm lấy tên (bỏ họ) 
     private string GetLastName(string name)
     {
-        if (string.IsNullOrWhiteSpace(name)) return "User";
+        if (string.IsNullOrWhiteSpace(name)) return "Khách";
         var parts = name.Split(' ');
         return parts[^1];
     }

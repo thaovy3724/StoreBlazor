@@ -1,5 +1,14 @@
 ﻿@page "/client/login"
 @layout ClientLayout
+@inject StoreBlazor.Services.Auth.Interfaces.IAuthService AuthService
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inject IJSRuntime JS
+
+<div id="loadingOverlay" class="loading-overlay @(isLoading ? "" : "d-none")">
+    <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
 
 <div class="container py-5">
     <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
@@ -8,23 +17,44 @@
                 <div class="card-body p-5">
 
                     <div class="text-center mb-4">
-
                         <h3 class="fw-bold text-dark">Đăng nhập</h3>
                         <p class="text-muted">Chào mừng bạn quay trở lại!</p>
                     </div>
 
-                    <form>
+                    <form @onkeydown="HandleKeyDown">
                         <div class="form-floating mb-3">
-                            <input type="email" class="form-control" id="loginEmail" placeholder="name@example.com">
+                            <input class="form-control @(EmailError != null ? "is-invalid" : "")"
+                                   id="loginEmail"
+                                   placeholder="name@example.com"
+                                   @bind="Email"
+                                   @bind:event="oninput"
+                                   disabled="@isLoading" />
                             <label for="loginEmail">Địa chỉ Email</label>
+                            @if (EmailError != null)
+                            {
+                                <div class="invalid-feedback">@EmailError</div>
+                            }
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input type="password" class="form-control" id="loginPassword" placeholder="Password">
+                            <input type="password"
+                                   class="form-control @(PasswordError != null ? "is-invalid" : "")"
+                                   id="loginPassword"
+                                   placeholder="Password"
+                                   @bind="Password"
+                                   @bind:event="oninput"
+                                   disabled="@isLoading" />
                             <label for="loginPassword">Mật khẩu</label>
+                            @if (PasswordError != null)
+                            {
+                                <div class="invalid-feedback">@PasswordError</div>
+                            }
                         </div>
 
-                        <button type="button" class="btn btn-primary w-100 py-3 rounded-3 fw-bold mb-3 shadow-sm">
+                        <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold mb-3 shadow-sm"
+                                type="button"
+                                @onclick="LoginAsync"
+                                disabled="@isLoading">
                             ĐĂNG NHẬP
                         </button>
                     </form>
@@ -43,5 +73,84 @@
 </div>
 
 @code {
+    private string Email = string.Empty;
+    private string Password = string.Empty;
 
+    private string? EmailError;
+    private string? PasswordError;
+
+    private bool isLoading = false;
+
+    private bool Validate()
+    {
+        EmailError = null;
+        PasswordError = null;
+
+        if (string.IsNullOrWhiteSpace(Email))
+        {
+            EmailError = "Vui lòng nhập email.";
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+        {
+            EmailError = "Email không hợp lệ.";
+        }
+
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            PasswordError = "Vui lòng nhập mật khẩu.";
+        }
+
+        return EmailError == null && PasswordError == null;
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !isLoading)
+        {
+            await LoginAsync();
+        }
+    }
+
+    private async Task LoginAsync()
+    {
+        if (!Validate()) return;
+
+        isLoading = true;
+        try
+        {
+            var dto = new StoreBlazor.DTO.Client.LoginDTO { Email = Email, Password = Password };
+            var result = await AuthService.LoginAsync(dto, "customer");
+
+            if (result.Type == "success")
+            {
+                var user = await AuthService.GetCurrentUserAsync(Email);
+                if (user != null)
+                {
+                    await SessionStorage.SetItemAsync("userId", user.UserId);
+                    await SessionStorage.SetItemAsync("userName", user.FullName);
+                    await SessionStorage.SetItemAsync("userEmail", user.Username);
+                    await SessionStorage.SetItemAsync("userRole", user.Role);
+                    await SessionStorage.SetItemAsync("cartCount", 0);
+                    
+                    Console.WriteLine($"[DEBUG] Session saved - userName: {user.FullName}");
+                }
+
+                await JS.InvokeVoidAsync("showAlert", result.Message, "success");
+                await JS.InvokeVoidAsync("navigateToClientWithDelay", "/client", 2000);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("showAlert", result.Message ?? "Đăng nhập thất bại.", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("showAlert", $"Có lỗi xảy ra: {ex.Message}", "error");
+            Console.WriteLine($"[ERROR] LoginAsync - {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
 }

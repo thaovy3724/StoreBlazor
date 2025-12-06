@@ -6,8 +6,11 @@ using StoreBlazor.Services.Admin.Implementations;
 using StoreBlazor.Services.Admin.Interfaces;
 using StoreBlazor.Services.Client.Implementations;
 using StoreBlazor.Services.Client.Interfaces;
+using StoreBlazor.Services.Auth.Implementations;
+using StoreBlazor.Services.Auth.Interfaces;
 using StoreBlazor.Services.Payment.Implementations;
 using StoreBlazor.Services.Payment;
+using Blazored.SessionStorage;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,8 +34,12 @@ builder.Services.AddScoped<IMoMoService, MoMoService>();
 builder.Services.AddScoped<IProductManagerService, ProductManagerService>();
 builder.Services.AddScoped<IStatisticService, StatisticService>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddScoped<IProductService, ProductService>();
+
+// ??ng ký Blazored.SessionStorage
+builder.Services.AddBlazoredSessionStorage();
 
 builder.Services.Configure<FormOptions>(options =>
 {
@@ -54,7 +61,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 
 app.UseAntiforgery();
 
