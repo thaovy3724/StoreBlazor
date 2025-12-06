@@ -1,0 +1,144 @@
+﻿@using StoreBlazor.DTO.Admin.OrderManager
+
+@* Modal xem chi tiết đơn hàng *@
+@if (Model != null)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 rounded-4">
+                <div class="modal-header border-0 bg-light rounded-top-4">
+                    <h5 class="modal-title fw-bold text-primary">
+                        Chi tiết đơn hàng #@Model.OrderId
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="HandleClose"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded-3">
+                        <div>
+                            <small class="text-muted d-block">Ngày đặt hàng</small>
+                            <span class="fw-bold">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block">Trạng thái</small>
+                            <span class="badge @GetStatusBadgeClass(Model.Status) text-dark-emphasis">
+                                @GetStatusLabel(Model.Status)
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold border-bottom pb-2 mb-3">Thông tin khách hàng</h6>
+                            <p class="mb-1"><strong>Tên khách hàng:</strong> @Model.CustomerName</p>
+                            <p class="mb-0"><strong>Địa chỉ giao hàng:</strong> @Model.UserName</p>
+                        </div>
+                        <div class="col-md-6 mt-3 mt-md-0">
+                            <h6 class="fw-bold border-bottom pb-2 mb-3">Thanh toán</h6>
+                            <p class="mb-1"><strong>Phương thức:</strong> @GetPaymentMethodLabel(Model.PaymentMethod)</p>
+                            <p class="mb-1"><strong>Tiền sản phẩm:</strong> @Model.TotalAmount.ToString("N0") đ</p>
+                            @if (!string.IsNullOrEmpty(Model.PromoCode))
+                            {
+                                <p class="mb-1"><strong>Mã giảm giá:</strong> @Model.PromoCode</p>
+                                <p class="mb-1"><strong>Tiền giảm:</strong> @Model.DiscountAmount.ToString("N0") đ</p>
+                            }
+                        </div>
+                    </div>
+                    @* Danh sách sản phẩm trong chi tiết đơn hàng *@
+                    <h6 class="fw-bold border-bottom pb-2 mb-3">Sản phẩm đã mua</h6>
+                    <div class="list-group list-group-flush mb-3">
+                        @if (Model.Items != null && Model.Items.Any())
+                        {
+                            @foreach (var detail in Model.Items)
+                            {
+                                <div class="list-group-item px-0 d-flex align-items-center">
+                                    <img src="/uploads/@detail.ProductImage" class="rounded border me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0 small fw-bold">@detail.ProductName</h6>
+                                        <small class="text-muted">x @detail.Quantity</small>
+                                    </div>
+                                    <div class="text-end fw-bold">
+                                        @detail.Subtotal.ToString("N0")đ
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top bg-light rounded-bottom-4 justify-content-between">
+                    <div class="fs-5">
+                        Tổng cộng: <strong class="text-primary">@((Model.TotalAmount - Model.DiscountAmount).ToString("N0"))đ</strong>
+                    </div>
+                    <div>
+                        @if (Model.Status == OrderStatus.Pending)
+                        {
+                            <button class="btn btn-danger me-2" @onclick="HandleCancelOrder">
+                                <i class="bi bi-x-circle"></i> Hủy đơn hàng
+                            </button>
+                        }
+                        <button class="btn btn-secondary" @onclick="HandleClose">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public OrderDetailDto? Model { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnCancel { get; set; }
+
+    private void HandleClose()
+    {
+        OnClose.InvokeAsync();
+    }
+
+    private async Task HandleCancelOrder()
+    {
+        if (Model != null)
+        {
+            await OnCancel.InvokeAsync(Model.OrderId);
+        }
+    }
+
+    private string GetStatusBadgeClass(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Pending => "bg-warning-subtle text-warning-emphasis border-warning-subtle",
+            OrderStatus.Paid => "bg-info-subtle text-info-emphasis border-info-subtle",
+            OrderStatus.Cancelled => "bg-danger-subtle text-danger-emphasis border-danger-subtle",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusLabel(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Pending => "Chờ xử lý",
+            OrderStatus.Paid => "Đã thanh toán",
+            OrderStatus.Cancelled => "Đã hủy",
+            _ => "Không rõ"
+        };
+    }
+
+    private string GetPaymentMethodLabel(PaymentMethod method)
+    {
+        return method switch
+        {
+            PaymentMethod.Cash => "Tiền mặt",
+            PaymentMethod.Card => "Thẻ",
+            PaymentMethod.BankTransfer => "Chuyển khoản",
+            PaymentMethod.EWallet => "Ví điện tử",
+            _ => "Không xác định"
+        };
+    }
+}

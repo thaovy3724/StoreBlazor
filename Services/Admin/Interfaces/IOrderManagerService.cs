@@ -13,6 +13,10 @@ namespace StoreBlazor.Services.Admin.Interfaces
         Task<ServiceResult> CancelAsync(int orderId);
         Task<OrderDetailDto?> GetOrderDetailAsync(int orderId);
         Task<PageResult<OrderTableDto>> FilterAsync(string keyword, int status, decimal? priceFrom, decimal? priceTo, int page);
+
+        // Cho client
+        Task<PageResult<OrderTableDto>> GetOrdersByCustomerAsync(string customerName, int page);
+        Task<PageResult<OrderTableDto>> FilterByCustomerAsync(string customerName, string keyword, int status, int page);
     }
 
 }
