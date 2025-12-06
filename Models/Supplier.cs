@@ -8,6 +8,7 @@ namespace StoreBlazor.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("supplier_id")]
         public int SupplierId { get; set; }
 
         [Required]

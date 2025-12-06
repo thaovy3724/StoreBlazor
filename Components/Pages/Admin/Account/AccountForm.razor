@@ -1,0 +1,141 @@
+﻿<!-- Modal dùng chung -->
+<div class="modal fade" id="accountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="accountForm" @onsubmit:preventDefault="true" @onsubmit="HandleOnSubmit">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accountModalTitle">
+                        @(IsEditMode ? "Chỉnh sửa tài khoản" : "Thêm tài khoản")
+                    </h5>
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="modal"
+                            @onclick="HandleOnClose"
+                            aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên đăng nhập</label>
+                        <input type="text" class="form-control @(UsernameError != null ? "is-invalid" : "")"
+                               @bind="Model.Username">
+                        <div class="invalid-feedback">@UsernameError</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Họ và tên</label>
+                        <input type="text" class="form-control @(FullNameError != null ? "is-invalid" : "")"
+                               @bind="Model.FullName">
+                        <div class="invalid-feedback">@FullNameError</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mật khẩu @(IsEditMode ? "(Để trống nếu không đổi)" : "")</label>
+                        <input type="password" class="form-control @(PasswordError != null ? "is-invalid" : "")"
+                               @bind="Model.Password">
+                        <div class="invalid-feedback">@PasswordError</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Vai trò</label>
+                        <select class="form-control" @bind="Model.Role">
+                            <option value="@Role.Admin">Admin</option>
+                            <option value="@Role.Staff">Staff</option>
+                            <option value="@Role.Customer">Customer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public User Model { get; set; } = new();
+
+    [Parameter]
+    public bool IsEditMode { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<User> OnSave { get; set; }
+
+    // Error handling
+    private string? UsernameError;
+    private string? FullNameError;
+    private string? PasswordError;
+
+    protected override void OnParametersSet()
+    {
+        ClearErrors();
+    }
+
+    private void HandleOnClose()
+    {
+        ClearErrors();
+        OnClose.InvokeAsync();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        if (ValidateForm())
+        {
+            await OnSave.InvokeAsync(Model);
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void ClearErrors()
+    {
+        UsernameError = null;
+        FullNameError = null;
+        PasswordError = null;
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+
+        // Validate Username
+        if (string.IsNullOrEmpty(Model.Username))
+        {
+            UsernameError = "Tên đăng nhập không được để trống";
+            isValid = false;
+        }
+        else if (Model.Username.Length > 50)
+        {
+            UsernameError = "Tên đăng nhập tối đa 50 ký tự";
+            isValid = false;
+        }
+
+        // Validate FullName
+        if (!string.IsNullOrEmpty(Model.FullName) && Model.FullName.Length > 100)
+        {
+            FullNameError = "Họ và tên tối đa 100 ký tự";
+            isValid = false;
+        }
+
+        // Validate Password
+        if (!IsEditMode && string.IsNullOrEmpty(Model.Password))
+        {
+            PasswordError = "Mật khẩu không được để trống";
+            isValid = false;
+        }
+        else if (!string.IsNullOrEmpty(Model.Password) && Model.Password.Length < 6)
+        {
+            PasswordError = "Mật khẩu phải có ít nhất 6 ký tự";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+}

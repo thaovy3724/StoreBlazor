@@ -33,6 +33,10 @@ builder.Services.AddScoped<IStatisticService, StatisticService>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
 
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<ISupplierService, SupplierService>();
+
 
 builder.Services.Configure<FormOptions>(options =>
 {
