@@ -1,4 +1,7 @@
-﻿@* ﻿@functions
+﻿@page "/admin"
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+
+@* ﻿@functions
 {
     string IsActive(string controller)
         => ViewContext.RouteData.Values["controller"]?.ToString() == controller ? "active" : "";
@@ -7,63 +10,11 @@
 <!-- Sidebar bên trái -->
 <div class="sidebar d-flex flex-column pt-3">
     <nav class="nav flex-column mt-2">
-        <a class="nav-link" href="/admin/category">
-            <i class="bi bi-tags-fill text-primary"></i>
-            <span>Quản lý loại sản phẩm</span>
-        </a>
-        <a class="nav-link" href="/admin/promotion">
-            <i class="bi bi-gift-fill text-primary"></i>
-            <span>Quản lý khuyến mãi</span>
-        </a>
-        <a class="nav-link" href="/admin/order">
-            <i class="bi bi-receipt-cutoff text-primary"></i>
-            <span>Quản lý đơn hàng</span>
-        </a>
-        <a class="nav-link" href="/admin/product">
-            <i class="bi bi-box-seam text-primary"></i>
-            <span>Quản lý sản phẩm</span>
-        </a>
-        <a class="nav-link" href="/admin/supplier">
-            <i class="bi bi-truck text-primary"></i>
-            <span>Quản lý nhà cung cấp</span>
-        </a>
-        <a class="nav-link" href="/admin/account">
-            <i class="bi bi-people-fill text-primary"></i>
-            <span>Quản lý tài khoản</span>
-        </a>
-        <a class="nav-link" href="/admin/customer">
-            <i class="bi bi-person-lines-fill text-primary"></i>
-            <span>Quản lý khách hàng</span>
-        </a>
-        <a class="nav-link" href="/admin/orderstaff">
-            <i class="bi bi-cart-fill text-primary"></i>
-            <span>Trang bán hàng</span>
-        </a>
-        <a class="nav-link" href="/admin/statistic">
-            <i class="bi bi-bar-chart-line-fill text-primary"></i>
-            <span>Thống kê</span>
-        </a>
-        @* @if (HttpContextAccessor.HttpContext.Session.GetString("Role") == "Admin")
+        @if (!string.IsNullOrWhiteSpace(userRole) && userRole.Trim().ToLower() == "admin")
         {
-            <a class="nav-link" href="/admin/user">
-                <i class="bi bi-people-fill text-primary"></i>
-                <span>Quản lý tài khoản</span>
-            </a>
-            <a class="nav-link" href="/admin/customer">
-                <i class="bi bi-person-lines-fill text-primary"></i>
-                <span>Quản lý khách hàng</span>
-            </a>
-            <a class="nav-link" href="/admin/product">
-                <i class="bi bi-box-seam text-primary"></i>
-                <span>Quản lý sản phẩm</span>
-            </a>
             <a class="nav-link" href="/admin/category">
                 <i class="bi bi-tags-fill text-primary"></i>
                 <span>Quản lý loại sản phẩm</span>
-            </a>
-            <a class="nav-link" href="/admin/supplier">
-                <i class="bi bi-truck text-primary"></i>
-                <span>Quản lý nhà cung cấp</span>
             </a>
             <a class="nav-link" href="/admin/promotion">
                 <i class="bi bi-gift-fill text-primary"></i>
@@ -73,24 +24,50 @@
                 <i class="bi bi-receipt-cutoff text-primary"></i>
                 <span>Quản lý đơn hàng</span>
             </a>
-            <a class="nav-link" href="/admin/statistics">
-                <i class="bi bi-bar-chart-line-fill text-primary"></i>
-                <span>Thống kê</span>
+            <a class="nav-link" href="/admin/product">
+                <i class="bi bi-box-seam text-primary"></i>
+                <span>Quản lý sản phẩm</span>
             </a>
-        }
-        @if (HttpContextAccessor.HttpContext.Session.GetString("Role") == "Staff")
-        {
-            <a class="nav-link" href="/admin/sale">
-                <i class="bi bi-bar-chart-line-fill text-primary"></i> Trang bán hàng
+            <a class="nav-link" href="/admin/supplier">
+                <i class="bi bi-truck text-primary"></i>
+                <span>Quản lý nhà cung cấp</span>
+            </a>
+            <a class="nav-link" href="/admin/account">
+                <i class="bi bi-people-fill text-primary"></i>
+                <span>Quản lý tài khoản</span>
             </a>
             <a class="nav-link" href="/admin/customer">
                 <i class="bi bi-person-lines-fill text-primary"></i>
                 <span>Quản lý khách hàng</span>
             </a>
-        } *@
+            <a class="nav-link" href="/admin/statistic">
+                <i class="bi bi-bar-chart-line-fill text-primary"></i>
+                <span>Thống kê</span>
+            </a>
+        }
+        else if (!string.IsNullOrWhiteSpace(userRole) && userRole.Trim().ToLower() == "staff")
+        {
+            <a class="nav-link" href="/admin/orderstaff">
+                <i class="bi bi-cart-fill text-primary"></i>
+                <span>Trang bán hàng</span>
+            </a>
+            <a class="nav-link" href="/admin/statistic">
+                <i class="bi bi-bar-chart-line-fill text-primary"></i>
+                <span>Thống kê</span>
+            </a>
+        }
     </nav>
 </div>
 
 @code {
+    private string? userRole;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            userRole = await SessionStorage.GetItemAsync<string>("adminRole");
+            StateHasChanged();
+        }
+    }
 }
