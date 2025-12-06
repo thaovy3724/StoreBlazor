@@ -1,11 +1,8 @@
 ﻿@page "/client/orderHistory"
 @layout ClientLayout
-@using StoreBlazor.Components.Pages.Admin
-@using StoreBlazor.DTO.Admin.OrderManager
 @inject IOrderManagerService service
 @inject Blazored.SessionStorage.ISessionStorageService SessionStorage
 @inherits BaseParent<Order>
-@rendermode InteractiveServer
 
 <div class="container py-5">
     <div class="row mb-4">
@@ -109,11 +106,11 @@
     private bool isPageLoaded = false;
 
     // ==== LOAD DATA ====
-    protected override Task OnInitializedAsync()
-    {
-        // KHÔNG GỌI SessionStorage ở đây nữa
-        return Task.CompletedTask;
-    }
+    // protected override Task OnInitializedAsync()
+    // {
+    //     KHÔNG GỌI SessionStorage ở đây nữa
+    //     return Task.CompletedTask;
+    // }
 
     // Dùng OnAfterRenderAsync để đảm bảo SessionStorage đã sẵn sàng
     protected override async Task OnAfterRenderAsync(bool firstRender)
