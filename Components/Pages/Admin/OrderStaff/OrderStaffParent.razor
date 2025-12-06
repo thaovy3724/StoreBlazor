@@ -11,7 +11,7 @@
         <!-- ==================== COL TRÁI: SẢN PHẨM ==================== -->
         <div class="col-md-5 border-end d-flex flex-column">
             
-            <!-- Thanh tìm kiếm + lọc -->
+            <!-- Thanh tìm kiếm + lọc (giữ component như yêu cầu) -->
             <OrderStaffFilter Categories="@categories"
                               SelectedCategoryId="@selectedCategoryId"
                               SearchKeyword="@searchKeyword"
@@ -22,14 +22,28 @@
                               OnScannerToggle="ToggleScanner"
                               OnBarcodeScanned="HandleBarcodeScanned" />
 
+            <!-- Ô quét mã (giống layout Razor Pages: #reader / #result) -->
+            @if (showScanner)
+            {
+                <main>
+                    <div id="reader"></div>
+                    <div id="result"></div>
+                </main>
+            }
+
             <!-- Danh sách sản phẩm -->
-            <div class="row g-3 flex-grow-1" style="overflow-y: auto;">
+            <div class="row g-3 flex-grow-1 align-items-start" style="overflow-y: auto;">
                 @if (products != null && products.Any())
                 {
                     foreach (var p in products)
                     {
-                        <div class="col-4">
-                            <div class="product-card d-flex flex-column h-100 justify-content-between"
+                        <div class="col-4 align-items-sketch">
+                            <div class="product-card d-flex flex-column justify-content-between"
+                                 data-id="@p.ProductId"
+                                 data-name="@p.ProductName"
+                                 data-price="@p.Price"
+                                 data-image="@p.ProductImage"
+                                 data-quantity="@p.Quantity"
                                  @onclick="() => AddToCart(p)" style="cursor: pointer;">
 
                                 @if (!string.IsNullOrWhiteSpace(p.ProductImage))
@@ -66,9 +80,8 @@
                 }
             </div>
 
-
-            <!-- Phân trang -->
-            <div class="mt-auto pt-2">
+            <!-- Phân trang (container id giống Razor Pages) -->
+            <div id="paginationContainer" class="mt-auto pt-2">
                 <Pagination CurrentPage="@CurrentPage"
                             TotalPages="@TotalPages"
                             OnPageChange="LoadProductsAsync" />
@@ -76,12 +89,12 @@
         </div>
 
         <!-- ==================== COL PHẢI: GIỎ HÀNG ==================== -->
-        <div class="col-md-7">
+        <div class="col-md-7 d-flex flex-column">
             <h5 class="mt-3">Phiếu Hàng</h5>
 
             <!-- Bảng giỏ hàng -->
-            <div class="cart-wrapper table-responsive" style="max-height: 350px; overflow-y: auto;">
-                <table class="table table-bordered cart-table">
+            <div class="cart-wrapper table-responsive flex-grow-1" style="overflow-y: auto;">
+                <table class="table table-bordered cart-table thead-separator">
                     <thead class="table-light">
                         <tr class="text-center">
                             <th style="width: 50px;"></th>
@@ -91,18 +104,18 @@
                             <th>Thành tiền</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="cart-body">
                         @if (cartItems.Any())
                         {
                             foreach (var item in cartItems)
                             {
                                 <tr>
-                                    <td class="text-center">
-                                        <button class="btn btn-sm btn-danger" @onclick="() => RemoveFromCart(item)">
-                                            <i class="bi bi-trash"></i>
+                                    <td class="text-center align-middle">
+                                        <button class="btn btn-sm btn-danger btn-remove" @onclick="() => RemoveFromCart(item)">
+                                            ×
                                         </button>
                                     </td>
-                                    <td>
+                                    <td class="align-middle">
                                         <div class="d-flex align-items-center">
                                             <img src="/uploads/@item.ProductImage" 
                                                  style="width: 50px; height: 50px; object-fit: cover;" 
@@ -110,15 +123,15 @@
                                             <span>@item.ProductName</span>
                                         </div>
                                     </td>
-                                    <td class="text-center">@item.Price.ToString("N0")đ</td>
-                                    <td class="text-center">
+                                    <td class="text-center align-middle">@item.Price.ToString("N0")đ</td>
+                                    <td class="text-center align-middle">
                                         <div class="input-group input-group-sm" style="width: 110px; margin: 0 auto;">
                                             <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, -1)">-</button>
                                             <input type="text" class="form-control text-center" value="@item.Quantity" readonly>
                                             <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, 1)">+</button>
                                         </div>
                                     </td>
-                                    <td class="text-center fw-bold">@item.Subtotal.ToString("N0")đ</td>
+                                    <td class="text-center fw-bold align-middle">@item.Subtotal.ToString("N0")đ</td>
                                 </tr>
                             }
                         }
@@ -144,32 +157,33 @@
                     <div class="mb-3">
                         <label class="form-label fw-medium">Khách hàng</label>
                         <div class="input-group">
-                            <!-- input: đảm bảo binding cập nhật trên oninput -->
-                            <input type="text" class="form-control"
+                            <!-- input có id giống Razor Pages và binding oninput -->
+                            <input id="customerPhoneInput" type="text" class="form-control"
                                    placeholder="Nhập số điện thoại"
                                    @bind="customerPhone"
-                                   @bind:event="oninput" />
+                                   @bind:event="oninput" autocomplete="off" />
                             <button class="btn btn-outline-primary" 
                                     data-bs-toggle="modal" 
                                     data-bs-target="#modalAddCustomer">
                                 <i class="bi bi-person-plus"></i>
                             </button>
                         </div>
-                        @if (selectedCustomer != null)
-                        {
-                            <div class="form-text text-secondary fst-italic mt-2">
-                                <strong>@selectedCustomer.Name</strong> - @selectedCustomer.Phone
+                        <div class="form-text text-secondary fst-italic mt-2" id="customerInfo">
+                            @if (selectedCustomer != null)
+                            {
+                                <strong>@selectedCustomer.Name</strong><span> - @selectedCustomer.Phone</span>
                                 @if (!string.IsNullOrEmpty(selectedCustomer.Address))
                                 {
-                                    <br />@selectedCustomer.Address
+                                    <br />
+                                    <span>@selectedCustomer.Address</span>
                                 }
-                            </div>
-                        }
-                        
-                        <!-- Autocomplete suggestions -->
+                            }
+                        </div>
+
+                        <!-- Autocomplete suggestions (id giống Razor Pages) -->
                         @if (customerSuggestions.Any())
                         {
-                            <div class="list-group position-absolute mt-1" style="z-index: 1000; max-width: 400px;">
+                            <div id="customerSuggestions" class="list-group position-absolute mt-1" style="z-index: 1000; max-width: 400px; display:block;">
                                 @foreach (var cust in customerSuggestions)
                                 {
                                     <button class="list-group-item list-group-item-action" 
@@ -185,7 +199,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-medium">Khuyến mãi</label>
                         <div class="input-group">
-                            <input type="text" class="form-control" 
+                            <input id="selectedPromotionInput" type="text" class="form-control" 
                                    placeholder="Chọn khuyến mãi..."
                                    value="@(selectedPromotion?.PromoCode ?? "")"
                                    readonly>
@@ -196,21 +210,21 @@
                                 <i class="bi bi-gift"></i>
                             </button>
                         </div>
-                        @if (selectedPromotion != null)
-                        {
-                            <div class="form-text text-success fst-italic">
-                                Giảm @DiscountAmount.ToString("N0")đ - @selectedPromotion.Description
-                            </div>
-                        }
+                        <div id="selectedPromotionText" class="form-text text-success fst-italic">
+                            @if (selectedPromotion != null)
+                            {
+                                <text>Giảm @DiscountAmount.ToString("N0")đ - @selectedPromotion.Description</text>
+                            }
+                        </div>
                     </div>
                 </div>
 
                 <!-- COL PHẢI: Tổng tiền + Thanh toán -->
                 <div class="col-md-6">
                     <div class="total-box">
-                        <p>Tổng tiền hàng: <strong>@TotalAmount.ToString("N0")đ</strong></p>
-                        <p>Khuyến mãi: <span class="text-danger">-@DiscountAmount.ToString("N0")đ</span></p>
-                        <h5 class="text-danger">Thành tiền: <span>@FinalAmount.ToString("N0")đ</span></h5>
+                        <p>Tổng tiền hàng: <strong id="totalAmount">@TotalAmount.ToString("N0")đ</strong></p>
+                        <p>Khuyến mãi: <span id="discountAmount" class="text-danger">-@DiscountAmount.ToString("N0")đ</span></p>
+                        <h5 class="text-danger">Thành tiền: <span id="finalAmount">@FinalAmount.ToString("N0")đ</span></h5>
 
                         <button class="btn btn-primary w-100" 
                                 data-bs-toggle="modal" 
@@ -227,6 +241,7 @@
         </div>
     </div>
 </div>
+
 <!-- Modal hiển thị kết quả thanh toán -->
 <div class="modal fade" id="modalPaymentResult" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
@@ -263,7 +278,8 @@
         </div>
     </div>
 </div>
-<!-- Form Modal -->
+
+<!-- Form Modal (giữ component form như cũ) -->
 <OrderStaffForm Promotions="@promotions"
                 TotalAmount="@TotalAmount"
                 DiscountAmount="@DiscountAmount"

@@ -11,7 +11,7 @@ window.initBarcodeScanner = async function (dotNetRef) {
 
     window.html5QrCodeInstance.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
+        { fps: 10, qrbox: { width: 450, height: 400 }},
         decodedText => {
             dotNetRef.invokeMethodAsync("HandleBarcodeScanned", decodedText);
         }

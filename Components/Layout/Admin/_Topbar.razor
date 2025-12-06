@@ -1,45 +1,65 @@
-﻿@* @inject IHttpContextAccessor HttpContextAccessor *@
+﻿@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 
 <!-- Topbar -->
 <div class="topbar">
     <div class="brand">Admin Panel</div>
     <div class="d-flex align-items-center">
-        @* TODO: Sửa bằng tên hiển thị trong session  *@
         <span class="user-info me-2">Xin chào, 
-            <a asp-controller="PersonalInfo" asp-action="Index" class="fw-bold text-decoration-none" style="color:#0d6efd">
-                Khách
+            <a href="#" class="fw-bold text-decoration-none" style="color:#0d6efd">
+                @adminName
             </a>
-            @* <a asp-controller="PersonalInfo" asp-action="Index" class="fw-bold text-decoration-none" style="color:#0d6efd">
-                @(HttpContextAccessor.HttpContext.Session.GetString("Fullname") ?? "Khách")
-            </a> *@
         </span>
         <span class="text-muted mx-2">|</span>
-        <button id="btnLogout" class="btn btn-link btn-sm p-0 text-decoration-none" style="color:#0d6efd">Đăng xuất</button>
+        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" style="color:#0d6efd" @onclick="LogoutAsync">Đăng xuất</button>
     </div>
 </div>
 
 @code {
-    // <script>
-    //     document.addEventListener("DOMContentLoaded", () => {
-    //         const btnLogout = document.getElementById("btnLogout");
-    //         if (btnLogout) {
-    //             btnLogout.addEventListener("click", async () => {
-    //                 const confirm = await Swal.fire({
-    //                     title: "Xác nhận đăng xuất?",
-    //                     text: "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
-    //                     icon: "question",
-    //                     showCancelButton: true,
-    //                     confirmButtonText: "Đăng xuất",
-    //                     cancelButtonText: "Hủy",
-    //                 });
+    private string adminName = "Khách";
 
-    //                 if (confirm.isConfirmed) {
-    //                     window.location.href = "/Auth/Logout";
-    //                     localStorage.clear();
-    //                 }
-    //             });
-    //         }
-    //     });
-    // </script>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var name = await SessionStorage.GetItemAsync<string>("adminName");
+            if (!string.IsNullOrEmpty(name))
+            {
+                adminName = name;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Load admin name - {ex.Message}");
+        }
+    }
 
+    private async Task LogoutAsync()
+    {
+        var confirmed = await JS.InvokeAsync<bool>("showLockAlert", "Xác nhận đăng xuất?");
+        
+        if (confirmed)
+        {
+            try
+            {
+                // Xóa tất cả session data
+                await SessionStorage.RemoveItemAsync("adminId");
+                await SessionStorage.RemoveItemAsync("adminName");
+                await SessionStorage.RemoveItemAsync("adminEmail");
+                await SessionStorage.RemoveItemAsync("adminRole");
+
+                await JS.InvokeVoidAsync("showAlert", "Đăng xuất thành công.", "success");
+                
+                // Điều hướng về trang đăng nhập
+                await Task.Delay(1500);
+                NavigationManager.NavigateTo("/admin/login", forceLoad: true);
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("showAlert", $"Có lỗi xảy ra: {ex.Message}", "error");
+                Console.WriteLine($"[ERROR] LogoutAsync - {ex}");
+            }
+        }
+    }
 }
