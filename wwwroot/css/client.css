@@ -1,4 +1,8 @@
-﻿/* Card sản phẩm hiệu ứng hover */
+﻿* {
+    font-family: "Lexend", sans-serif;
+}
+
+/* Card sản phẩm hiệu ứng hover */
 .product-card {
     transition: all 0.3s ease;
     border: 1px solid #eee;
