@@ -4,6 +4,7 @@
 @inject IStatisticService StatisticService
 @inject IJSRuntime JS
 
+<AdminAuthGuard>
 <div class="container-fluid p-4">
     @if (!isComponentReady)
     {
@@ -26,6 +27,7 @@
         </div>
     }
 </div>
+</AdminAuthGuard>
 
 @code {
     private WeeklyStatisticDTO? weeklyStats;

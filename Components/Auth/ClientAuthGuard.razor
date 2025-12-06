@@ -1,0 +1,52 @@
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inject NavigationManager NavigationManager
+
+@if (isAuthorized)
+{
+    @ChildContent
+}
+else if (isLoading)
+{
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool isAuthorized = false;
+    private bool isLoading = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var clientId = await SessionStorage.GetItemAsync<int?>("clientId");
+                
+                if (clientId == null || clientId == 0)
+                {
+                    NavigationManager.NavigateTo("/client/login", forceLoad: true);
+                }
+                else
+                {
+                    isAuthorized = true;
+                }
+            }
+            catch
+            {
+                NavigationManager.NavigateTo("/client/login", forceLoad: true);
+            }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+}
