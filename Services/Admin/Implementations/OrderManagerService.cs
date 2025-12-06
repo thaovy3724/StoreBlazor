@@ -150,5 +150,60 @@ namespace StoreBlazor.Services.Admin.Implementations
                 Message = "Đã hủy đơn hàng thành công!"
             };
         }
+
+        // ==== THÊM VÀO OrderManagerService.cs ====
+
+        // Lấy đơn hàng của 1 khách hàng cụ thể
+        public async Task<PageResult<OrderTableDto>> GetOrdersByCustomerAsync(string customerName, int page)
+        {
+            var query = _dbContext.Orders
+                .Include(o => o.Customer)
+                .Where(o => o.Customer != null && o.Customer.Name == customerName) // Lọc theo tên khách hàng
+                .OrderByDescending(o => o.OrderId)
+                .Select(o => new OrderTableDto
+                {
+                    OrderId = o.OrderId,
+                    CustomerName = o.Customer != null ? o.Customer.Name : "Khách lẻ",
+                    OrderDate = o.OrderDate,
+                    TotalAmount = o.TotalAmount,
+                    Status = o.Status
+                });
+
+            return await GetPagedAsync(query, page);
+        }
+
+        // Lọc đơn hàng của 1 khách hàng cụ thể
+        public async Task<PageResult<OrderTableDto>> FilterByCustomerAsync(string customerName, string keyword, int status, int page)
+        {
+            var query = _dbContext.Orders
+                .Include(o => o.Customer)
+                .Where(o => o.Customer != null && o.Customer.Name == customerName) // Lọc theo tên khách hàng
+                .AsQueryable();
+
+            // Lọc theo mã đơn hàng
+            if (!string.IsNullOrEmpty(keyword) && int.TryParse(keyword, out int orderId))
+            {
+                query = query.Where(o => o.OrderId == orderId);
+            }
+
+            // Lọc theo trạng thái
+            if (status != -1)
+            {
+                query = query.Where(o => (int)o.Status == status);
+            }
+
+            query = query.OrderByDescending(o => o.OrderDate);
+
+            var dtoQuery = query.Select(o => new OrderTableDto
+            {
+                OrderId = o.OrderId,
+                CustomerName = o.Customer != null ? o.Customer.Name : "Khách lẻ",
+                OrderDate = o.OrderDate,
+                TotalAmount = o.TotalAmount,
+                Status = o.Status
+            });
+
+            return await GetPagedAsync<OrderTableDto>(dtoQuery, page);
+        }
     }
 }
