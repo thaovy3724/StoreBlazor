@@ -6,287 +6,289 @@
 @inject NavigationManager Nav
 @inject IJSRuntime JS
 
-<div class="container-fluid p-1 vh-100">
-    <div class="row bg-white">
-        <!-- ==================== COL TRÁI: SẢN PHẨM ==================== -->
-        <div class="col-md-5 border-end d-flex flex-column">
-            
-            <!-- Thanh tìm kiếm + lọc (giữ component như yêu cầu) -->
-            <OrderStaffFilter Categories="@categories"
-                              SelectedCategoryId="@selectedCategoryId"
-                              SearchKeyword="@searchKeyword"
-                              ShowScanner="@showScanner"
-                              OnCategoryChange="HandleCategoryChange"
-                              SearchKeywordChanged="(keyword) => searchKeyword = keyword"
-                              OnSearch="() => LoadProductsAsync(1)"
-                              OnScannerToggle="ToggleScanner"
-                              OnBarcodeScanned="HandleBarcodeScanned" />
+<AdminAuthGuard>
+    <div class="container-fluid p-1 vh-100">
+        <div class="row bg-white">
+            <!-- ==================== COL TRÁI: SẢN PHẨM ==================== -->
+            <div class="col-md-5 border-end d-flex flex-column">
+                
+                <!-- Thanh tìm kiếm + lọc (giữ component như yêu cầu) -->
+                <OrderStaffFilter Categories="@categories"
+                                  SelectedCategoryId="@selectedCategoryId"
+                                  SearchKeyword="@searchKeyword"
+                                  ShowScanner="@showScanner"
+                                  OnCategoryChange="HandleCategoryChange"
+                                  SearchKeywordChanged="(keyword) => searchKeyword = keyword"
+                                  OnSearch="() => LoadProductsAsync(1)"
+                                  OnScannerToggle="ToggleScanner"
+                                  OnBarcodeScanned="HandleBarcodeScanned" />
 
-            <!-- Ô quét mã (giống layout Razor Pages: #reader / #result) -->
-            @if (showScanner)
-            {
-                <main>
-                    <div id="reader"></div>
-                    <div id="result"></div>
-                </main>
-            }
-
-            <!-- Danh sách sản phẩm -->
-            <div class="row g-3 flex-grow-1 align-items-start" style="overflow-y: auto;">
-                @if (products != null && products.Any())
+                <!-- Ô quét mã (giống layout Razor Pages: #reader / #result) -->
+                @if (showScanner)
                 {
-                    foreach (var p in products)
-                    {
-                        <div class="col-4 align-items-sketch">
-                            <div class="product-card d-flex flex-column justify-content-between"
-                                 data-id="@p.ProductId"
-                                 data-name="@p.ProductName"
-                                 data-price="@p.Price"
-                                 data-image="@p.ProductImage"
-                                 data-quantity="@p.Quantity"
-                                 @onclick="() => AddToCart(p)" style="cursor: pointer;">
-
-                                @if (!string.IsNullOrWhiteSpace(p.ProductImage))
-                                {
-                                    <img src="/uploads/@p.ProductImage"
-                                         alt="@p.ProductName"
-                                         class="img-fluid rounded mb-2" />
-                                }
-                                else
-                                {
-                                    <img src="/images/no-image.jpg"
-                                         alt="No image"
-                                         class="img-fluid rounded mb-2" />
-                                }
-
-                                <p class="mb-1 fw-semibold text-truncate" title="@p.ProductName">
-                                    @p.ProductName
-                                </p>
-
-                                <span class="text-muted small d-block mb-2">
-                                    Tồn kho: <strong class="text-success">@p.Quantity</strong>
-                                </span>
-
-                                <span class="product-price text-center">@p.Price.ToString("N0")đ</span>
-                            </div>
-                        </div>
-                    }
+                    <main>
+                        <div id="reader"></div>
+                        <div id="result"></div>
+                    </main>
                 }
-                else
-                {
-                    <div class="col-12 text-center text-muted py-3">
-                        Không có sản phẩm nào
-                    </div>
-                }
-            </div>
 
-            <!-- Phân trang (container id giống Razor Pages) -->
-            <div id="paginationContainer" class="mt-auto pt-2">
-                <Pagination CurrentPage="@CurrentPage"
-                            TotalPages="@TotalPages"
-                            OnPageChange="LoadProductsAsync" />
-            </div>
-        </div>
-
-        <!-- ==================== COL PHẢI: GIỎ HÀNG ==================== -->
-        <div class="col-md-7 d-flex flex-column">
-            <h5 class="mt-3">Phiếu Hàng</h5>
-
-            <!-- Bảng giỏ hàng -->
-            <div class="cart-wrapper table-responsive flex-grow-1" style="overflow-y: auto;">
-                <table class="table table-bordered cart-table thead-separator">
-                    <thead class="table-light">
-                        <tr class="text-center">
-                            <th style="width: 50px;"></th>
-                            <th>Sản phẩm</th>
-                            <th>Đơn giá</th>
-                            <th>Số lượng</th>
-                            <th>Thành tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cart-body">
-                        @if (cartItems.Any())
-                        {
-                            foreach (var item in cartItems)
-                            {
-                                <tr>
-                                    <td class="text-center align-middle">
-                                        <button class="btn btn-sm btn-danger btn-remove" @onclick="() => RemoveFromCart(item)">
-                                            ×
-                                        </button>
-                                    </td>
-                                    <td class="align-middle">
-                                        <div class="d-flex align-items-center">
-                                            <img src="/uploads/@item.ProductImage" 
-                                                 style="width: 50px; height: 50px; object-fit: cover;" 
-                                                 class="me-2 rounded">
-                                            <span>@item.ProductName</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-center align-middle">@item.Price.ToString("N0")đ</td>
-                                    <td class="text-center align-middle">
-                                        <div class="input-group input-group-sm" style="width: 110px; margin: 0 auto;">
-                                            <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, -1)">-</button>
-                                            <input type="text" class="form-control text-center" value="@item.Quantity" readonly>
-                                            <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, 1)">+</button>
-                                        </div>
-                                    </td>
-                                    <td class="text-center fw-bold align-middle">@item.Subtotal.ToString("N0")đ</td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    Giỏ hàng trống
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            <hr class="my-3">
-
-            <!-- Thông tin khách hàng + Thanh toán -->
-            <div class="row">
-                <!-- COL TRÁI: Khách hàng + Khuyến mãi -->
-                <div class="col-md-6" style="border-right: 2px dashed #6c757d;">
-                    <!-- Khách hàng -->
-                    <div class="mb-3">
-                        <label class="form-label fw-medium">Khách hàng</label>
-                        <div class="input-group">
-                            <!-- input có id giống Razor Pages và binding oninput -->
-                            <input id="customerPhoneInput" type="text" class="form-control"
-                                   placeholder="Nhập số điện thoại"
-                                   @bind="customerPhone"
-                                   @bind:event="oninput" autocomplete="off" />
-                            <button class="btn btn-outline-primary" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#modalAddCustomer">
-                                <i class="bi bi-person-plus"></i>
-                            </button>
-                        </div>
-                        <div class="form-text text-secondary fst-italic mt-2" id="customerInfo">
-                            @if (selectedCustomer != null)
-                            {
-                                <strong>@selectedCustomer.Name</strong><span> - @selectedCustomer.Phone</span>
-                                @if (!string.IsNullOrEmpty(selectedCustomer.Address))
-                                {
-                                    <br />
-                                    <span>@selectedCustomer.Address</span>
-                                }
-                            }
-                        </div>
-
-                        <!-- Autocomplete suggestions (id giống Razor Pages) -->
-                        @if (customerSuggestions.Any())
-                        {
-                            <div id="customerSuggestions" class="list-group position-absolute mt-1" style="z-index: 1000; max-width: 400px; display:block;">
-                                @foreach (var cust in customerSuggestions)
-                                {
-                                    <button class="list-group-item list-group-item-action" 
-                                            @onclick="() => SelectCustomer(cust)">
-                                        <strong>@cust.Name</strong> - @cust.Phone
-                                    </button>
-                                }
-                            </div>
-                        }
-                    </div>
-
-                    <!-- Khuyến mãi -->
-                    <div class="mb-3">
-                        <label class="form-label fw-medium">Khuyến mãi</label>
-                        <div class="input-group">
-                            <input id="selectedPromotionInput" type="text" class="form-control" 
-                                   placeholder="Chọn khuyến mãi..."
-                                   value="@(selectedPromotion?.PromoCode ?? "")"
-                                   readonly>
-                            <button class="btn btn-outline-primary" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#modalPromotion"
-                                    disabled="@(!cartItems.Any())">
-                                <i class="bi bi-gift"></i>
-                            </button>
-                        </div>
-                        <div id="selectedPromotionText" class="form-text text-success fst-italic">
-                            @if (selectedPromotion != null)
-                            {
-                                <text>Giảm @DiscountAmount.ToString("N0")đ - @selectedPromotion.Description</text>
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <!-- COL PHẢI: Tổng tiền + Thanh toán -->
-                <div class="col-md-6">
-                    <div class="total-box">
-                        <p>Tổng tiền hàng: <strong id="totalAmount">@TotalAmount.ToString("N0")đ</strong></p>
-                        <p>Khuyến mãi: <span id="discountAmount" class="text-danger">-@DiscountAmount.ToString("N0")đ</span></p>
-                        <h5 class="text-danger">Thành tiền: <span id="finalAmount">@FinalAmount.ToString("N0")đ</span></h5>
-
-                        <button class="btn btn-primary w-100" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#modalPayment"
-                                disabled="@(!cartItems.Any())">
-                            <i class="bi bi-cash-coin me-2"></i> Thanh toán
-                        </button>
-                        <button class="btn btn-outline-danger w-100 mt-2" @onclick="ClearCart">
-                            <i class="bi bi-x-circle me-2"></i> Hủy
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal hiển thị kết quả thanh toán -->
-<div class="modal fade" id="modalPaymentResult" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="ClosePaymentResultModal"></button>
-            </div>
-            <div class="modal-body text-center py-5">
-                @if (paymentResult != null)
-                {
-                    @if (paymentResult.Success)
+                <!-- Danh sách sản phẩm -->
+                <div class="row g-3 flex-grow-1 align-items-start" style="overflow-y: auto;">
+                    @if (products != null && products.Any())
                     {
-                        <i class="bi bi-check-circle text-success" style="font-size: 5rem;"></i>
-                        <h4 class="mt-3 fw-bold text-success">Thanh toán thành công!</h4>
-                        <p class="text-muted mb-2">Mã đơn hàng: <strong>#@paymentResult.OrderId</strong></p>
-                        @if (!string.IsNullOrEmpty(paymentResult.TransactionId))
+                        foreach (var p in products)
                         {
-                            <p class="text-muted">Mã giao dịch: <strong>@paymentResult.TransactionId</strong></p>
+                            <div class="col-4 align-items-sketch">
+                                <div class="product-card d-flex flex-column justify-content-between"
+                                     data-id="@p.ProductId"
+                                     data-name="@p.ProductName"
+                                     data-price="@p.Price"
+                                     data-image="@p.ProductImage"
+                                     data-quantity="@p.Quantity"
+                                     @onclick="() => AddToCart(p)" style="cursor: pointer;">
+
+                                    @if (!string.IsNullOrWhiteSpace(p.ProductImage))
+                                    {
+                                        <img src="/uploads/@p.ProductImage"
+                                             alt="@p.ProductName"
+                                             class="img-fluid rounded mb-2" />
+                                    }
+                                    else
+                                    {
+                                        <img src="/images/no-image.jpg"
+                                             alt="No image"
+                                             class="img-fluid rounded mb-2" />
+                                    }
+
+                                    <p class="mb-1 fw-semibold text-truncate" title="@p.ProductName">
+                                        @p.ProductName
+                                    </p>
+
+                                    <span class="text-muted small d-block mb-2">
+                                        Tồn kho: <strong class="text-success">@p.Quantity</strong>
+                                    </span>
+
+                                    <span class="product-price text-center">@p.Price.ToString("N0")đ</span>
+                                </div>
+                            </div>
                         }
                     }
                     else
                     {
-                        <i class="bi bi-x-circle text-danger" style="font-size: 5rem;"></i>
-                        <h4 class="mt-3 fw-bold text-danger">Thanh toán thất bại!</h4>
-                        <p class="text-muted">@paymentResult.Message</p>
+                        <div class="col-12 text-center text-muted py-3">
+                            Không có sản phẩm nào
+                        </div>
                     }
-                }
+                </div>
+
+                <!-- Phân trang (container id giống Razor Pages) -->
+                <div id="paginationContainer" class="mt-auto pt-2">
+                    <Pagination CurrentPage="@CurrentPage"
+                                TotalPages="@TotalPages"
+                                OnPageChange="LoadProductsAsync" />
+                </div>
             </div>
-            <div class="modal-footer border-0 justify-content-center">
-                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal" @onclick="ClosePaymentResultModal">
-                    Đóng
-                </button>
+
+            <!-- ==================== COL PHẢI: GIỎ HÀNG ==================== -->
+            <div class="col-md-7 d-flex flex-column">
+                <h5 class="mt-3">Phiếu Hàng</h5>
+
+                <!-- Bảng giỏ hàng -->
+                <div class="cart-wrapper table-responsive flex-grow-1" style="overflow-y: auto;">
+                    <table class="table table-bordered cart-table thead-separator">
+                        <thead class="table-light">
+                            <tr class="text-center">
+                                <th style="width: 50px;"></th>
+                                <th>Sản phẩm</th>
+                                <th>Đơn giá</th>
+                                <th>Số lượng</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-body">
+                            @if (cartItems.Any())
+                            {
+                                foreach (var item in cartItems)
+                                {
+                                    <tr>
+                                        <td class="text-center align-middle">
+                                            <button class="btn btn-sm btn-danger btn-remove" @onclick="() => RemoveFromCart(item)">
+                                                ×
+                                            </button>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="d-flex align-items-center">
+                                                <img src="/uploads/@item.ProductImage" 
+                                                     style="width: 50px; height: 50px; object-fit: cover;" 
+                                                     class="me-2 rounded">
+                                                <span>@item.ProductName</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">@item.Price.ToString("N0")đ</td>
+                                        <td class="text-center align-middle">
+                                            <div class="input-group input-group-sm" style="width: 110px; margin: 0 auto;">
+                                                <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, -1)">-</button>
+                                                <input type="text" class="form-control text-center" value="@item.Quantity" readonly>
+                                                <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, 1)">+</button>
+                                            </div>
+                                        </td>
+                                        <td class="text-center fw-bold align-middle">@item.Subtotal.ToString("N0")đ</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        Giỏ hàng trống
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- Thông tin khách hàng + Thanh toán -->
+                <div class="row">
+                    <!-- COL TRÁI: Khách hàng + Khuyến mãi -->
+                    <div class="col-md-6" style="border-right: 2px dashed #6c757d;">
+                        <!-- Khách hàng -->
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Khách hàng</label>
+                            <div class="input-group">
+                                <!-- input có id giống Razor Pages và binding oninput -->
+                                <input id="customerPhoneInput" type="text" class="form-control"
+                                       placeholder="Nhập số điện thoại"
+                                       @bind="customerPhone"
+                                       @bind:event="oninput" autocomplete="off" />
+                                <button class="btn btn-outline-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalAddCustomer">
+                                    <i class="bi bi-person-plus"></i>
+                                </button>
+                            </div>
+                            <div class="form-text text-secondary fst-italic mt-2" id="customerInfo">
+                                @if (selectedCustomer != null)
+                                {
+                                    <strong>@selectedCustomer.Name</strong><span> - @selectedCustomer.Phone</span>
+                                    @if (!string.IsNullOrEmpty(selectedCustomer.Address))
+                                    {
+                                        <br />
+                                        <span>@selectedCustomer.Address</span>
+                                    }
+                                }
+                            </div>
+
+                            <!-- Autocomplete suggestions (id giống Razor Pages) -->
+                            @if (customerSuggestions.Any())
+                            {
+                                <div id="customerSuggestions" class="list-group position-absolute mt-1" style="z-index: 1000; max-width: 400px; display:block;">
+                                    @foreach (var cust in customerSuggestions)
+                                    {
+                                        <button class="list-group-item list-group-item-action" 
+                                                @onclick="() => SelectCustomer(cust)">
+                                            <strong>@cust.Name</strong> - @cust.Phone
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Khuyến mãi -->
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Khuyến mãi</label>
+                            <div class="input-group">
+                                <input id="selectedPromotionInput" type="text" class="form-control" 
+                                       placeholder="Chọn khuyến mãi..."
+                                       value="@(selectedPromotion?.PromoCode ?? "")"
+                                       readonly>
+                                <button class="btn btn-outline-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalPromotion"
+                                        disabled="@(!cartItems.Any())">
+                                    <i class="bi bi-gift"></i>
+                                </button>
+                            </div>
+                            <div id="selectedPromotionText" class="form-text text-success fst-italic">
+                                @if (selectedPromotion != null)
+                                {
+                                    <text>Giảm @DiscountAmount.ToString("N0")đ - @selectedPromotion.Description</text>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COL PHẢI: Tổng tiền + Thanh toán -->
+                    <div class="col-md-6">
+                        <div class="total-box">
+                            <p>Tổng tiền hàng: <strong id="totalAmount">@TotalAmount.ToString("N0")đ</strong></p>
+                            <p>Khuyến mãi: <span id="discountAmount" class="text-danger">-@DiscountAmount.ToString("N0")đ</span></p>
+                            <h5 class="text-danger">Thành tiền: <span id="finalAmount">@FinalAmount.ToString("N0")đ</span></h5>
+
+                            <button class="btn btn-primary w-100" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalPayment"
+                                    disabled="@(!cartItems.Any())">
+                                <i class="bi bi-cash-coin me-2"></i> Thanh toán
+                            </button>
+                            <button class="btn btn-outline-danger w-100 mt-2" @onclick="ClearCart">
+                                <i class="bi bi-x-circle me-2"></i> Hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Form Modal (giữ component form như cũ) -->
-<OrderStaffForm Promotions="@promotions"
-                TotalAmount="@TotalAmount"
-                DiscountAmount="@DiscountAmount"
-                FinalAmount="@FinalAmount"
-                OnCustomerAdded="HandleCustomerAdded"
-                OnPromotionSelected="HandlePromotionSelected"
-                OnPaymentConfirmed="ProcessPayment" />
+    <!-- Modal hiển thị kết quả thanh toán -->
+    <div class="modal fade" id="modalPaymentResult" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="ClosePaymentResultModal"></button>
+                </div>
+                <div class="modal-body text-center py-5">
+                    @if (paymentResult != null)
+                    {
+                        @if (paymentResult.Success)
+                        {
+                            <i class="bi bi-check-circle text-success" style="font-size: 5rem;"></i>
+                            <h4 class="mt-3 fw-bold text-success">Thanh toán thành công!</h4>
+                            <p class="text-muted mb-2">Mã đơn hàng: <strong>#@paymentResult.OrderId</strong></p>
+                            @if (!string.IsNullOrEmpty(paymentResult.TransactionId))
+                            {
+                                <p class="text-muted">Mã giao dịch: <strong>@paymentResult.TransactionId</strong></p>
+                            }
+                        }
+                        else
+                        {
+                            <i class="bi bi-x-circle text-danger" style="font-size: 5rem;"></i>
+                            <h4 class="mt-3 fw-bold text-danger">Thanh toán thất bại!</h4>
+                            <p class="text-muted">@paymentResult.Message</p>
+                        }
+                    }
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal" @onclick="ClosePaymentResultModal">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Modal (giữ component form như cũ) -->
+    <OrderStaffForm Promotions="@promotions"
+                    TotalAmount="@TotalAmount"
+                    DiscountAmount="@DiscountAmount"
+                    FinalAmount="@FinalAmount"
+                    OnCustomerAdded="HandleCustomerAdded"
+                    OnPromotionSelected="HandlePromotionSelected"
+                    OnPaymentConfirmed="ProcessPayment" />
+</AdminAuthGuard>
 
 @code {
     // ===== STATE =====

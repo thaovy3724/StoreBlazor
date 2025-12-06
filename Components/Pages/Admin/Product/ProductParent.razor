@@ -3,6 +3,8 @@
 @layout AdminLayout
 @inject IProductManagerService service
 @inherits BaseParent<Product>
+
+<AdminAuthGuard>
 <div class="container-fluid p-4">
 
     <!-- Nội dung chính: RenderBody -->
@@ -100,6 +102,7 @@
         </div>
     </div>
 </div>
+</AdminAuthGuard>
 @* Form nhập liệu *@
 <ProductForm Model="@SelectedProductDetail"
              IsEditMode="@IsEditMode"

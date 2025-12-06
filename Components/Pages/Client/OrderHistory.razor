@@ -2,6 +2,7 @@
 @layout ClientLayout
 @rendermode InteractiveServer
 
+<ClientAuthGuard>
 <div class="container py-5">
     <div class="row mb-4">
         <div class="col-12">
@@ -161,7 +162,7 @@
         </div>
     </div>
 }
-
+</ClientAuthGuard>
 @code {
     // ENUM TRẠNG THÁI 
     public enum OrderStatus
