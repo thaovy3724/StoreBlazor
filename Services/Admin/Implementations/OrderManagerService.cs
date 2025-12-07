@@ -159,7 +159,12 @@ namespace StoreBlazor.Services.Admin.Implementations
             var query = _dbContext.Orders
                 .Include(o => o.Customer)
                 .Include(o => o.User)
-                .Where(o => o.UserId == userId) 
+                .Where(o =>
+                    o.Customer.Email == _dbContext.Users
+                        .Where(u => u.UserId == userId)
+                        .Select(u => u.Username)
+                        .FirstOrDefault()
+                )
                 .OrderByDescending(o => o.OrderId)
                 .Select(o => new OrderTableDto
                 {
@@ -181,10 +186,15 @@ namespace StoreBlazor.Services.Admin.Implementations
         {
             Console.WriteLine($"[SERVICE] FilterByCustomerAsync - userId: {userId}, keyword: '{keyword}', status: {status}");
 
+            var username = await _dbContext.Users
+                 .Where(u => u.UserId == userId)
+                 .Select(u => u.Username)
+                 .FirstOrDefaultAsync();
+
             var query = _dbContext.Orders
                 .Include(o => o.Customer)
                 .Include(o => o.User)
-                .Where(o => o.UserId == userId) 
+                .Where(o => o.Customer.Email == username)
                 .AsQueryable();
 
             // Lọc theo mã đơn hàng
