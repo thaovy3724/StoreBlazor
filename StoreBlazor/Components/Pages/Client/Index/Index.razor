@@ -1,0 +1,94 @@
+﻿@page "/client"
+@using StoreBlazor.Services
+@inject IProductService ProductService
+@inject ICategoryClientService CategoryService
+@layout ClientLayout
+
+<div class="container py-4">
+    <div class="row">
+        @* Bộ lọc sản phẩm *@
+        <IndexFilter @bind-KeyWord="@keyword"
+                     @bind-SelectedCategory="@selectedCategory"
+                     @bind-PriceFrom="@priceFrom"
+                     @bind-PriceTo="@priceTo"
+                     Categories="@categories"
+                     OnSearch="LoadPageAsync" />
+
+        @* Danh sach san pham *@
+        <div class="col-lg-9">
+            ﻿<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
+                @if (listResult != null && listResult.Any())
+                 {
+                    @foreach (var product in listResult)
+                    {
+                            <ProductCard Model = "@product"
+                                         OnViewDetail ="HandleOnViewDetail"/>
+                    }
+                }
+                else
+                {
+                    <div>Không có sản phẩm nào</div>
+                }
+            </div>
+
+            @* Phân trang *@
+            <IndexPagination CurrentPage="@CurrentPage"
+                             TotalPages="@TotalPages"
+                             OnPageChange="LoadPageAsync" />
+        </div>
+    </div>
+</div>
+<ProductDetail Model = "@selectedProduct"
+               Onclose="HandleOnclose"/>
+@code {
+    // ==== VARIABLES ====
+    private List<ProductCardDTO> listResult = new();
+    private List<Category> categories = new();
+    private int CurrentPage;
+    private int TotalPages;
+
+    private string keyword = string.Empty;
+    private int selectedCategory = -1;
+    private decimal? priceFrom = null;
+    private decimal? priceTo = null;
+
+    // ==== LOAD DATA ====
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPageAsync(1);
+        categories = await CategoryService.GetAllCategoryAsync();
+    }
+
+    protected async Task LoadPageAsync(int page)
+    {
+        PageResult<ProductCardDTO> result = new();
+
+        // Nếu có filter
+        if (!string.IsNullOrEmpty(keyword) || selectedCategory != -1 || priceFrom.HasValue || priceTo.HasValue)
+        {
+            result = await ProductService.FilterAsync(keyword, selectedCategory, priceFrom, priceTo, page);
+        }
+        else
+        {
+            result = await ProductService.GetAllProductAsync(page);
+        }
+
+        listResult = result.Items;
+        CurrentPage = page;
+        TotalPages = result.TotalPages;
+    }
+
+    // ==== VIEW DETAIL ====
+    private ProductCardDTO selectedProduct = new ProductCardDTO();
+    private void HandleOnViewDetail(ProductCardDTO item)
+    {
+        // Hiển thị chi tiết sản phẩm
+        selectedProduct = item;
+    }
+
+    private void HandleOnclose()
+    {
+        // Đóng form chi tiết sản phẩm
+        selectedProduct = new ProductCardDTO();
+    }
+}

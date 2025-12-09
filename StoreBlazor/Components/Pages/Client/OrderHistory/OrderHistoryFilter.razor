@@ -1,0 +1,66 @@
+﻿@using StoreBlazor.DTO.Admin.OrderManager
+
+@* Thanh lọc, tìm kiếm đơn hàng *@
+<div class="row mb-4 g-3 align-items-center">
+    <!-- Bộ lọc trạng thái -->
+    <div class="col-auto d-flex align-items-center">
+        <select class="form-select" @onchange="OnStatusChanged">
+            <option value="-1" selected="@(FilterStatus == -1)">Tất cả trạng thái</option>
+            <option value="@((int)OrderStatus.Pending)" selected="@(FilterStatus == (int)OrderStatus.Pending)">Chờ xử lý</option>
+            <option value="@((int)OrderStatus.Paid)" selected="@(FilterStatus == (int)OrderStatus.Paid)">Đã thanh toán</option>
+            <option value="@((int)OrderStatus.Cancelled)" selected="@(FilterStatus == (int)OrderStatus.Cancelled)">Đã hủy</option>
+        </select>
+    </div>
+
+    <!-- Ô tìm kiếm -->
+    <div class="col-auto d-flex align-items-center flex-grow-1">
+        <div class="input-group flex-grow-1">
+            <input type="text"
+                   class="form-control"
+                   placeholder="Tìm theo mã đơn hàng..."
+                   @bind="KeyWord"
+                   @onkeypress="OnKeyPress">
+            <button class="btn btn-primary" @onclick="HandleSearch">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string KeyWord { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> KeyWordChanged { get; set; }
+
+    [Parameter]
+    public int FilterStatus { get; set; } = -1;
+
+    [Parameter]
+    public EventCallback<int> FilterStatusChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnSearch { get; set; }
+
+    private async Task OnStatusChanged(ChangeEventArgs e)
+    {
+        FilterStatus = int.Parse(e.Value?.ToString() ?? "-1");
+        await HandleSearch();
+    }
+
+    private async Task HandleSearch()
+    {
+        await KeyWordChanged.InvokeAsync(KeyWord);
+        await FilterStatusChanged.InvokeAsync(FilterStatus);
+        await OnSearch.InvokeAsync(1);
+    }
+
+    private async Task OnKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleSearch();
+        }
+    }
+}

@@ -1,0 +1,86 @@
+﻿<!-- Thanh lọc -->
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+    <div class="d-flex flex-wrap gap-2 align-items-center flex-grow-1">
+        <!-- Lọc theo trạng thái -->
+        <select class="form-select form-select-sm" style="width: 180px;" 
+                @onchange="OnStatusChanged">
+            <option value="-1" selected="@(FilterStatus == -1)">Tất cả trạng thái</option>
+            <option value="@((int)OrderStatus.Pending)" selected="@(FilterStatus == (int)OrderStatus.Pending)">Chờ xử lý</option>
+            <option value="@((int)OrderStatus.Paid)" selected="@(FilterStatus == (int)OrderStatus.Paid)">Đã thanh toán</option>
+            <option value="@((int)OrderStatus.Cancelled)" selected="@(FilterStatus == (int)OrderStatus.Cancelled)">Đã hủy</option>
+        </select>
+
+        <!-- Lọc theo khoảng giá -->
+        <div class="input-group input-group-sm" style="width: 260px;">
+            <span class="input-group-text">Giá từ</span>
+            <input type="number" class="form-control" placeholder="0" min="0" 
+                   @bind="PriceFrom">
+            <span class="input-group-text">đến</span>
+            <input type="number" class="form-control" placeholder="0" min="0" 
+                   @bind="PriceTo">
+        </div>
+
+        <!-- Ô tìm kiếm -->
+        <div class="input-group input-group-sm" style="width: 300px;">
+            <input type="text" class="form-control" placeholder="Nhập mã đơn hàng, tên khách hàng"
+                   @bind="KeyWord"
+                   @onkeypress="OnKeyPress">
+            <button class="btn btn-primary" type="button" @onclick="HandleSearch">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string KeyWord { get; set; } = string.Empty;
+
+    [Parameter] 
+    public EventCallback<string> KeyWordChanged { get; set; }
+
+    [Parameter] 
+    public int FilterStatus { get; set; } = -1;
+
+    [Parameter] 
+    public EventCallback<int> FilterStatusChanged { get; set; }
+
+    [Parameter]
+    public decimal? PriceFrom { get; set; }
+
+    [Parameter]
+    public EventCallback<decimal?> PriceFromChanged { get; set; }
+
+    [Parameter]
+    public decimal? PriceTo { get; set; }
+
+    [Parameter] 
+    public EventCallback<decimal?> PriceToChanged { get; set; }
+
+    [Parameter] 
+    public EventCallback<int> OnSearch { get; set; }
+
+    // Tự động lọc khi chọn trạng thái
+    private async Task OnStatusChanged(ChangeEventArgs e)
+    {
+        FilterStatus = int.Parse(e.Value?.ToString() ?? "-1");
+        await HandleSearch();
+    }
+
+    private async Task HandleSearch()
+    {
+        await KeyWordChanged.InvokeAsync(KeyWord);
+        await FilterStatusChanged.InvokeAsync(FilterStatus);
+        await PriceFromChanged.InvokeAsync(PriceFrom);
+        await PriceToChanged.InvokeAsync(PriceTo);
+        await OnSearch.InvokeAsync(1);
+    }
+
+    private async Task OnKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleSearch();
+        }
+    }
+}

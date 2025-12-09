@@ -1,0 +1,154 @@
+﻿@page "/admin/login"
+@using StoreBlazor.Services
+@layout AdminLoginLayout
+@inject IAuthService AuthService
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inject IJSRuntime JS
+
+<div class="login-container">
+    <div id="loadingOverlay" class="loading-overlay @(isLoading ? "" : "d-none")">
+        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <div class="login-card">
+        <div class="brand">
+            <div>
+                <img style="height: 70px;" src="logo.jpg" alt="FOMO Store">
+            </div>
+            <h5 class="fw-bold mt-2">Đăng nhập Admin</h5>
+        </div>
+
+        <form @onkeydown="HandleKeyDown">
+            <div class="mb-3">
+                <label class="form-label">Tên đăng nhập</label>
+                <input type="text" 
+                       class="form-control @(UsernameError != null ? "is-invalid" : "")"
+                       placeholder="Nhập tên đăng nhập"
+                       @bind="Username"
+                       @bind:event="oninput"
+                       disabled="@isLoading" />
+                @if (UsernameError != null)
+                {
+                    <div class="text-danger small mt-2">@UsernameError</div>
+                }
+            </div>
+
+            <div class="mb-3 position-relative">
+                <label class="form-label">Mật khẩu</label>
+                <div class="input-group">
+                    <input type="password" 
+                           class="form-control @(PasswordError != null ? "is-invalid" : "")"
+                           id="adminPassword"
+                           placeholder="Nhập mật khẩu"
+                           @bind="Password"
+                           @bind:event="oninput"
+                           disabled="@isLoading" />
+                    <button type="button" class="btn btn-outline-secondary" @onclick="TogglePasswordVisibility" disabled="@isLoading">
+                        <i class="@(showPassword ? "bi bi-eye-slash" : "bi bi-eye")"></i>
+                    </button>
+                </div>
+                @if (PasswordError != null)
+                {
+                    <div class="text-danger small mt-2">@PasswordError</div>
+                }
+            </div>
+
+            <button type="button"
+                    class="btn btn-primary w-100 py-2 fw-bold"
+                    @onclick="LoginAsync"
+                    disabled="@isLoading">
+                ĐĂNG NHẬP
+            </button>
+        </form>
+    </div>
+</div>
+
+@code {
+    private string Username = string.Empty;
+    private string Password = string.Empty;
+    private bool showPassword = false;
+
+    private string? UsernameError;
+    private string? PasswordError;
+
+    private bool isLoading = false;
+
+    private void TogglePasswordVisibility()
+    {
+        showPassword = !showPassword;
+        JS.InvokeVoidAsync("togglePasswordVisibility", "adminPassword");
+    }
+
+    private bool Validate()
+    {
+        UsernameError = null;
+        PasswordError = null;
+
+        if (string.IsNullOrWhiteSpace(Username))
+        {
+            UsernameError = "Vui lòng nhập tên đăng nhập.";
+        }
+
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            PasswordError = "Vui lòng nhập mật khẩu.";
+        }
+
+        return UsernameError == null && PasswordError == null;
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !isLoading)
+        {
+            await LoginAsync();
+        }
+    }
+
+    private async Task LoginAsync()
+    {
+        if (!Validate()) return;
+
+        isLoading = true;
+        try
+        {
+            var dto = new StoreBlazor.DTO.Client.LoginDTO { Email = Username, Password = Password };
+            var result = await AuthService.LoginAsync(dto, "admin");
+
+            if (result.Type == "success")
+            {
+                var user = await AuthService.GetCurrentUserAsync(Username);
+                if (user != null)
+                {
+                    await SessionStorage.SetItemAsync("adminId", user.UserId);
+                    await SessionStorage.SetItemAsync("adminName", user.FullName);
+                    await SessionStorage.SetItemAsync("adminEmail", user.Username);
+                    await SessionStorage.SetItemAsync("adminRole", user.Role);
+                    
+                    Console.WriteLine($"[DEBUG] Admin session saved - adminName: {user.FullName}, role: {user.Role}");
+                }
+
+                await JS.InvokeVoidAsync("showAlert", result.Message, "success");
+                
+                // Điều hướng theo role
+                var redirectUrl = user?.Role?.ToLower() == "staff" ? "/admin/orderstaff" : "/admin/category";
+                await JS.InvokeVoidAsync("navigateToClientWithDelay", redirectUrl, 2000);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("showAlert", result.Message ?? "Đăng nhập thất bại.", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("showAlert", $"Có lỗi xảy ra: {ex.Message}", "error");
+            Console.WriteLine($"[ERROR] AdminLoginAsync - {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

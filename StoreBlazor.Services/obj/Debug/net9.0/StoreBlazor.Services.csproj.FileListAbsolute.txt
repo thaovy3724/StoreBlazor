@@ -1,0 +1,17 @@
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\bin\Debug\net9.0\StoreBlazor.Services.deps.json
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\bin\Debug\net9.0\StoreBlazor.Services.dll
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\bin\Debug\net9.0\StoreBlazor.Services.pdb
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\bin\Debug\net9.0\StoreBlazor.DTO.dll
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\bin\Debug\net9.0\StoreBlazor.Models.dll
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\bin\Debug\net9.0\StoreBlazor.DTO.pdb
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\bin\Debug\net9.0\StoreBlazor.Models.pdb
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\obj\Debug\net9.0\StoreBlazor.Services.csproj.AssemblyReference.cache
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\obj\Debug\net9.0\StoreBlazor.Services.GeneratedMSBuildEditorConfig.editorconfig
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\obj\Debug\net9.0\StoreBlazor.Services.AssemblyInfoInputs.cache
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\obj\Debug\net9.0\StoreBlazor.Services.AssemblyInfo.cs
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\obj\Debug\net9.0\StoreBlazor.Services.csproj.CoreCompileInputs.cache
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\obj\Debug\net9.0\StoreBla.A8955253.Up2Date
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\obj\Debug\net9.0\StoreBlazor.Services.dll
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\obj\Debug\net9.0\refint\StoreBlazor.Services.dll
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\obj\Debug\net9.0\StoreBlazor.Services.pdb
+A:\FixBugDiEm\dotNET\Github-repo\StoreBlazor\StoreBlazor.Services\obj\Debug\net9.0\ref\StoreBlazor.Services.dll

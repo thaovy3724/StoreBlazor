@@ -1,0 +1,326 @@
+﻿@page "/admin/order"
+@using StoreBlazor.DTO.Admin.OrderManager
+@layout AdminLayout
+@inject IOrderManagerService service
+@inherits BaseParent<Order>
+
+<AdminAuthGuard>
+<div class="container-fluid p-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold">Lịch sử đơn hàng</h3>
+    </div>
+    <!-- Thanh lọc -->
+    <OrderManagerFilter @bind-KeyWord="@keyword"
+                        @bind-FilterStatus="@filterStatus"
+                        @bind-PriceFrom="@priceFrom"
+                        @bind-PriceTo="@priceTo"
+                        OnSearch="LoadPageAsync" />
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light thead-separator ">
+                        <tr class="text-center">
+                            <th style="width:100px;">ID</th>
+                            <th>Tên khách hàng</th>
+                            <th>Ngày tạo đơn</th>
+                            <th>Tổng giá trị đơn hàng</th>
+                            <th>Trạng thái đơn hàng</th>
+                            <th style="width:150px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderList">
+                        @if (listResult == null || !listResult.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center">Chưa có đơn hàng</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var order in listResult)
+                            {
+                                <tr class="text-center">
+                                    <td class="text-center">@order.OrderId</td>
+                                    <td>@order.CustomerName</td>
+                                    <td>@order.OrderDate.ToString("dd/MM/yyyy hh:mm:ss tt")</td>
+                                    <td>@String.Format("{0:N0} đ", order.TotalAmount)</td>
+                                    <td>
+                                        @if (@order.Status == OrderStatus.Pending)
+                                        {
+                                            <span class="badge rounded-pill px-3 py-2 fw-semibold" style="background-color:#ffc1071a; color:#b8860b; border:1px solid #ffc107;">
+                                                Chờ xử lý
+                                            </span>
+                                        }
+                                        else if (@order.Status == OrderStatus.Paid)
+                                        {
+                                            <span class="badge rounded-pill px-3 py-2 fw-semibold" style="background-color:#0d6efd1a; color:#0d6efd; border:1px solid #0d6efd;">
+                                                Đã thanh toán
+                                            </span>
+                                        }
+                                        else if (@order.Status == OrderStatus.Cancelled)
+                                        {
+                                            <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                                                  style="background-color: #dc35451a; color: #dc3545; border: 1px solid #dc3545;">
+                                                Đã hủy
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (order.Status == OrderStatus.Pending)
+                                        {
+                                            <!-- Nút xem -->
+                                            <button class="btn btn-sm btn-light border me-1 btn-view" title="Xem"
+                                                    @onclick="() => OpenDetailForm(order.OrderId)"
+                                                    data-bs-toggle="modal" data-bs-target="#orderHistoryModal">
+                                                <i class="bi bi-eye text-primary"></i>
+                                            </button>
+                                            <!-- Hủy đơn hàng -->
+                                            <button class="btn btn-sm btn-light border me-1" title="Hủy đơn hàng" @onclick="() => CancelOrder(order.OrderId)">
+                                                <i class="bi bi-x-circle text-danger"></i>
+                                            </button>
+                                            <!-- Approve đơn hàng -->
+                                            <button class="btn btn-sm btn-light border me-1" title="Xác nhận đơn hàng" @onclick="() => ApproveOrder(order.OrderId)">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <!-- Nút xem -->
+                                            <button class="btn btn-sm btn-light border me-1 btn-view" title="Xem"
+                                                    @onclick="() => OpenDetailForm(order.OrderId)"
+                                                    data-bs-toggle="modal" data-bs-target="#orderHistoryModal"
+                                                   >
+                                                <i class="bi bi-eye text-primary"></i>
+                                            </button>
+                                            <!-- Nút in -->
+                                            <button class="btn btn-sm btn-light border me-1 btn-print" data-order-id="@order.OrderId" title="In hóa đơn"
+                                                    @onclick="() => PrintOrder(order.OrderId)">
+                                                <i class="bi bi-printer text-secondary"></i>
+                                            </button>
+                                        }
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <!-- Phân trang-->
+            <Pagination CurrentPage="@CurrentPage"
+                        TotalPages="@TotalPages"
+                        OnPageChange="LoadPageAsync" />
+        </div>
+    </div>
+</div>
+</AdminAuthGuard>
+
+<!-- Modal dùng chung -->
+<OrderManagerForm Model="@SelectedOrderDetail"
+                  IsDetailMode="@IsDetailMode"
+                  OnClose="CloseForm" />
+
+@code {
+    // ==== VARIABLES ====
+    private List<OrderTableDto> listResult = new();
+    private ServiceResult serviceResult = new();
+
+    private string keyword = string.Empty;
+    private int filterStatus = -1;
+    private decimal? priceFrom = null;
+    private decimal? priceTo = null;
+
+    // ==== LOAD DATA ====
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPageAsync(1);
+    }
+    protected override async Task LoadPageAsync(int page)
+    {
+        PageResult<OrderTableDto> result = new();
+
+        // Nếu có filter
+        if (!string.IsNullOrEmpty(keyword) || filterStatus != -1 || priceFrom.HasValue || priceTo.HasValue)
+        {
+            result = await service.FilterAsync(keyword, filterStatus, priceFrom, priceTo, page);
+        }
+        else
+        {
+            result = await service.GetAllOrdersForTableAsync(page);
+        }
+
+        listResult = result.Items;
+        CurrentPage = page;
+        TotalPages = result.TotalPages;
+    }
+    // === SAVE DATA - APPROVE/CANCEL ORDER ====
+    private async Task CancelOrder(int orderId)
+    {
+        var result = await service.CancelAsync(orderId);
+        await ShowAlertAsync(result);
+        await LoadPageAsync(CurrentPage);
+    }
+
+    private async Task ApproveOrder(int orderId)
+    {
+        var result = await service.ApproveAsync(orderId);
+        await ShowAlertAsync(result);
+        await LoadPageAsync(CurrentPage);
+    }
+    // === OPEN DETAIL FORM ===
+    private OrderDetailDto? SelectedOrderDetail { get; set; } = null;
+
+    private async Task OpenDetailForm(int orderId)
+    {
+        SelectedOrderDetail = await service.GetOrderDetailAsync(orderId);
+
+        IsDetailMode = true;
+        StateHasChanged();
+    }
+    // === IN HOA DON 
+    private async Task PrintOrder(int orderId)
+    {
+        var detail = await service.GetOrderDetailAsync(orderId);
+        if (detail == null) return;
+
+        var finalAmount = (detail.TotalAmount) - (detail.DiscountAmount);
+
+        var html = $@"
+        <!DOCTYPE html>
+        <html lang=""vi"">
+        <head>
+            <meta charset=""utf-8"">
+            <title>Hóa đơn #{detail.OrderId}</title>
+            <style>
+                @@page {{ size: 90mm auto; margin: 0; }}
+                body {{
+                    font-family: 'DejaVu Sans', Arial, sans-serif;
+                    font-size: 12.5px;
+                    line-height: 1.4;
+                    margin: 0;
+                    padding: 0;
+                    color: #000;
+
+                    display: flex;
+                    justify-content: center; 
+                    align-items: center;    
+                    height: 100vh;          
+                }}
+                .invoice {{ max-width: 90mm; width: 100%; padding: 10px; box-sizing: border-box; }}
+                .text-center {{ text-align: center; }}
+                .text-right {{ text-align: right; }}
+                .fw-bold {{ font-weight: bold; }}
+                h3 {{ margin: 0 0 8px; font-size: 17px; text-transform: uppercase; }}
+                .header, .footer {{ margin: 10px 0; }}
+                table {{ width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12.5px; }}
+                th, td {{ padding: 4px 2px; }}
+                th {{ border-bottom: 1px dashed #333; text-align: left; }}
+                .items td {{ border-bottom: 1px dotted #ccc; }}
+                .total td {{ font-weight: bold; }}
+                .grand-total td {{ font-size: 16px !important; font-weight: bold; color: #c00; border-top: 2px solid #000; }}
+                hr {{ border: none; border-top: 1px dashed #666; margin: 10px 0; }}
+                .small {{ font-size: 11px; }}
+            </style>
+        </head>
+        <body onload=""window.print(); setTimeout(() => window.close(), 800)"">
+            <div class=""invoice"">
+
+                <!-- TIÊU ĐỀ CỬA HÀNG -->
+                <div class=""header text-center"">
+                    <h3>FOMO STORE</h3>
+                    <div class=""small"">
+                        Địa chỉ: 123 Đường ABC, Q.1, TP.HCM<br>
+                        Hotline: 0909 123 456
+                    </div>
+                    <hr>
+                </div>
+
+                <!-- TIÊU ĐỀ HÓA ĐƠN -->
+                <div class=""text-center"">
+                    <h3>HÓA ĐƠN BÁN HÀNG</h3>
+                    <div>Mã đơn: <strong>#{detail.OrderId}</strong></div>
+                    <div>Ngày: {detail.OrderDate:dd/MM/yyyy HH:mm}</div>
+                </div>
+                <hr>
+
+                <!-- THÔNG TIN KHÁCH + NHÂN VIÊN -->
+                <div class=""small"">
+                    Khách hàng: <strong>{detail.CustomerName}</strong><br>
+                    Nhân viên: <strong>{detail.UserName}</strong>
+                </div>
+                <hr>
+
+                <!-- BẢNG SẢN PHẨM -->
+                <table class=""items"">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th class=""text-center"">SL</th>
+                            <th class=""text-right"">Giá</th>
+                            <th class=""text-right"">Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>";
+
+            // === VÒNG LẶP GIỮ NGUYÊN NHƯ BẠN ĐÃ VIẾT ===
+            foreach (var i in detail.Items)
+            {
+                html += $@"
+                        <tr>
+                            <td>{i.ProductName}</td>
+                            <td class=""text-center"">{i.Quantity}</td>
+                            <td class=""text-right"">{i.Price:N0}</td>
+                            <td class=""text-right"">{i.Subtotal:N0}</td>
+                        </tr>";
+            }
+
+            // === TIẾP TỤC NỐI CHUỖI ===
+            html += $@"
+                    </tbody>
+                </table>
+
+                <!-- TỔNG KẾT -->
+                <table>
+                    <tr class=""total"">
+                        <td colspan=""3"" class=""text-right fw-bold"">Thành tiền:</td>
+                        <td class=""text-right"">{detail.TotalAmount:N0} đ</td>
+                    </tr>";
+
+            // Nếu có giảm giá thì hiển thị
+            if (!string.IsNullOrEmpty(detail.PromoCode))
+            {
+                html += $@"
+                    <tr>
+                        <td colspan=""3"" class=""text-right"">Giảm giá ({detail.PromoCode}):</td>
+                        <td class=""text-right"">-{detail.DiscountAmount:N0} đ</td>
+                    </tr>";
+            }
+
+            html += $@"
+                    <tr class=""grand-total"">
+                        <td colspan=""3"" class=""text-right fw-bold"">TỔNG THANH TOÁN:</td>
+                        <td class=""text-right"">{finalAmount:N0} đ</td>
+                    </tr>
+                </table>
+
+                <div style=""margin-top: 12px; font-size: 12px;"">
+                    <strong>PTTT:</strong>{detail.PaymentMethod}<br>
+                    <strong>Trạng thái:</strong> {detail.Status}
+                </div>
+
+                <div class=""footer text-center"" style=""margin-top: 15px;"">
+                    <strong>CẢM ƠN QUÝ KHÁCH!</strong><br>
+                    <small>Hẹn gặp lại - In lúc: {DateTime.Now:HH:mm dd/MM/yyyy}</small>
+                </div>
+
+            </div>
+        </body>
+        </html>";
+
+        await JS.InvokeVoidAsync("openPrintWindow", html);
+    }
+}

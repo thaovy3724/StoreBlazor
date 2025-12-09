@@ -1,0 +1,154 @@
+﻿<!-- Modal dùng chung -->
+<div class="modal fade" id="supplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="supplierForm" @onsubmit:preventDefault="true" @onsubmit="HandleOnSubmit">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="supplierModalTitle">
+                        @(IsEditMode ? "Chỉnh sửa nhà cung cấp" : "Thêm nhà cung cấp")
+                    </h5>
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="modal"
+                            @onclick="HandleOnClose"
+                            aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên nhà cung cấp</label>
+                        <input type="text" class="form-control @(NameError != null ? "is-invalid" : "")"
+                               @bind="Model.Name">
+                        <div class="invalid-feedback">@NameError</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="text" class="form-control @(PhoneError != null ? "is-invalid" : "")"
+                               @bind="Model.Phone">
+                        <div class="invalid-feedback">@PhoneError</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control @(EmailError != null ? "is-invalid" : "")"
+                               @bind="Model.Email">
+                        <div class="invalid-feedback">@EmailError</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <textarea class="form-control @(AddressError != null ? "is-invalid" : "")"
+                                  rows="3"
+                                  @bind="Model.Address"></textarea>
+                        <div class="invalid-feedback">@AddressError</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Supplier Model { get; set; } = new();
+
+    [Parameter]
+    public bool IsEditMode { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<Supplier> OnSave { get; set; }
+
+    // Error handling
+    private string? NameError;
+    private string? PhoneError;
+    private string? EmailError;
+    private string? AddressError;
+
+    protected override void OnParametersSet()
+    {
+        ClearErrors();
+    }
+
+    private void HandleOnClose()
+    {
+        ClearErrors();
+        OnClose.InvokeAsync();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        if (ValidateForm())
+        {
+            await OnSave.InvokeAsync(Model);
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void ClearErrors()
+    {
+        NameError = null;
+        PhoneError = null;
+        EmailError = null;
+        AddressError = null;
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+
+        // Validate Name (required)
+        if (string.IsNullOrEmpty(Model.Name))
+        {
+            NameError = "Tên nhà cung cấp không được để trống";
+            isValid = false;
+        }
+        else if (Model.Name.Length > 100)
+        {
+            NameError = "Tên nhà cung cấp tối đa 100 ký tự";
+            isValid = false;
+        }
+
+        // Validate Phone (optional nhưng nếu có thì phải hợp lệ)
+        if (!string.IsNullOrEmpty(Model.Phone))
+        {
+            if (Model.Phone.Length > 20)
+            {
+                PhoneError = "Số điện thoại tối đa 20 ký tự";
+                isValid = false;
+            }
+            else if (!System.Text.RegularExpressions.Regex.IsMatch(Model.Phone, @"^0\d{9}$"))
+            {
+                PhoneError = "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0)";
+                isValid = false;
+            }
+        }
+
+        // Validate Email (optional nhưng nếu có thì phải hợp lệ)
+        if (!string.IsNullOrEmpty(Model.Email))
+        {
+            if (Model.Email.Length > 100)
+            {
+                EmailError = "Email tối đa 100 ký tự";
+                isValid = false;
+            }
+            else if (!System.Text.RegularExpressions.Regex.IsMatch(Model.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                EmailError = "Email không hợp lệ";
+                isValid = false;
+            }
+        }
+
+        return isValid;
+    }
+}
+

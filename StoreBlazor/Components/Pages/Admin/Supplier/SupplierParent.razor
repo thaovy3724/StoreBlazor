@@ -1,0 +1,153 @@
+﻿@page "/admin/supplier"
+@layout AdminLayout
+@inject ISupplierService service
+@inherits BaseParent<Supplier>
+
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold">Quản lý Nhà cung cấp</h3>
+    </div>
+
+    <SupplierSearch @bind-KeyWord="@keyword"
+                    OnSearch="LoadPageAsync" />
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light thead-separator">
+                        <tr class="text-center">
+                            <th style="width:80px;">ID</th>
+                            <th>Tên nhà cung cấp</th>
+                            <th>Số điện thoại</th>
+                            <th>Email</th>
+                            <th>Địa chỉ</th>
+                            <th style="width:150px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="supplierTableBody">
+                        @if (listResult != null && listResult.Any())
+                        {
+                            foreach (var item in listResult)
+                            {
+                                <tr class="text-center" data-id="@item.SupplierId">
+                                    <td>@($"NCC{item.SupplierId}")</td>
+                                    <td class="text-start">@item.Name</td>
+                                    <td>@(item.Phone ?? "")</td>
+                                    <td class="text-start">@(item.Email ?? "")</td>
+                                    <td class="text-start">
+                                        @if (!string.IsNullOrEmpty(item.Address))
+                                        {
+                                            <span title="@item.Address">
+                                                @(item.Address.Length > 30 ? item.Address[..30] + "..." : item.Address)
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-light border me-1 btn-edit"
+                                                title="Sửa"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#supplierModal"
+                                                @onclick="()=>OpenEditForm(item)">
+                                            <i class="bi bi-pencil text-success"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-light border btn-delete"
+                                                title="Xóa"
+                                                @onclick="() => HandleDeleteAsync(item)">
+                                            <i class="bi bi-trash text-danger"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center">Chưa có dữ liệu</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <Pagination CurrentPage="@CurrentPage"
+                        TotalPages="@TotalPages"
+                        OnPageChange="LoadPageAsync" />
+        </div>
+    </div>
+</div>
+
+<SupplierForm Model="@SelectedItem"
+              IsEditMode="@IsEditMode"
+              OnSave="HandleSaveAsync"
+              OnClose="CloseForm" />
+
+@code {
+    // ==== VARIABLES ====
+    private List<Supplier> listResult = new();
+    private ServiceResult serviceResult = new();
+    private string keyword = string.Empty;
+
+    // ==== LOAD DATA ====
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPageAsync(1);
+    }
+
+    protected override async Task LoadPageAsync(int page)
+    {
+        PageResult<Supplier> result = new();
+        if (keyword == string.Empty)
+        {
+            result = await service.GetAllSupplierAsync(page);
+        }
+        else
+        {
+            result = await service.SearchByNameAsync(keyword, page);
+        }
+
+        listResult = result.Items;
+        CurrentPage = page;
+        TotalPages = result.TotalPages;
+    }
+
+    // ==== OPEN FORM ====
+    private void OpenEditForm(Supplier item)
+    {
+        IsEditMode = true;
+        SelectedItem = new Supplier
+            {
+                SupplierId = item.SupplierId,
+                Name = item.Name,
+                Phone = item.Phone,
+                Email = item.Email,
+                Address = item.Address
+            };
+    }
+
+    // === SAVE DATA ====
+    private async Task HandleSaveAsync(Supplier model)
+    {
+        if (IsEditMode)
+        {
+            serviceResult = await service.UpdateAsync(model);
+        }
+        else
+        {
+            serviceResult = await service.CreateAsync(model);
+        }
+        await ShowAlertAsync(serviceResult);
+        await LoadPageAsync(CurrentPage);
+    }
+
+    // ==== DELETE ====
+    private async Task HandleDeleteAsync(Supplier model)
+    {
+        if (!await ConfirmDeleteAsync()) return;
+
+        serviceResult = await service.DeleteAsync(model);
+        await ShowAlertAsync(serviceResult);
+
+        await LoadPageAsync(CurrentPage);
+    }
+}
+

@@ -1,0 +1,174 @@
+﻿@using StoreBlazor.DTO.Admin.OrderManager
+<div class="modal fade" id="orderHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+
+            <!-- Header -->
+            <div class="modal-header">
+                <h5 class="modal-title">Quản lý đơn hàng #@Model?.OrderId</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        @onclick="HandleOnClose"
+                        aria-label="Close"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+                 @if (Model == null)
+                {
+                    <div>Đang tải...</div>
+                }
+                else
+                {
+                    <div class="row">
+                        <div class="col-md-7">
+                            <table class="table table-bordered cart-table thead-separator">
+                                <thead class="table-light">
+                                    <tr class="text-center">
+                                        <th>Sản phẩm</th>
+                                        <th>Hình ảnh</th>
+                                        <th>Đơn giá</th>
+                                        <th>Số lượng</th>
+                                        <th>Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cart-body" class="align-middle">
+                                    @if (Model?.Items != null && Model.Items.Any())
+                                    {
+                                        @foreach (var item in Model.Items)
+                                        {
+                                            <tr class="text-center">
+                                                <td>@item.ProductName</td>
+                                                <td>
+                                                    <img src="/uploads/@item.ProductImage" alt="@item.ProductName"
+                                                         style="width:60px; height:60px; object-fit:cover; border-radius:4px;">
+                                                </td>
+                                                <td>@item.Price.ToString("N0") đ</td>
+                                                <td>@item.Quantity</td>
+                                                <td>@item.Subtotal.ToString("N0") đ</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5" class="text-center">Đang tải...</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="col-md-5">
+                            <div class="card shadow-sm">
+                                <div class="card-header card-header-order bg-light fw-semibold">
+                                    Thông tin hóa đơn #
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2 d-flex justify-content-between">
+                                        <span class="fw-semibold">Tên khách hàng:</span>
+                                        <span class="order-history-customername">@Model?.CustomerName</span>
+                                    </div>
+                                    <div class="mb-2 d-flex justify-content-between">
+                                        <span class="fw-semibold">Nhân viên phụ trách:</span>
+                                        <span class="order-history-username">@Model?.UserName</span>
+                                    </div>
+                                    <div class="mb-2 d-flex justify-content-between">
+                                        <span class="fw-semibold">Ngày tạo đơn hàng:</span>
+                                        <span class="order-history-orderdate">@Model?.OrderDate.ToString("dd/MM/yyyy HH:mm:ss")</span>
+                                    </div>
+                                    <div class="mb-2 d-flex justify-content-between">
+                                        <span class="fw-semibold">Trạng thái:</span>
+                                        <span class="badge rounded-pill px-3 py-2 fw-semibold order-history-orderstatus"
+                                            style="@(Model?.Status switch
+                                            {
+                                                OrderStatus.Pending => "background-color:#ffc1071a; color:#b8860b; border:1px solid #ffc107;",
+                                                OrderStatus.Paid => "background-color:#0d6efd1a; color:#0d6efd; border:1px solid #0d6efd;",
+                                                OrderStatus.Cancelled => "background-color:#dc35451a; color:#dc3545; border:1px solid #dc3545;",
+                                                _ => ""
+                                            })">
+                                        @(Model?.Status switch
+                                        {
+                                            OrderStatus.Pending => "Chờ xử lý",
+                                            OrderStatus.Paid => "Đã thanh toán",
+                                            OrderStatus.Cancelled => "Đã hủy",
+                                            _ => "Không xác định"
+                                        })
+                                        </span>
+                                    </div>
+                                    <div class="mb-2 d-flex justify-content-between order-history-paymentmethod-div">
+                                        <span class="fw-semibold">Phương thức thanh toán:</span>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary btn-order-history-paymentmethod" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#paymentInfo"
+                                                    aria-expanded="false"
+                                                    aria-controls="paymentInfo"
+                                                    title="Xem chi tiết thanh toán">
+                                            @(Model?.PaymentMethod switch
+                                            {
+                                                PaymentMethod.Cash => "Tiền mặt",
+                                                PaymentMethod.Card => "Thẻ",
+                                                PaymentMethod.BankTransfer => "Chuyển khoản",
+                                                PaymentMethod.EWallet => "Ví điện tử",
+                                                _ => "Không xác định"
+                                            })
+                                            </button>
+                                        </div>
+                                    </div>
+                                    @if (Model?.Status == OrderStatus.Paid)
+                                    {
+                                        <div class="collapse mt-2 order-history-paymentmethod-div-collapse" id="paymentInfo">
+                                            <div class="card card-body">
+                                                <p>Phương thức: <span class="order-history-paymentmethod"> @Model?.PaymentMethod</span></p>
+                                                <p>Số tiền: <span class="order-history-paymentamount">@Model?.PaymentAmount.ToString("N0") đ</span></p>
+                                                <p>Ngày thanh toán: <span class="order-history-paymentdate">@Model?.PaymentDate?.ToString("dd/MM/yyyy HH:mm:ss")</span></p>
+                                            </div>
+                                        </div>
+                                    }
+                                   
+                                    <hr>
+                                    <div class="mb-2 d-flex justify-content-between">
+                                        <span class="fw-semibold">Thành tiền:</span>
+                                        <span class="order-history-totalamount">@Model?.TotalAmount.ToString("N0")</span>
+                                    </div>
+                                    <div class="mb-2 d-flex justify-content-between">
+                                        <span class="fw-semibold">Mã giảm giá:</span>
+                                        <span class="order-history-promotioncode">@Model?.PromoCode</span>
+                                    </div>
+                                    <div class="mb-2 d-flex justify-content-between">
+                                        <span class="fw-semibold">Số tiền giảm:</span>
+                                        <span class="order-history-discountamount">@Model?.DiscountAmount.ToString("N0") đ</span>
+                                    </div>
+                                    <hr>
+                                    <div class="mb-2 d-flex justify-content-between fs-5">
+                                        <span class="fw-bold">Tổng thanh toán:</span>
+                                        <span class="order-history-finalamount fw-bold text-danger">@(((Model?.TotalAmount ?? 0) - (Model?.DiscountAmount ?? 0)).ToString("N0")) đ</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public OrderDetailDto? Model { get; set; }
+
+    [Parameter]
+    public bool IsDetailMode { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private void HandleOnClose()
+    {
+        OnClose.InvokeAsync();
+    }
+
+}

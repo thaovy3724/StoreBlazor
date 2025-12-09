@@ -1,0 +1,129 @@
+﻿@inject IJSRuntime JS
+
+@* Nếu tổng số trang > 1 thì mới hiện thanh pagination  *@
+@if (TotalPages > 1)
+{﻿
+    <div class="mt-5 pb-5 d-flex justify-content-center">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+
+                @* Nút Previous *@
+                <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                    <button class="page-link" @onclick="() => GoToPage(CurrentPage - 1)" aria-label="Previous">&laquo;</button>
+                </li>
+
+                @* Nếu tổng số trang <= 5: hiển thị tất cả *@
+            @if (TotalPages <= 5)
+            {
+                @for (int i = 1; i <= TotalPages; i++)
+                {
+                    // !!!! BẪY CLOSURE NẾU KO DÙNG BIẾN TẠM -> nhận tham chiếu ko phải tham trị
+                    var pageNumber = i;   // biến tạm, mỗi vòng là 1 biến khác nhau
+
+                    <li class="page-item @(pageNumber == CurrentPage ? "active" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(pageNumber)">@pageNumber</button>
+                    </li>
+                }
+            }
+            else
+            {
+                @* Trường hợp CurrentPage <= 3: 1,2,3,4,..., last *@
+                @if (CurrentPage <= 3)
+                {
+                    @for (int i = 1; i <= 4; i++)
+                    {
+                        // !!!! BẪY CLOSURE NẾU KO DÙNG BIẾN TẠM -> nhận tham chiếu ko phải tham trị
+                        var pageNumber = i;   // biến tạm, mỗi vòng là 1 biến khác nhau
+
+                        <li class="page-item @(pageNumber == CurrentPage ? "active" : "")">
+                            <button class="page-link" @onclick="() => GoToPage(pageNumber)">@pageNumber</button>
+                        </li>
+                    }
+
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    <li class="page-item">
+                        <button class="page-link" @onclick="() => GoToPage(TotalPages)">@TotalPages</button>
+                    </li>
+                }
+                @* Trường hợp CurrentPage >= TotalPages - 2: 1,..., last-3,last-2,last-1,last *@
+                else if (CurrentPage >= TotalPages - 2)
+                {
+                    <li class="page-item">
+                        <button class="page-link" @onclick="() => GoToPage(1)">1</button>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+
+                    @for (int i = TotalPages - 3; i <= TotalPages; i++)
+                    {
+                        // !!!! BẪY CLOSURE NẾU KO DÙNG BIẾN TẠM -> nhận tham chiếu ko phải tham trị
+                        var pageNumber = i;   // biến tạm, mỗi vòng là 1 biến khác nhau
+
+                        <li class="page-item @(pageNumber == CurrentPage ? "active" : "")">
+                            <button class="page-link" @onclick="() => GoToPage(pageNumber)">@pageNumber</button>
+                        </li>
+                    }
+                }
+                @* Trường hợp ở giữa: 1,..., curr-1, curr, curr+1, ..., last *@
+                else
+                {
+                    <li class="page-item">
+                        <button class="page-link" @onclick="() => GoToPage(1)">1</button>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+
+                    @for (int i = CurrentPage - 1; i <= CurrentPage + 1; i++)
+                    {
+                        // !!!! BẪY CLOSURE NẾU KO DÙNG BIẾN TẠM -> nhận tham chiếu ko phải tham trị
+                        var pageNumber = i;   // biến tạm, mỗi vòng là 1 biến khác nhau
+
+                        <li class="page-item @(pageNumber == CurrentPage ? "active" : "")">
+                            <button class="page-link" @onclick="() => GoToPage(pageNumber)">@pageNumber</button>
+                        </li>
+                    }
+
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+
+                    <li class="page-item">
+                        <button class="page-link" @onclick="() => GoToPage(TotalPages)">@TotalPages</button>
+                    </li>
+                }
+            }
+            @* Nút Next *@
+            <li class="page-item @(CurrentPage==TotalPages? "disabled":"")">
+                <button class="page-link" @onclick="() => GoToPage(CurrentPage + 1)" aria-label="Next">&raquo;</button>
+            </li>
+        </ul>
+    </nav>
+    </div>
+}
+@code {
+    [Parameter] public int CurrentPage { get; set; }
+    [Parameter] public int TotalPages { get; set; }
+
+    // Hàm callback để báo cho component cha biết đổi trang
+    [Parameter] public EventCallback<int> OnPageChange { get; set; }
+
+    private async Task GoToPage(int page)
+    {
+        await JS.InvokeVoidAsync("console.log", $"[Pagination] current page: {CurrentPage}");
+        await JS.InvokeVoidAsync("console.log", $"[Pagination] Click page: {page}");
+
+        if (page < 1 || page > TotalPages)
+        {
+            await JS.InvokeVoidAsync("console.log", "[Pagination] Out of range");
+            return;
+        }
+
+        await OnPageChange.InvokeAsync(page);
+    }
+}

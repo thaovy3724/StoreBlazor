@@ -1,0 +1,83 @@
+﻿﻿<div class="col-lg-3 mb-4">
+    @* Bo loc theo the loai/khoang gia *@
+    <div class="card shadow-sm border-0">
+        @* Loai SP *@
+        <div class="card-header bg-white fw-bold py-3">
+            <i class="bi bi-funnel me-2"></i> Bộ lọc tìm kiếm
+        </div>
+        <div class="card-body">
+            <h6 class="fw-bold mb-3">Danh mục sản phẩm</h6>
+            <select class="form-select mb-4" @bind="SelectedCategory">
+                <option value="-1">-- Tất cả danh mục --</option>
+
+                @foreach (var cat in Categories)
+                {
+                    <option value="@cat.CategoryId">
+                        @cat.CategoryName
+                    </option>
+                }
+            </select>
+
+            <hr class="text-muted opacity-25">
+                <h6 class="fw-bold mb-3">Từ khóa</h6>
+                <input type="text" class="form-control form-control-sm mb-2" @bind = "KeyWord"
+                placeholder="Nhập tên sản phẩm">
+
+            <hr class="text-muted opacity-25">
+
+            @* Khoang gia *@
+            <h6 class="fw-bold mb-3">Khoảng giá (VNĐ)</h6>
+            <div class="mb-3">
+                <label class="small text-muted mb-1">Từ:</label>
+                <input type="number" class="form-control form-control-sm mb-2" placeholder="0" min="0"
+                       @bind="PriceFrom">
+                <label class="small text-muted mb-1">Đến:</label>
+                <input type="number" class="form-control form-control-sm" placeholder="0" min="0"
+                       @bind="PriceTo">
+            </div>
+            <button class="btn btn-primary w-100 btn-sm" @onclick="HandleSearch">
+                Áp dụng
+            </button>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public List<Category> Categories { get; set; } = new();
+
+    [Parameter]
+    public string KeyWord { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> KeyWordChanged { get; set; }
+
+    [Parameter]
+    public int SelectedCategory { get; set; } = -1;
+
+    [Parameter]
+    public EventCallback<int> SelectedCategoryChanged { get; set; }
+
+    [Parameter]
+    public decimal? PriceFrom { get; set; }
+
+    [Parameter]
+    public EventCallback<decimal?> PriceFromChanged { get; set; }
+
+    [Parameter]
+    public decimal? PriceTo { get; set; }
+
+    [Parameter]
+    public EventCallback<decimal?> PriceToChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnSearch { get; set; }
+
+    private async Task HandleSearch()
+    {
+        await KeyWordChanged.InvokeAsync(KeyWord);
+        await SelectedCategoryChanged.InvokeAsync(SelectedCategory);
+        await PriceFromChanged.InvokeAsync(PriceFrom);
+        await PriceToChanged.InvokeAsync(PriceTo);
+        await OnSearch.InvokeAsync(1);
+    }
+}

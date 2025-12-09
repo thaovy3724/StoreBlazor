@@ -1,0 +1,187 @@
+﻿@using StoreBlazor.Services
+@* Components/ClientNavMenu.razor *@
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inject IJSRuntime JS
+@inject ICartService CartService
+@inject NavigationManager Nav
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3">
+    <div class="container">
+        @* Brand Store *@
+        <a class="navbar-brand d-flex align-items-center fw-bold text-primary me-4" href="/client">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                <i class="bi bi-shop fs-5"></i>
+            </div>
+            <span style="letter-spacing: -0.5px;">FOMOStore</span>
+        </a>
+
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#clientNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="clientNavbar">
+            <div class="d-flex align-items-center gap-3 ms-auto justify-content-end">
+                @* Gio hang *@
+                <button class="btn btn-outline-light text-dark border-0 nav-icon-btn position-relative" @onclick="GoToCart" title="Giỏ hàng">
+                    <i class="bi bi-cart3 fs-4"></i>
+                    @if (CartCount > 0)
+                    {
+                        <span class="position-absolute badge rounded-pill bg-danger border border-light badge-cart">
+                            @CartCount
+                        </span>
+                    }
+                </button>
+
+                <div class="vr h-100 mx-1 d-none d-lg-block"></div>
+                @* Thong tin ca nhan *@
+                <div class="dropdown">
+                    <button class="btn btn-outline-light text-dark border-0 d-flex align-items-center gap-2 py-1 ps-2 pe-3 rounded-pill"
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                            style="background-color: #f8f9fa;">
+                        @* Ten khach hang *@
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                            <span class="fw-bold">@GetInitials(userName)</span>
+                        </div>
+
+                        <div class="d-none d-md-block text-start" style="line-height: 1.2;">
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">Xin chào,</small>
+                            <span class="fw-semibold text-truncate" style="max-width: 100px; display:inline-block">@GetLastName(userName)</span>
+                        </div>
+                        <i class="bi bi-chevron-down ms-1 text-muted small"></i>
+                    </button>
+                    @* Thong tin ca nhan/Don hang/ Dang xuat *@
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3 overflow-hidden">
+                        <li class="px-3 py-2 bg-light border-bottom">
+                            <span class="d-block fw-bold text-dark">@userName</span>
+                        </li>
+                        <li><a class="dropdown-item py-2 mt-1" href="/client/profile"><i class="bi bi-person-gear me-2 text-primary"></i>Tài khoản của tôi</a></li>
+                        <li><a class="dropdown-item py-2" href="/client/orderHistory"><i class="bi bi-box-seam me-2 text-primary"></i>Đơn mua</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button class="dropdown-item py-2 text-danger fw-semibold" @onclick="Logout">
+                                <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+@code {
+    private string searchQuery = "";
+    private int cartCount = 0;
+    private bool isSessionReady = false;
+    private string userName = "Khách";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadUserData();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadUserData()
+    {
+        try
+        {
+            await Task.Delay(100);
+
+            var storedName = await SessionStorage.GetItemAsync<string>("userName");
+            Console.WriteLine($"[DEBUG] Stored userName from session: {storedName}");
+            
+            if (!string.IsNullOrEmpty(storedName))
+            {
+                userName = storedName;
+            }
+
+            var storedCartCount = await SessionStorage.GetItemAsync<int?>("cartCount");
+            if (storedCartCount.HasValue && storedCartCount.Value > 0)
+            {
+                cartCount = storedCartCount.Value;
+            }
+
+            isSessionReady = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] LoadUserData - {ex.Message}");
+            userName = "Khách";
+            cartCount = 0;
+        }
+    }
+
+    private async Task Logout()
+    {
+        try
+        {
+            await SessionStorage.RemoveItemAsync("userId");
+            await SessionStorage.RemoveItemAsync("userName");
+            await SessionStorage.RemoveItemAsync("userEmail");
+            await SessionStorage.RemoveItemAsync("userRole");
+            await SessionStorage.RemoveItemAsync("cartCount");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Logout - {ex.Message}");
+        }
+
+        await JS.InvokeVoidAsync("navigateToClient", "/client/login");
+    }
+
+    private async Task GoToCart()
+    {
+        await JS.InvokeVoidAsync("navigateToClient", "/client/cart");
+    }
+
+    private async Task SearchSubmit()
+    {
+        if (!string.IsNullOrEmpty(searchQuery))
+        {
+            var url = $"/client/search?query={Uri.EscapeDataString(searchQuery)}";
+            await JS.InvokeVoidAsync("navigateToClient", url);
+        }
+    }
+
+    // Hàm lấy chữ cái đầu của tên để làm Avatar
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "U";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
+        return parts[^1][0].ToString().ToUpper();
+    }
+
+    private string GetLastName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "Khách";
+        var parts = name.Split(' ');
+        return parts[^1];
+    }
+
+    // ==== CART ====
+    private int CartCount;
+
+    protected override void OnInitialized()
+    {
+        // đăng ký event để khi giỏ thay đổi thì navbar tự rerender
+        CartService.OnChange += CartChanged;
+
+        // Lấy số lượng ban đầu (sau khi InitializeAsync chạy xong)
+        CartCount = CartService.GetTotalQuantity();
+    }
+
+    private void CartChanged()
+    {
+        CartCount = CartService.GetTotalQuantity();
+        InvokeAsync(StateHasChanged); // đảm bảo UI update
+    }
+}

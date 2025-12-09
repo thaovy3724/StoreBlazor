@@ -1,0 +1,246 @@
+﻿@page "/admin/product"
+@using StoreBlazor.DTO.Admin.Product
+@layout AdminLayout
+@inject IProductManagerService service
+@inherits BaseParent<Product>
+
+<AdminAuthGuard>
+<div class="container-fluid p-4">
+
+    <!-- Nội dung chính: RenderBody -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold">Quản lý Sản phẩm</h3>
+    </div>
+    <!-- Thanh lọc -->
+    <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+        <!-- Thanh lọc bên trái -->
+        <!-- Thanh lọc bên trái -->
+        <ProductFilter @bind-KeyWord="@keyword"
+                       @bind-FilterCategoryId="@filterCategoryId"
+                       @bind-PriceFrom="@priceFrom"
+                       @bind-PriceTo="@priceTo"
+                       Categories="@Categories"
+                       OnSearch="LoadPageAsync" />
+
+        <!-- Nút Thêm mới bên phải -->
+        <button class="btn btn-primary btn-sm btn-add" data-bs-toggle="modal" data-bs-target="#productModal" data-action="view_add">
+            <i class="bi bi-plus-circle"></i> Thêm mới
+        </button>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light thead-separator ">
+                        <tr class="text-center">
+                            <th style="width:100px;">Barcode</th>
+                            <th>Hình ảnh</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá bán</th>
+                            <th>Đơn vị</th>
+                            <th style="width:200px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productList">
+                        @if (listResult != null && listResult.Any())
+                        {
+                            foreach (var item in listResult)
+                            {
+                                <tr class="text-center">
+                                    <td class="text-center">@item.Barcode</td>
+                                    <td class="text-center">
+                                        <img src="/uploads/@item.ProductImage" alt="@item.ProductName"
+                                             style="width:60px; height:60px; object-fit:cover; border-radius:4px;">
+                                    </td>
+                                    <td>@item.ProductName</td>
+                                    <td>@($"{item.Price:N0}đ")</td>
+                                    <td>@item.Unit</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-light border me-1 btn-view"
+                                                title="Xem" data-bs-toggle="modal"
+                                                data-bs-target="#productModal" data-action="view"
+                                                data-barcode="@item.Barcode"
+                                                @onclick="() => OpenDetailForm(item.ProductId)">
+                                            <i class="bi bi-eye text-primary"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-light border me-1 btn-edit"
+                                                title="Sửa" data-bs-toggle="modal"
+                                                data-bs-target="#productModal" data-action="view_edit"
+                                                data-barcode="@item.Barcode"
+                                                @onclick="() => OpenEditForm(item.ProductId)">
+                                            <i class="bi bi-pencil text-success"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-light border btn-delete"
+                                                data-barcode="@item.Barcode" title="Xóa" data-action="delete"
+                                                @onclick="() => HandleDeleteAsync(item.ProductId)">
+                                            <i class="bi bi-trash text-danger"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-light border me-1 btn-barcode"
+                                                title="Xem Barcode"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#barcodeModal"
+                                                @onclick="() => OpenBarcodeModal(item.Barcode, item.ProductName)">
+                                            <i class="bi bi-upc text-warning"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Không có sản phẩm nào.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <!-- Phân trang-->
+            <Pagination CurrentPage="@CurrentPage"
+                        TotalPages="@TotalPages"
+                        OnPageChange="LoadPageAsync" />
+        </div>
+    </div>
+</div>
+</AdminAuthGuard>
+@* Form nhập liệu *@
+<ProductForm Model="@SelectedProductDetail"
+             IsEditMode="@IsEditMode"
+             IsDetailMode="@IsDetailMode"
+             Categories="@Categories"
+             Suppliers="@Suppliers"
+             OnSave="HandleSaveAsync"
+             OnClose="CloseForm"/>
+
+@* Modal tạo barcode *@
+<ProductBarcodeModal BarcodeValue="@SelectedBarcode"
+                     ProductName="@SelectedProductName" />
+
+@code {
+    // ==== VARIABLES ====
+    private List<Product> listResult = new();
+    private List<Category> Categories = new();
+    private List<Supplier> Suppliers = new();
+    private ServiceResult serviceResult = new();
+
+    private string keyword = string.Empty;
+    private int filterCategoryId = -1;
+    private decimal? priceFrom = null;
+    private decimal? priceTo = null;
+    // ==== LOAD DATA ====
+    // Load Select
+    private async Task LoadCategoriesAndSuppliers()
+    {
+        Categories = await service.GetAllCategoriesAsync();
+        Suppliers = await service.GetAllSuppliersAsync();
+    }
+    // Load dữ liệu ban đầu
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategoriesAndSuppliers();
+        await LoadPageAsync(1);
+    }
+    protected override async Task LoadPageAsync(int page)
+    {
+        PageResult<Product> result = new();
+
+        // Nếu có bất kỳ filter nào được áp dụng
+        if (!string.IsNullOrEmpty(keyword) || filterCategoryId != -1 || priceFrom.HasValue || priceTo.HasValue)
+        {
+            result = await service.FilterAsync(keyword, filterCategoryId, priceFrom, priceTo, page);
+        }
+        else
+        {
+            result = await service.GetAllProductAsync(page);
+        }
+
+        listResult = result.Items;
+        CurrentPage = page;
+        TotalPages = result.TotalPages;
+    }
+    // ==== OPEN DETAIL FORM ====
+    private ProductFormDto? SelectedProductDetail { get; set; } = new ProductFormDto
+    {
+        CategoryId = -1,
+        SupplierId = -1,
+        Inventory = new Inventory() // Đảm bảo Inventory cũng được khởi tạo
+    };
+    private async Task OpenDetailForm(int productId)
+    {
+
+        IsEditMode = false;
+        IsDetailMode = true;
+
+        await LoadCategoriesAndSuppliers();
+
+        SelectedProductDetail = await service.GetProductDetailAsync(productId);
+
+        StateHasChanged();
+    }
+    // ==== OPEN EDIT FORM ====
+    private async Task OpenEditForm(int productId)
+    {
+        IsEditMode = true;
+
+        await LoadCategoriesAndSuppliers();
+
+        SelectedProductDetail = await service.GetProductDetailAsync(productId);
+
+        StateHasChanged();
+    }
+
+    // === SAVE DATA ====
+    private async Task HandleSaveAsync(ProductFormDto model)
+    {
+        if (IsEditMode)
+        {
+            serviceResult = await service.UpdateAsync(model);
+        }
+        else
+        {
+            serviceResult = await service.CreateAsync(model);
+        }
+        Console.WriteLine($"Service Result: {serviceResult.Message}");
+        await ShowAlertAsync(serviceResult);
+        await LoadPageAsync(CurrentPage);
+    }
+    // ==== DELETE ====
+    private async Task HandleDeleteAsync(int productId)
+    {
+        if (!await ConfirmDeleteAsync()) return;
+
+        serviceResult = await service.DeleteAsync(new ProductFormDto { ProductId = productId });
+        await ShowAlertAsync(serviceResult);
+
+        await LoadPageAsync(CurrentPage);
+    }
+    // === BARCODE ===
+    private string SelectedBarcode = string.Empty;
+    private string SelectedProductName = string.Empty;
+
+    // Thêm method mở modal barcode
+    private void OpenBarcodeModal(string barcode, string productName)
+    {
+        SelectedBarcode = barcode;
+        SelectedProductName = productName;
+        StateHasChanged();
+    }
+
+    // === ĐÓNG FORM ===
+    protected new void CloseForm()
+    {
+        SelectedProductDetail = new ProductFormDto
+        {
+
+            Inventory = new Inventory(),
+            CategoryId = -1, 
+            SupplierId = -1,
+        };
+        base.CloseForm();
+    }
+
+}
+
+
+
+

@@ -1,0 +1,174 @@
+﻿@using StoreBlazor.Services
+@inject ICartService CartService
+@inject IPromotionClientService PromotionService
+@inject NavigationManager Navigation
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+            <div class="card-header bg-white py-3">
+                <div class="row fw-bold small text-uppercase">
+                    <div class="col-6">Sản phẩm</div>
+                    <div class="col-3 text-center">Số lượng</div>
+                    <div class="col-3 text-end">Tạm tính</div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                @foreach (var item in Cart)
+                {
+                    <div class="p-3 border-bottom cart-item-row">
+                        <div class="row align-items-center">
+                            <div class="col-12 col-md-6 mb-3 mb-md-0 d-flex gap-3 align-items-center">
+                                <div class="bg-light rounded p-2 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                    <img src="/uploads/@item.ProductImage" alt="@item.ProductName" class="img-fluid" style="max-height: 100%;">
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark product-name-limit">@item.ProductName</h6>
+                                    <small class="text-muted d-block mb-2">Đơn giá: @item.ProductPrice.ToString("N0")đ</small>
+
+                                    <button class="btn btn-link text-danger text-decoration-none p-0 small"
+                                            @onclick="() => RemoveItem(item.ProductId)">
+                                        <i class="bi bi-trash me-1"></i>Xóa
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3 d-flex justify-content-center">
+                                <div class="input-group input-group-sm" style="width: 110px;">
+                                    <button class="btn btn-outline-secondary" @onclick="() => DecreaseSelectedQuantity(item)">-</button>
+                                    <input type="text" class="form-control text-center bg-white" value="@item.SelectedQuantity" readonly>
+                                    <button class="btn btn-outline-secondary" @onclick="() => IncreaseSelectedQuantity(item)">+</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3 text-end">
+                                <span class="fw-bold text-primary">
+                                    @((item.ProductPrice * item.SelectedQuantity).ToString("N0"))đ
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="card-footer bg-white p-3">
+                <a href="/client" class="text-decoration-none text-muted fw-semibold">
+                    <i class="bi bi-arrow-left me-2"></i>Tiếp tục mua hàng
+                </a>
+            </div>
+        </div>
+    </div>
+    @* Tạm tính giỏ hàng *@
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-3 position-sticky" style="top: 20px;">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-4">Cộng giỏ hàng</h5>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Tạm tính:</span>
+                    <span class="fw-bold">@SubTotalAmount.ToString("N0")đ</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-4 align-items-center">
+                    <span class="fw-bold fs-5">Tổng tiền:</span>
+                    <span class="fw-bold fs-4 text-primary">@TotalAmount.ToString("N0")đ</span>
+                </div>
+                @* Mã giảm giá *@
+                <div class="input-group mb-3">
+                    <button class="btn btn-outline-secondary"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#cartDiscountModal"
+                    title="Chọn mã giảm giá">
+                        <i class="bi bi-ticket-perforated-fill text-primary"></i> Chọn mã giảm giá
+                    </button>
+                </div>
+                @if (AppliedCoupon != null)
+                {
+                    <div class="alert alert-success d-flex justify-content-between align-items-center py-2 px-3 small">
+                        <span><i class="bi bi-check-circle me-1"></i>Đã dùng mã: <strong>@AppliedCoupon.PromoCode</strong> (-@DiscountAmount.ToString("N0")đ)</span>
+                        <button type="button" class="btn-close btn-close-white small" @onclick="RemoveCoupon"></button>
+                    </div>
+                }
+                <button class="btn btn-primary w-100 py-2 rounded-3 fw-bold shadow-sm" @onclick="ProceedToCheckout">
+                    TIẾN HÀNH THANH TOÁN
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@* modal chọn mã giảm giá *@
+<CartDiscountModal ListPromotion ="@ListPromotion"
+                   SubTotalAmount ="@SubTotalAmount" 
+                   OnClose="CloseForm"/>
+
+@code{
+    [Parameter]
+    public List<CartItemDTO> Cart { get; set; } = new();
+    private decimal SubTotalAmount => CartService.GetSubTotalAmount();
+    private decimal DiscountAmount => CartService.GetPromotionAmount(SubTotalAmount);
+    private decimal TotalAmount => CartService.GetFinalAmount();
+
+    private async Task RemoveItem(int productId)
+    {
+        await CartService.RemoveItemAsync(productId); // tự động bắn OnChange
+    }
+
+    private async Task DecreaseSelectedQuantity(CartItemDTO item)
+    {
+        if (item.SelectedQuantity > 1)
+        {
+            var newQty = item.SelectedQuantity - 1;
+            await CartService.UpdateQuantityAsync(item.ProductId, newQty);
+        }
+    }
+
+    private async Task IncreaseSelectedQuantity(CartItemDTO item)
+    {
+        if (item.SelectedQuantity < item.Quantity)
+        {
+            var newQty = item.SelectedQuantity + 1;
+            await CartService.UpdateQuantityAsync(item.ProductId, newQty);
+        }
+    }
+
+    // ==== PROMOTION ====
+    private List<Promotion> ListPromotion = new();
+    private Promotion? AppliedCoupon;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CartService.OnChange += StateHasChanged;
+
+        ListPromotion = await PromotionService.GetAllPromotionAsync();
+
+        AppliedCoupon = CartService.GetAppliedPromotion();
+    }
+
+    private async Task RemoveCoupon()
+    {
+        if (AppliedCoupon == null) return;
+        await CartService.RemovePromotionAsync();
+        AppliedCoupon = null;
+    }
+
+    private async Task CloseForm(Promotion? coupon)
+    {
+        if (coupon == null)
+        {
+            return;
+        }
+        await CartService.ApplyPromotionAsync(coupon);
+        AppliedCoupon = coupon;
+    }
+
+    // ==== CHECK OUT ====
+    private void ProceedToCheckout()
+    {
+        Navigation.NavigateTo("/client/checkout");
+    }
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
+
+}

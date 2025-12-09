@@ -1,0 +1,72 @@
+﻿<!-- Thanh lọc -->
+<div class="d-flex flex-wrap gap-2 align-items-center flex-grow-1">
+    <!-- Lọc theo loại sản phẩm -->
+    <select class="form-select form-select-sm" style="width: 150px;"
+            @onchange="OnCategoryChanged">
+        <option value="-1" selected="@(FilterCategoryId == -1)">Tất cả loại</option>
+        @if (Categories != null)
+        {
+            foreach (var c in Categories)
+            {
+                <option value="@c.CategoryId" selected="@(FilterCategoryId == c.CategoryId)">@c.CategoryName</option>
+            }
+        }
+    </select>
+
+    <!-- Lọc theo khoảng giá -->
+    <div class="input-group input-group-sm" style="width: 250px;">
+        <span class="input-group-text">Giá từ</span>
+        <input type="number" class="form-control" placeholder="" min="0" @bind="PriceFrom">
+        <span class="input-group-text">đến</span>
+        <input type="number" class="form-control" placeholder="" min="0" @bind="PriceTo">
+    </div>
+
+    <!-- Ô tìm kiếm -->
+    <div class="input-group input-group-sm" style="width: 300px;">
+        <input type="text" class="form-control" placeholder="Nhập tên sản phẩm, barcode"
+               @bind="KeyWord"
+               @onkeypress="OnKeyPress">
+        <button class="btn btn-primary btn-search" type="button" @onclick="HandleSearch">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string KeyWord { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> KeyWordChanged { get; set; }
+
+    [Parameter] public int FilterCategoryId { get; set; } = -1;
+    [Parameter] public EventCallback<int> FilterCategoryIdChanged { get; set; }
+
+    [Parameter] public decimal? PriceFrom { get; set; }
+    [Parameter] public EventCallback<decimal?> PriceFromChanged { get; set; }
+
+    [Parameter] public decimal? PriceTo { get; set; }
+    [Parameter] public EventCallback<decimal?> PriceToChanged { get; set; }
+
+    [Parameter] public List<Category>? Categories { get; set; }
+    [Parameter] public EventCallback<int> OnSearch { get; set; }
+
+    private async Task HandleSearch()
+    {
+        await KeyWordChanged.InvokeAsync(KeyWord);
+        await FilterCategoryIdChanged.InvokeAsync(FilterCategoryId);
+        await PriceFromChanged.InvokeAsync(PriceFrom);
+        await PriceToChanged.InvokeAsync(PriceTo);
+        await OnSearch.InvokeAsync(1);
+    }
+    private async Task OnCategoryChanged(ChangeEventArgs e)
+    {
+        FilterCategoryId = int.Parse(e.Value?.ToString() ?? "-1");
+        await HandleSearch();
+    }
+
+    private async Task OnKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleSearch();
+        }
+    }
+}

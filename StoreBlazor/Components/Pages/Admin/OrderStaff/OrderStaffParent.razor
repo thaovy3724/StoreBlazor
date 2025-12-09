@@ -1,0 +1,656 @@
+﻿@page "/admin/orderstaff"
+@using StoreBlazor.Services
+@layout AdminLayout
+@inject IOrderStaffService service
+@inject IVNPayService vnpayService
+@inject IMoMoService momoService
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<AdminAuthGuard>
+    <div class="container-fluid p-1 vh-100">
+        <div class="row bg-white">
+            <!-- ==================== COL TRÁI: SẢN PHẨM ==================== -->
+            <div class="col-md-5 border-end d-flex flex-column">
+                
+                <!-- Thanh tìm kiếm + lọc (giữ component như yêu cầu) -->
+                <OrderStaffFilter Categories="@categories"
+                                  SelectedCategoryId="@selectedCategoryId"
+                                  SearchKeyword="@searchKeyword"
+                                  ShowScanner="@showScanner"
+                                  OnCategoryChange="HandleCategoryChange"
+                                  SearchKeywordChanged="(keyword) => searchKeyword = keyword"
+                                  OnSearch="() => LoadProductsAsync(1)"
+                                  OnScannerToggle="ToggleScanner"
+                                  OnBarcodeScanned="HandleBarcodeScanned" />
+
+                <!-- Ô quét mã (giống layout Razor Pages: #reader / #result) -->
+                @if (showScanner)
+                {
+                    <main>
+                        <div id="reader"></div>
+                        <div id="result"></div>
+                    </main>
+                }
+
+                <!-- Danh sách sản phẩm -->
+                <div class="row g-3 flex-grow-1 align-items-start" style="overflow-y: auto;">
+                    @if (products != null && products.Any())
+                    {
+                        foreach (var p in products)
+                        {
+                            <div class="col-4 align-items-sketch">
+                                <div class="product-card d-flex flex-column justify-content-between"
+                                     data-id="@p.ProductId"
+                                     data-name="@p.ProductName"
+                                     data-price="@p.Price"
+                                     data-image="@p.ProductImage"
+                                     data-quantity="@p.Quantity"
+                                     @onclick="() => AddToCart(p)" style="cursor: pointer;">
+
+                                    @if (!string.IsNullOrWhiteSpace(p.ProductImage))
+                                    {
+                                        <img src="/uploads/@p.ProductImage"
+                                             alt="@p.ProductName"
+                                             class="img-fluid rounded mb-2" />
+                                    }
+                                    else
+                                    {
+                                        <img src="/images/no-image.jpg"
+                                             alt="No image"
+                                             class="img-fluid rounded mb-2" />
+                                    }
+
+                                    <p class="mb-1 fw-semibold text-truncate" title="@p.ProductName">
+                                        @p.ProductName
+                                    </p>
+
+                                    <span class="text-muted small d-block mb-2">
+                                        Tồn kho: <strong class="text-success">@p.Quantity</strong>
+                                    </span>
+
+                                    <span class="product-price text-center">@p.Price.ToString("N0")đ</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="col-12 text-center text-muted py-3">
+                            Không có sản phẩm nào
+                        </div>
+                    }
+                </div>
+
+                <!-- Phân trang (container id giống Razor Pages) -->
+                <div id="paginationContainer" class="mt-auto pt-2">
+                    <Pagination CurrentPage="@CurrentPage"
+                                TotalPages="@TotalPages"
+                                OnPageChange="LoadProductsAsync" />
+                </div>
+            </div>
+
+            <!-- ==================== COL PHẢI: GIỎ HÀNG ==================== -->
+            <div class="col-md-7 d-flex flex-column">
+                <h5 class="mt-3">Phiếu Hàng</h5>
+
+                <!-- Bảng giỏ hàng -->
+                <div class="cart-wrapper table-responsive flex-grow-1" style="overflow-y: auto;">
+                    <table class="table table-bordered cart-table thead-separator">
+                        <thead class="table-light">
+                            <tr class="text-center">
+                                <th style="width: 50px;"></th>
+                                <th>Sản phẩm</th>
+                                <th>Đơn giá</th>
+                                <th>Số lượng</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-body">
+                            @if (cartItems.Any())
+                            {
+                                foreach (var item in cartItems)
+                                {
+                                    <tr>
+                                        <td class="text-center align-middle">
+                                            <button class="btn btn-sm btn-danger btn-remove" @onclick="() => RemoveFromCart(item)">
+                                                ×
+                                            </button>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="d-flex align-items-center">
+                                                <img src="/uploads/@item.ProductImage" 
+                                                     style="width: 50px; height: 50px; object-fit: cover;" 
+                                                     class="me-2 rounded">
+                                                <span>@item.ProductName</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">@item.Price.ToString("N0")đ</td>
+                                        <td class="text-center align-middle">
+                                            <div class="input-group input-group-sm" style="width: 110px; margin: 0 auto;">
+                                                <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, -1)">-</button>
+                                                <input type="text" class="form-control text-center" value="@item.Quantity" readonly>
+                                                <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, 1)">+</button>
+                                            </div>
+                                        </td>
+                                        <td class="text-center fw-bold align-middle">@item.Subtotal.ToString("N0")đ</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        Giỏ hàng trống
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- Thông tin khách hàng + Thanh toán -->
+                <div class="row">
+                    <!-- COL TRÁI: Khách hàng + Khuyến mãi -->
+                    <div class="col-md-6" style="border-right: 2px dashed #6c757d;">
+                        <!-- Khách hàng -->
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Khách hàng</label>
+                            <div class="input-group">
+                                <!-- input có id giống Razor Pages và binding oninput -->
+                                <input id="customerPhoneInput" type="text" class="form-control"
+                                       placeholder="Nhập số điện thoại"
+                                       @bind="customerPhone"
+                                       @bind:event="oninput" autocomplete="off" />
+                                <button class="btn btn-outline-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalAddCustomer">
+                                    <i class="bi bi-person-plus"></i>
+                                </button>
+                            </div>
+                            <div class="form-text text-secondary fst-italic mt-2" id="customerInfo">
+                                @if (selectedCustomer != null)
+                                {
+                                    <strong>@selectedCustomer.Name</strong><span> - @selectedCustomer.Phone</span>
+                                    @if (!string.IsNullOrEmpty(selectedCustomer.Address))
+                                    {
+                                        <br />
+                                        <span>@selectedCustomer.Address</span>
+                                    }
+                                }
+                            </div>
+
+                            <!-- Autocomplete suggestions (id giống Razor Pages) -->
+                            @if (customerSuggestions.Any())
+                            {
+                                <div id="customerSuggestions" class="list-group position-absolute mt-1" style="z-index: 1000; max-width: 400px; display:block;">
+                                    @foreach (var cust in customerSuggestions)
+                                    {
+                                        <button class="list-group-item list-group-item-action" 
+                                                @onclick="() => SelectCustomer(cust)">
+                                            <strong>@cust.Name</strong> - @cust.Phone
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Khuyến mãi -->
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Khuyến mãi</label>
+                            <div class="input-group">
+                                <input id="selectedPromotionInput" type="text" class="form-control" 
+                                       placeholder="Chọn khuyến mãi..."
+                                       value="@(selectedPromotion?.PromoCode ?? "")"
+                                       readonly>
+                                <button class="btn btn-outline-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalPromotion"
+                                        disabled="@(!cartItems.Any())">
+                                    <i class="bi bi-gift"></i>
+                                </button>
+                            </div>
+                            <div id="selectedPromotionText" class="form-text text-success fst-italic">
+                                @if (selectedPromotion != null)
+                                {
+                                    <text>Giảm @DiscountAmount.ToString("N0")đ - @selectedPromotion.Description</text>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COL PHẢI: Tổng tiền + Thanh toán -->
+                    <div class="col-md-6">
+                        <div class="total-box">
+                            <p>Tổng tiền hàng: <strong id="totalAmount">@TotalAmount.ToString("N0")đ</strong></p>
+                            <p>Khuyến mãi: <span id="discountAmount" class="text-danger">-@DiscountAmount.ToString("N0")đ</span></p>
+                            <h5 class="text-danger">Thành tiền: <span id="finalAmount">@FinalAmount.ToString("N0")đ</span></h5>
+
+                            <button class="btn btn-primary w-100" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalPayment"
+                                    disabled="@(!cartItems.Any())">
+                                <i class="bi bi-cash-coin me-2"></i> Thanh toán
+                            </button>
+                            <button class="btn btn-outline-danger w-100 mt-2" @onclick="ClearCart">
+                                <i class="bi bi-x-circle me-2"></i> Hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal hiển thị kết quả thanh toán -->
+    <div class="modal fade" id="modalPaymentResult" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="ClosePaymentResultModal"></button>
+                </div>
+                <div class="modal-body text-center py-5">
+                    @if (paymentResult != null)
+                    {
+                        @if (paymentResult.Success)
+                        {
+                            <i class="bi bi-check-circle text-success" style="font-size: 5rem;"></i>
+                            <h4 class="mt-3 fw-bold text-success">Thanh toán thành công!</h4>
+                            <p class="text-muted mb-2">Mã đơn hàng: <strong>#@paymentResult.OrderId</strong></p>
+                            @if (!string.IsNullOrEmpty(paymentResult.TransactionId))
+                            {
+                                <p class="text-muted">Mã giao dịch: <strong>@paymentResult.TransactionId</strong></p>
+                            }
+                        }
+                        else
+                        {
+                            <i class="bi bi-x-circle text-danger" style="font-size: 5rem;"></i>
+                            <h4 class="mt-3 fw-bold text-danger">Thanh toán thất bại!</h4>
+                            <p class="text-muted">@paymentResult.Message</p>
+                        }
+                    }
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal" @onclick="ClosePaymentResultModal">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Modal (giữ component form như cũ) -->
+    <OrderStaffForm Promotions="@promotions"
+                    TotalAmount="@TotalAmount"
+                    DiscountAmount="@DiscountAmount"
+                    FinalAmount="@FinalAmount"
+                    OnCustomerAdded="HandleCustomerAdded"
+                    OnPromotionSelected="HandlePromotionSelected"
+                    OnPaymentConfirmed="ProcessPayment" />
+</AdminAuthGuard>
+
+@code {
+    // ===== STATE =====
+    private List<ProductCardDto> products = new();
+    private List<Category> categories = new();
+    private List<CartItemDto> cartItems = new();
+    private List<PromotionDto> promotions = new();
+    private List<CustomerSuggestionDto> customerSuggestions = new();
+
+    private CustomerSuggestionDto? selectedCustomer;
+    private PromotionDto? selectedPromotion;
+
+    private int? selectedCategoryId = -1;
+    private string searchKeyword = string.Empty;
+
+    private string _customerPhone = string.Empty;
+    private string customerPhone
+    {
+        get => _customerPhone;
+        set
+        {
+            if (_customerPhone == value) return;
+            _customerPhone = value;
+            _ = InvokeAsync(SearchCustomer);
+        }
+    }
+
+    private bool showScanner = false;
+    private int CurrentPage = 1;
+    private int TotalPages = 1;
+
+    // Payment Result
+    private PaymentResultDto? paymentResult;
+
+    // Flags để defer JS
+    private bool _deferShowPaymentModal = false;
+    private string _deferredModalId = "modalPaymentResult";
+    private bool _deferShowAlert = false;
+    private string _deferAlertMessage = string.Empty;
+    private string _deferAlertType = "success";
+
+    // ===== COMPUTED =====
+    private decimal TotalAmount => cartItems.Sum(c => c.Subtotal);
+    private decimal DiscountAmount => selectedPromotion?.CalculateDiscount(TotalAmount) ?? 0;
+    private decimal FinalAmount => TotalAmount - DiscountAmount;
+
+    // ===== LIFECYCLE =====
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await service.GetAllCategoriesAsync();
+        promotions = await service.GetActivePromotionsAsync();
+        await LoadProductsAsync(1);
+
+        // Xử lý callback từ VNPay/MoMo
+        await HandlePaymentCallbackAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_deferShowPaymentModal)
+        {
+            _deferShowPaymentModal = false;
+            try
+            {
+                await JS.InvokeVoidAsync("showModal", _deferredModalId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error invoking showModal: {ex.Message}");
+            }
+        }
+
+        if (_deferShowAlert)
+        {
+            _deferShowAlert = false;
+            try
+            {
+                await JS.InvokeVoidAsync("showAlert", _deferAlertMessage, _deferAlertType);
+                // Xóa query params bằng JS helper (không reload)
+                await JS.InvokeVoidAsync("replaceUrl", "/admin/orderstaff");
+
+                // Clear cart và reload products sau khi alert
+                ClearCart();
+                await LoadProductsAsync(CurrentPage);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error invoking showAlert/replaceUrl: {ex.Message}");
+            }
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    // ===== XỬ LÝ CALLBACK =====
+    private async Task HandlePaymentCallbackAsync()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        // Check VNPay callback
+        if (query.AllKeys.Contains("vnp_ResponseCode"))
+        {
+            var queryParams = query.AllKeys.ToDictionary(k => k ?? "", k => query[k] ?? "");
+            var response = vnpayService.ProcessCallback(queryParams);
+
+            paymentResult = new PaymentResultDto
+            {
+                Success = response.Success,
+                OrderId = response.OrderId,
+                TransactionId = response.TransactionId,
+                Message = response.Message
+            };
+
+            if (response.Success)
+            {
+                await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(response.OrderId), PaymentMethod.BankTransfer, response.TransactionId);
+            }
+
+            // Chỉ hiển thị alert, không hiển thị modal
+            _deferShowAlert = true;
+            _deferAlertMessage = paymentResult.Success ? "Thanh toán thành công" : (paymentResult.Message ?? "Thanh toán thất bại");
+            _deferAlertType = paymentResult.Success ? "success" : "error";
+
+            // Trigger re-render để OnAfterRenderAsync chạy
+            _ = InvokeAsync(StateHasChanged);
+        }
+        // Check MoMo callback
+        else if (query.AllKeys.Contains("resultCode"))
+        {
+            var resultCode = query["resultCode"];
+            var orderId = query["orderId"] ?? "";
+            var transId = query["transId"] ?? "";
+
+            paymentResult = new PaymentResultDto
+            {
+                Success = resultCode == "0",
+                OrderId = orderId,
+                TransactionId = transId,
+                Message = resultCode == "0" ? "Thanh toán thành công" : "Thanh toán thất bại"
+            };
+
+            if (paymentResult.Success)
+            {
+                await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(orderId), PaymentMethod.EWallet, transId);
+            }
+
+            // Chỉ hiển thị alert, không hiển thị modal
+            _deferShowAlert = true;
+            _deferAlertMessage = paymentResult.Message;
+            _deferAlertType = paymentResult.Success ? "success" : "error";
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task ShowPaymentResultModal()
+    {
+        _deferShowPaymentModal = true;
+        _ = InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
+
+    private async Task ClosePaymentResultModal()
+    {
+        paymentResult = null;
+        ClearCart();
+        await LoadProductsAsync(CurrentPage);
+    }
+
+    // ===== PRODUCT METHODS =====
+    private async Task LoadProductsAsync(int page)
+    {
+        var result = await service.GetProductsAsync(page, selectedCategoryId, searchKeyword);
+        products = result.Items;
+        CurrentPage = page;
+        TotalPages = result.TotalPages;
+    }
+
+    private async Task HandleCategoryChange(int? categoryId)
+    {
+        selectedCategoryId = categoryId;
+        await LoadProductsAsync(1);
+    }
+
+    // ===== SCANNER =====
+    private void ToggleScanner()
+    {
+        showScanner = !showScanner;
+    }
+
+    private async Task HandleBarcodeScanned(string barcode)
+    {
+        var product = await service.GetProductByBarcodeAsync(barcode);
+
+        if (product != null)
+        {
+            AddToCart(product);
+            await JS.InvokeVoidAsync("showAlert", "Đã thêm sản phẩm", "success");
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("showAlert", "Không tìm thấy sản phẩm", "error");
+        }
+    }
+
+    // ===== CART METHODS =====
+    private void AddToCart(ProductCardDto product)
+    {
+        var existingItem = cartItems.FirstOrDefault(c => c.ProductId == product.ProductId);
+
+        if (existingItem != null)
+        {
+            if (existingItem.Quantity < existingItem.StockQuantity)
+            {
+                existingItem.Quantity++;
+            }
+            else
+            {
+                JS.InvokeVoidAsync("showAlert", "Không đủ hàng trong kho", "warning");
+            }
+        }
+        else
+        {
+            cartItems.Add(new CartItemDto
+            {
+                ProductId = product.ProductId,
+                ProductName = product.ProductName,
+                ProductImage = product.ProductImage,
+                Price = product.Price,
+                Quantity = 1,
+                StockQuantity = product.Quantity
+            });
+        }
+    }
+
+    private void UpdateQuantity(CartItemDto item, int change)
+    {
+        item.Quantity += change;
+
+        if (item.Quantity < 1) item.Quantity = 1;
+        if (item.Quantity > item.StockQuantity)
+        {
+            item.Quantity = item.StockQuantity;
+            JS.InvokeVoidAsync("showAlert", "Không đủ hàng trong kho", "warning");
+        }
+    }
+
+    private void RemoveFromCart(CartItemDto item)
+    {
+        cartItems.Remove(item);
+    }
+
+    private void ClearCart()
+    {
+        cartItems.Clear();
+        selectedCustomer = null;
+        selectedPromotion = null;
+        customerPhone = string.Empty;
+    }
+
+    // ===== CUSTOMER METHODS =====
+    private async Task SearchCustomer()
+    {
+        if (string.IsNullOrWhiteSpace(customerPhone))
+        {
+            customerSuggestions.Clear();
+            selectedCustomer = null;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        customerSuggestions = await service.SearchCustomerAsync(customerPhone);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void SelectCustomer(CustomerSuggestionDto customer)
+    {
+        selectedCustomer = customer;
+        // Gán trực tiếp backing field để tránh gọi lại SearchCustomer
+        _customerPhone = customer.Phone ?? "";
+        customerSuggestions.Clear();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleCustomerAdded(Customer customer)
+    {
+        var result = await service.CreateCustomerAsync(customer);
+        await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
+
+        if (result.Type == "success")
+        {
+            selectedCustomer = new CustomerSuggestionDto
+            {
+                CustomerId = customer.CustomerId,
+                Name = customer.Name,
+                Phone = customer.Phone ?? "",
+                Email = customer.Email,
+                Address = customer.Address
+            };
+            _customerPhone = customer.Phone ?? "";
+        }
+    }
+
+    // ===== PROMOTION METHODS =====
+    private void HandlePromotionSelected(PromotionDto? promotion)
+    {
+        selectedPromotion = promotion;
+    }
+
+    // ===== PAYMENT =====
+    private int userId = 0;
+    private async Task ProcessPayment(PaymentMethod paymentMethod)
+    {
+        var orderDto = new OrderCreateDto
+        {
+            CustomerId = selectedCustomer?.CustomerId,
+            PromoId = selectedPromotion?.PromoId,
+            TotalAmount = TotalAmount,
+            DiscountAmount = DiscountAmount,
+            PaymentMethod = paymentMethod,
+            Items = cartItems.Select(c => new OrderItemCreateDto
+            {
+                ProductId = c.ProductId,
+                ProductName = c.ProductName,
+                Quantity = c.Quantity,
+                Price = c.Price
+            }).ToList()
+        };
+
+        var ipAddress = "127.0.0.1"; 
+
+        userId = await SessionStorage.GetItemAsync<int?>("adminId") ?? 0;
+
+        var result = await service.CreateOrderWithPaymentAsync(orderDto, userId, ipAddress);
+
+        if (result.Type == "success")
+        {
+            if (paymentMethod == PaymentMethod.BankTransfer || paymentMethod == PaymentMethod.EWallet)
+            {
+                Nav.NavigateTo(result.Message, true);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
+                ClearCart();
+                await LoadProductsAsync(CurrentPage);
+            }
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
+        }
+    }
+
+    // ===== DTO FOR PAYMENT RESULT =====
+    private class PaymentResultDto
+    {
+        public bool Success { get; set; }
+        public string OrderId { get; set; } = string.Empty;
+        public string TransactionId { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+    }
+}

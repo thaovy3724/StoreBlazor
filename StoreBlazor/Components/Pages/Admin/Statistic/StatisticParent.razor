@@ -1,0 +1,107 @@
+﻿@page "/admin/statistic"
+@using StoreBlazor.DTO.Admin.Statistic
+@layout AdminLayout
+@inject IStatisticService StatisticService
+@inject IJSRuntime JS
+
+<AdminAuthGuard>
+<div class="container-fluid p-4">
+    @if (!isComponentReady)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <StatisticOneWeek Statistics="@weeklyStats" />
+        <div class="row mt-4">
+            <StatisticLineChart @ref="lineChart"
+                                AvailableYears="@availableYears"
+                                OnYearFilter="HandleYearFilter"
+                                OnDateRangeFilter="HandleDateRangeFilter" />
+            <StatisticPieChart @ref="pieChart"
+                               OnFilterChanged="HandlePieChartFilter" />
+        </div>
+    }
+</div>
+</AdminAuthGuard>
+
+@code {
+    private WeeklyStatisticDTO? weeklyStats;
+    private List<int>? availableYears;
+    private StatisticLineChart? lineChart;
+    private StatisticPieChart? pieChart;
+    private bool isComponentReady = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("STATISTIC PAGE - OnInitializedAsync");
+        await LoadWeeklyStatistics();
+        await LoadAvailableYears();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !isComponentReady)
+        {
+            Console.WriteLine("STATISTIC PAGE - OnAfterRenderAsync firstRender");
+            isComponentReady = true;
+
+            await Task.Delay(300);
+
+            await LoadRevenueByYear(DateTime.Now.Year);
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadWeeklyStatistics()
+    {
+        weeklyStats = await StatisticService.GetWeeklyStatisticsAsync();
+    }
+
+    private async Task LoadAvailableYears()
+    {
+        availableYears = await StatisticService.GetAvailableYearsAsync();
+    }
+
+    private async Task HandleYearFilter(int year)
+    {
+        await LoadRevenueByYear(year);
+    }
+
+    private async Task LoadRevenueByYear(int year)
+    {
+        Console.WriteLine($"LoadRevenueByYear: {year}, lineChart is null? {lineChart == null}");
+        var data = await StatisticService.GetRevenueByMonthAsync(year);
+        if (lineChart != null)
+        {
+            await lineChart.UpdateChart(data, year);
+        }
+        else
+        {
+            Console.WriteLine("ERROR: lineChart is null!");
+        }
+    }
+
+    private async Task HandleDateRangeFilter((DateTime start, DateTime end) dateRange)
+    {
+        var data = await StatisticService.GetRevenueByRangeAsync(dateRange.start, dateRange.end);
+        if (lineChart != null)
+        {
+            await lineChart.UpdateChartByRange(data, dateRange.start, dateRange.end);
+        }
+    }
+
+    private async Task HandlePieChartFilter((int type, int limit, DateTime? start, DateTime? end) filter)
+    {
+        var data = await StatisticService.GetTopDataAsync(filter.type, filter.limit, filter.start, filter.end);
+        if (pieChart != null)
+        {
+            await pieChart.UpdateChart(data);
+        }
+    }
+}

@@ -1,0 +1,118 @@
+﻿@using StoreBlazor.DTO.Admin.Statistic
+@inject IJSRuntime JS
+
+<div class="col-md-8 bg-white border rounded-3 shadow-sm p-3">
+    <div class="filter-bar bg-light rounded-2 px-3 py-2 mb-3 d-flex flex-wrap align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2 mb-2 mb-md-0">
+            <label for="yearSelect" class="form-label mb-0 fw-semibold text-secondary">Năm:</label>
+            <select id="yearSelect" class="form-select form-select-sm w-auto" @onchange="OnYearChanged">
+                <option value="">-- Chọn năm --</option>
+                @if (AvailableYears != null)
+                {
+                    foreach (var year in AvailableYears)
+                    {
+                        <option value="@year" selected="@(year == SelectedYear)">@year</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+            <label class="form-label mb-0 fw-semibold text-secondary">Từ:</label>
+            <input type="date" @bind="StartDate" class="form-control form-control-sm" style="width: 160px;">
+            <label class="form-label mb-0 fw-semibold text-secondary">Đến:</label>
+            <input type="date" @bind="EndDate" class="form-control form-control-sm" style="width: 160px;">
+            <button @onclick="FilterByDateRange" class="btn btn-sm btn-success ms-2 px-3">
+                <i class="bi bi-funnel-fill"></i> Lọc
+            </button>
+        </div>
+    </div>
+
+    <div class="chart-container" style="position: relative; height: 420px;">
+        <canvas id="revenueChart"></canvas>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<int>? AvailableYears { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnYearFilter { get; set; }
+
+    [Parameter]
+    public EventCallback<(DateTime, DateTime)> OnDateRangeFilter { get; set; }
+
+    private int SelectedYear = DateTime.Now.Year;
+    private DateTime? StartDate;
+    private DateTime? EndDate;
+
+    private object[]? ChartLabels;
+    private object[]? ChartValues;
+    private string? ChartTitle;
+    private bool shouldUpdateChart = false; 
+
+    private bool isChartInitialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            SelectedYear = DateTime.Now.Year;
+            isChartInitialized = true; 
+        }
+
+        if (isChartInitialized && shouldUpdateChart && ChartLabels != null && ChartValues != null)
+        {
+            try
+            {
+                await Task.Delay(100); 
+                await JS.InvokeVoidAsync("updateLineChart", ChartLabels, ChartValues, ChartTitle);
+                shouldUpdateChart = false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating chart: {ex.Message}");
+            }
+        }
+    }
+
+    public async Task UpdateChart(List<RevenueByMonthDTO> data, int year)
+    {
+        ChartLabels = data.Select(x => $"Tháng {x.Month}").Cast<object>().ToArray();
+        ChartValues = data.Select(x => x.Revenue).Cast<object>().ToArray();
+        ChartTitle = $"Biểu đồ doanh thu năm {year}";
+        shouldUpdateChart = true;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task UpdateChartByRange(List<RevenueByDateDTO> data, DateTime start, DateTime end)
+    {
+        ChartLabels = data.Select(x => x.Date.ToString("dd/MM/yyyy")).Cast<object>().ToArray();
+        ChartValues = data.Select(x => x.Revenue).Cast<object>().ToArray();
+        ChartTitle = $"Doanh thu từ {start:dd/MM/yyyy} đến {end:dd/MM/yyyy}";
+        shouldUpdateChart = true;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnYearChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int year))
+        {
+            SelectedYear = year;
+            await OnYearFilter.InvokeAsync(year);
+        }
+    }
+
+    private async Task FilterByDateRange()
+    {
+        if (StartDate.HasValue && EndDate.HasValue)
+        {
+            await OnDateRangeFilter.InvokeAsync((StartDate.Value, EndDate.Value));
+        }
+    }
+}
+
+           

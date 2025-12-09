@@ -1,0 +1,215 @@
+﻿@page "/client/orderHistory"
+@layout ClientLayout
+@using StoreBlazor.Components.Pages.Admin
+@using StoreBlazor.DTO.Admin.OrderManager
+@inject IOrderManagerService service
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inherits BaseParent<Order>
+@rendermode InteractiveServer
+
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="fw-bold text-primary">
+                <i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng
+            </h3>
+            <p class="text-muted">Theo dõi và quản lý các đơn hàng của bạn.</p>
+        </div>
+    </div>
+
+    @* Thanh lọc, tìm kiếm đơn hàng *@
+    <OrderHistoryFilter @bind-KeyWord="@keyword"
+                        @bind-FilterStatus="@filterStatus"
+                        OnSearch="LoadPageAsync" />
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        @* Table danh sách đơn hàng *@
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr class="text-black">
+                        <th class="py-3 text-center">Mã đơn hàng</th>
+                        <th class="py-3 text-center ">Ngày đặt</th>
+                        <th class="py-3 text-center">Tổng tiền</th>
+                        <th class="py-3 text-center">Trạng thái</th>
+                        <th class="py-3 text-center pe-4 ">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (listResult == null || !listResult.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                Bạn chưa có đơn hàng nào.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var order in listResult)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold text-primary text-center">#@order.OrderId</td>
+                                <td class="text-center">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="fw-bold text-center">@order.TotalAmount.ToString("N0")đ</td>
+                                <td class="text-center">
+                                    <span class="badge @GetStatusBadgeClass(order.Status) rounded-pill px-3 py-2 border">
+                                        @GetStatusLabel(order.Status)
+                                    </span>
+                                </td>
+                                <td class="text-center pe-4">
+                                    <button class="btn btn-sm btn-outline-primary me-2"
+                                            @onclick="() => OpenDetailModal(order.OrderId)"
+                                            title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+
+                                    @if (order.Status == OrderStatus.Pending)
+                                    {
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                @onclick="() => CancelOrder(order.OrderId)"
+                                                title="Hủy đơn hàng">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Phân trang -->
+        <div class="d-flex justify-content-center py-3">
+            <Pagination CurrentPage="@CurrentPage"
+                        TotalPages="@TotalPages"
+                        OnPageChange="LoadPageAsync" />
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal chi tiết -->
+<OrderHistoryForm Model="@selectedOrder"
+                  OnClose="CloseModal"
+                  OnCancel="CancelOrder" />
+
+
+@code {
+    // ==== VARIABLES ====
+    private List<OrderTableDto> listResult = new();
+    private OrderDetailDto? selectedOrder = null;
+
+    private string keyword = string.Empty;
+    private int filterStatus = -1;
+    private int currentUserId = 0;
+
+    private bool isPageLoaded = false;
+
+    // ==== LOAD DATA ====
+    protected override Task OnInitializedAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !isPageLoaded)
+        {
+            currentUserId = await SessionStorage.GetItemAsync<int?>("clientId") ?? 0;
+
+            Console.WriteLine($"[DEBUG] currentUserId from session = {currentUserId}");
+
+            if (currentUserId > 0)
+            {
+                await LoadPageAsync(1);
+            }
+            else
+            {
+                Console.WriteLine("[DEBUG] Session 'clientId' is missing or 0");
+            }
+
+            isPageLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task LoadPageAsync(int page)
+    {
+        PageResult<OrderTableDto> result = new();
+
+        Console.WriteLine($"[DEBUG] LoadPage - userId: {currentUserId}, keyword: '{keyword}', status: {filterStatus}, page: {page}");
+
+        if (currentUserId == 0)
+        {
+            Console.WriteLine("[DEBUG] userId = 0, returning empty");
+            listResult = new List<OrderTableDto>();
+            TotalPages = 1;
+            CurrentPage = 1;
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(keyword) || filterStatus != -1)
+        {
+            Console.WriteLine("[DEBUG] Calling FilterByCustomerAsync");
+            result = await service.FilterByCustomerAsync(currentUserId, keyword, filterStatus, page);
+        }
+        else
+        {
+            Console.WriteLine("[DEBUG] Calling GetOrdersByCustomerAsync");
+            result = await service.GetOrdersByCustomerAsync(currentUserId, page);
+        }
+
+        Console.WriteLine($"[DEBUG] Result - Items: {result.Items?.Count ?? 0}, TotalPages: {result.TotalPages}");
+
+        listResult = result.Items;
+        CurrentPage = page;
+        TotalPages = result.TotalPages;
+
+        StateHasChanged();
+    }
+
+    // === OPEN DETAIL MODAL ===
+    private async Task OpenDetailModal(int orderId)
+    {
+        selectedOrder = await service.GetOrderDetailAsync(orderId);
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        selectedOrder = null;
+    }
+
+    // === CANCEL ORDER ===
+    private async Task CancelOrder(int orderId)
+    {
+        var result = await service.CancelAsync(orderId);
+        await ShowAlertAsync(result);
+        await LoadPageAsync(CurrentPage);
+        CloseModal();
+    }
+
+    private string GetStatusBadgeClass(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Pending => "bg-warning-subtle text-warning-emphasis border-warning-subtle",
+            OrderStatus.Paid => "bg-info-subtle text-info-emphasis border-info-subtle",
+            OrderStatus.Cancelled => "bg-danger-subtle text-danger-emphasis border-danger-subtle",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusLabel(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Pending => "Chờ xử lý",
+            OrderStatus.Paid => "Đã thanh toán",
+            OrderStatus.Cancelled => "Đã hủy",
+            _ => "Không rõ"
+        };
+    }
+}

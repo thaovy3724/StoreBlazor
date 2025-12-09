@@ -1,0 +1,34 @@
+﻿@using StoreBlazor.Services
+@inherits LayoutComponentBase
+@inject ICartService CartService
+
+<HeadContent>
+    <link href="css/client.css" rel="stylesheet" />
+</HeadContent>
+
+<div class="page d-flex flex-column min-vh-100">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <ClientNavMenu />
+        </div>
+    <!-- Main content -->
+    <main class="flex-fill d-flex flex-column">
+        <article class="content px-4 flex-fill">
+            @Body
+        </article>
+    </main>
+    <!-- Footer -->
+    <ClientFooter />
+</div>
+<script src="js/toast.js"></script>
+<script src="js/cart.js"></script>
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Chỉ phía client mới load giỏ hàng
+            await CartService.InitializeAsync();
+        }
+    }
+}

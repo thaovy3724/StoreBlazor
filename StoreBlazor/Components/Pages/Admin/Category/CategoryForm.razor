@@ -1,0 +1,104 @@
+﻿<!-- Modal dùng chung -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="categoryForm" @onsubmit:preventDefault="true" @onsubmit="HandleOnSubmit">
+                @* @Html.AntiForgeryToken() *@
+                @* <input type="hidden" id="categoryId" name="categoryId" @bind="Model.CategoryId" /> *@
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoryModalTitle">
+                        @(IsEditMode ? "Chỉnh sửa loại sản phẩm" : "Thêm loại sản phẩm")
+                    </h5>
+                    <button type="button" class="btn-close" 
+                            data-bs-dismiss="modal" 
+                            @onclick="HandleOnClose"
+                            aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên loại sản phẩm</label>
+                        <input type="text" class="form-control @(NameError != null ? "is-invalid" : "")" id="typename" name="categoryName"
+                               @bind="Model.CategoryName">
+                        <div class="invalid-feedback" id="typename-msg">@NameError</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" id="categoryModalSaveBtn" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public Category Model { get; set; } = new();
+
+    [Parameter]
+    public bool IsEditMode { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        ClearErrors();
+    }
+
+    private void HandleOnClose()
+    {
+        ClearErrors();
+        OnClose.InvokeAsync();
+    }
+
+    // ==== ONSUBMIT ====
+    [Parameter]
+    public EventCallback<Category> OnSave { get; set; }
+
+    private async Task HandleOnSubmit()
+    {
+        // validate
+        if(ValidateForm())
+        {
+            // submit data
+            await OnSave.InvokeAsync(Model);
+        }
+        else
+        {
+            StateHasChanged(); 
+        }
+    }
+
+    // ==== ERROR HANDLING ====
+    private string? NameError;
+
+    private void ClearErrors()
+    {
+        NameError = null;
+    }
+
+    private bool ValidateForm()
+    {
+        string name = Model.CategoryName;
+        bool isValid = true;
+
+        if (string.IsNullOrEmpty(name))
+        {
+            NameError = "Tên loại không được để trống";
+            isValid = false;
+        }
+        else if (name.Length > 100)
+        {
+            NameError = "Tên loại tối đa 100 ký tự";
+            isValid = false;
+        }
+        else if (!Regex.IsMatch(name, @"^[\p{L}\s]+$"))
+        {
+            NameError = "Tên loại chỉ được chứa chữ cái và khoảng trắng";
+            isValid = false;
+        }
+        return isValid;
+    }
+}

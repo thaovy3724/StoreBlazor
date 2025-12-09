@@ -1,0 +1,43 @@
+﻿@page "/client/cart"
+@using StoreBlazor.Services
+@layout ClientLayout
+@inject ICartService service
+@* @inject NavigationManager Nav *@
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h3 class="fw-bold text-primary">
+                <i class="bi "></i>Giỏ hàng của bạn
+            </h3>
+        </div>
+    </div>
+
+    @if (Cart.Count == 0)
+    {
+       @* Khi giỏ hàng trống *@
+       <CartNull/>
+    }
+    else
+    {
+        @* Có sản phẩm *@
+        <CartNotNull Cart="@Cart" />
+    }
+</div>
+
+@code {
+
+    private List<CartItemDTO> Cart = new();
+
+    protected override void OnInitialized()
+    {
+        Cart = service.GetCart();
+        service.OnChange += HandleCartChanged;
+    }
+
+    private void HandleCartChanged()
+    {
+        Cart = service.GetCart();
+        InvokeAsync(StateHasChanged); // re-render UI khi có thay đổi, chứ ko phải reload trang
+    }
+}

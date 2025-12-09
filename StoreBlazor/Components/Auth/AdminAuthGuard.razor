@@ -1,0 +1,83 @@
+﻿@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+@if (isAuthorized)
+{
+    @ChildContent
+}
+else if (isLoading)
+{
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string[]? AllowedRoles { get; set; }
+
+    private bool isAuthorized = false;
+    private bool isLoading = true;
+
+    // Định nghĩa trang nào cho role nào
+    private static readonly string[] StaffPages = ["/admin/orderstaff", "/admin/statistic"];
+    private static readonly string[] AdminPages = ["/admin/category", "/admin/promotion", "/admin/order", 
+        "/admin/product", "/admin/supplier", "/admin/account", "/admin/customer", "/admin/statistic"];
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var adminId = await SessionStorage.GetItemAsync<int?>("adminId");
+                var role = await SessionStorage.GetItemAsync<string>("adminRole");
+                
+                if (adminId == null || adminId == 0)
+                {
+                    NavigationManager.NavigateTo("/admin/login", forceLoad: true);
+                    return;
+                }
+
+                // Kiểm tra quyền truy cập trang hiện tại
+                var currentPath = new Uri(NavigationManager.Uri).AbsolutePath.ToLower();
+                
+                if (role?.ToLower() == "staff")
+                {
+                    // Staff chỉ được vào StaffPages
+                    if (!StaffPages.Any(p => currentPath.StartsWith(p)))
+                    {
+                        NavigationManager.NavigateTo("/admin/orderstaff", forceLoad: true);
+                        return;
+                    }
+                }
+                else if (role?.ToLower() == "admin")
+                {
+                    // Admin không được vào trang bán hàng
+                    if (currentPath.StartsWith("/admin/orderstaff"))
+                    {
+                        NavigationManager.NavigateTo("/admin/category", forceLoad: true);
+                        return;
+                    }
+                }
+
+                isAuthorized = true;
+            }
+            catch
+            {
+                NavigationManager.NavigateTo("/admin/login", forceLoad: true);
+            }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+}
