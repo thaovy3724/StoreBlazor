@@ -1,4 +1,6 @@
-﻿﻿<div class="modal fade" id="productDetailModal" style="background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog" aria-hidden="true">
+﻿@inject ICartService service
+@inject IJSRuntime JS
+﻿<div class="modal fade" id="productDetailModal" style="background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content border-0 rounded-4 overflow-hidden">
                 <div class="modal-header border-0 pb-0">
@@ -11,38 +13,40 @@
                     <div class="row">
                         <div class="col-md-6 mb-3 mb-md-0">
                             <div class="bg-light rounded-3 p-4 d-flex align-items-center justify-content-center h-100">
-                                <img src="/uploads/@Model.Product.ProductImage" class="img-fluid rounded" style="max-height: 300px; object-fit: contain;" alt="@Model.Product.ProductName">
+                                <img src="/uploads/@Model.ProductImage" class="img-fluid rounded" style="max-height: 300px; object-fit: contain;" alt="@Model.ProductName">
                             </div>
                         </div>
 
                         <div class="col-md-6">
-                        <h4 class="fw-bold mb-2">@Model.Product.ProductName</h4>
+                        <h4 class="fw-bold mb-2">@Model.ProductName</h4>
                             <div class="mb-3">
-                            <span class="fs-4 fw-bold text-primary me-2">@Model.Product.Price.ToString("N0")đ</span>
+                            <span class="fs-4 fw-bold text-primary me-2">@Model.Price.ToString("N0")đ</span>
                             </div>
 
                             <div class="d-flex align-items-center gap-2 mb-4">
                                 <span class="fw-semibold">Tình trạng:</span>
                             @if (Model.Quantity > 0)
-                                {
-                                <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Còn hàng (@Model.Quantity)</span>
-                                }
-                                else
-                                {
-                                    <span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Hết hàng</span>
-                                }
+                            {
+                            <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Còn hàng (@Model.Quantity)</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Hết hàng</span>
+                            }
                             </div>
 
                             <div class="d-flex gap-3 align-items-center mb-4">
                                 <div class="input-group input-group-sm" style="width: 120px;">
-                                <button class="btn btn-outline-secondary" @onclick="() => Model.Quantity = Math.Max(1, Model.Quantity - 1)">-</button>
-                                <input type="text" class="form-control text-center" value="@Model.Quantity" readonly>
-                                <button class="btn btn-outline-secondary" @onclick="() => Model.Quantity++">+</button>
+                                <button class="btn btn-outline-secondary" @onclick="DecreaseSelectedQuantity">-</button>
+                                <input type="text" class="form-control text-center" value="@SelectedQuantity" readonly>
+                                <button class="btn btn-outline-secondary" @onclick="IncreaseSelectedQuantity">+</button>
                                 </div>
                             </div>
 
                             <div class="d-grid gap-2">
-                                <button class="btn btn-primary py-2">
+                                <button class="btn btn-primary py-2"
+                                    @onclick="HandleAddToCart"
+                                    disabled="@(Model.Quantity == 0)">
                                     <i class="bi bi-cart-plus me-2"></i> Thêm vào giỏ hàng
                                 </button>
                             </div>
@@ -56,11 +60,42 @@
     [Parameter]
     public ProductCardDTO Model { get; set; } = new ProductCardDTO();
 
+    private int SelectedQuantity = 1;
+
     [Parameter]
     public EventCallback OnClose { get; set; }
 
     private async Task HandleOnClose()
     {
+        SelectedQuantity = 1;
         await OnClose.InvokeAsync();
+    }
+
+    private void DecreaseSelectedQuantity()
+    {
+        if (SelectedQuantity > 1)
+            SelectedQuantity--;
+    }
+
+    private void IncreaseSelectedQuantity()
+    {
+        if (SelectedQuantity < Model.Quantity)
+            SelectedQuantity++;
+    }
+
+    private async Task HandleAddToCart()
+    {
+        CartItemDTO cartItem = new()
+        {
+            ProductId = Model.ProductId,
+            ProductName = Model.ProductName,
+            ProductImage = Model.ProductImage,
+            ProductPrice = Model.Price,
+            Quantity = Model.Quantity,
+            SelectedQuantity = SelectedQuantity
+        };
+        await service.AddToCartAsync(cartItem);
+
+        await JS.InvokeVoidAsync("showAlert", "Đã thêm vào giỏ hàng thành công", "success");
     }
 }

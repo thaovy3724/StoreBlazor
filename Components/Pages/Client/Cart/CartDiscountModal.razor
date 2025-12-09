@@ -1,0 +1,77 @@
+﻿@inject ICartService CartService
+﻿<div class="modal fade" id="cartDiscountModal" style="background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header border-0 bg-light rounded-top-4">
+                <h5 class="modal-title fw-bold"><i class="bi bi-ticket-perforated me-2 text-primary"></i>Kho Voucher</h5>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"
+                        @onclick="HandleOnClose"
+                        aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body bg-light">
+
+                <div class="d-flex flex-column gap-3">
+                @if (ListPromotion != null && ListPromotion.Any())
+                {
+                    @foreach (var coupon in ListPromotion)
+                    {
+                        <div class="card coupon-card border-0 shadow-sm @(coupon.MinOrderAmount > SubTotalAmount ? "opacity-50" : "")">
+                            <div class="row g-0 align-items-center">
+                                <div class="col-3 bg-primary bg-opacity-10 d-flex flex-column align-items-center justify-content-center py-3 border-end border-dashed" style="min-height: 100px;">
+                                    <i class="bi bi-gift-fill fs-3 text-primary"></i>
+                                    <small class="fw-bold text-primary mt-1">GIẢM</small>
+                                </div>
+                                <div class="col-9">
+                                    <div class="card-body p-2 ps-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title fw-bold mb-1">
+                                                        Giảm @coupon.DiscountValue.ToString("N0")
+                                                    @(coupon.DiscountType == DiscountType.Percent ? "%" : "đ")</h6>
+                                                <p class="card-text text-muted x-small mb-1">Đơn tối thiểu @coupon.MinOrderAmount.ToString("N0")đ</p>
+                                                <small class="text-danger x-small border border-danger px-1 rounded">HSD: @coupon.EndDate.ToString("dd/MM")</small>
+                                            </div>
+
+                                            <button class="btn btn-sm btn-primary px-3"
+                                                    disabled="@(coupon.MinOrderAmount > SubTotalAmount)"
+                                                    @onclick="() => SelectCoupon(coupon)">
+                                                Dùng ngay
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div>Không có mã giảm giá nào</div>
+                }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public List<Promotion> ListPromotion { get; set; } = new();
+    [Parameter]
+    public decimal SubTotalAmount { get; set; }
+    private Promotion? SelectedPromotion { get; set; }
+    [Parameter] public EventCallback<Promotion?> OnClose { get; set; }
+
+    private async Task HandleOnClose()
+    {
+        await OnClose.InvokeAsync(SelectedPromotion);
+    }
+
+    private void SelectCoupon(Promotion coupon)
+    {
+        SelectedPromotion = coupon;
+    }
+
+
+}
