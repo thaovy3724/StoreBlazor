@@ -1,43 +1,30 @@
 ﻿@* Components/ClientNavMenu.razor *@
+@inject ICartService CartService
 @inject NavigationManager Nav
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3">
     <div class="container">
         @* Brand Store *@
-        <a class="navbar-brand d-flex align-items-center fw-bold text-primary me-4" href="/client/index">
+        <a class="navbar-brand d-flex align-items-center fw-bold text-primary me-4" href="/client">
             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
                 <i class="bi bi-shop fs-5"></i>
             </div>
             <span style="letter-spacing: -0.5px;">FOMOStore</span>
         </a>
 
-          <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#clientNavbar">
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#clientNavbar">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="clientNavbar">
-            @* Tim kiem  *@
-            <form class="d-flex flex-grow-1 mx-lg-5 my-3 my-lg-0 position-relative" @onsubmit="SearchSubmit">
-                <div class="input-group border rounded-pill bg-light overflow-hidden">
-                    <input class="form-control border-0 bg-transparent search-input py-2 ps-4"
-                           type="search"
-                           placeholder="Bạn cần mua sản phẩm gì?..."
-                           @bind="searchQuery">
-                    @* Nut tim kiem *@
-                    <button class="btn btn-primary btn-search m-1 rounded-pill fw-semibold" type="submit">
-                        <i class="bi bi-search me-1"></i> Tìm
-                    </button>
-                </div>
-            </form>
-
-            <div class="d-flex align-items-center gap-3 justify-content-end">
+            <div class="d-flex align-items-center gap-3 ms-auto justify-content-end">
                 @* Gio hang *@
                 <button class="btn btn-outline-light text-dark border-0 nav-icon-btn position-relative" @onclick="GoToCart" title="Giỏ hàng">
                     <i class="bi bi-cart3 fs-4"></i>
-                    @if (cartCount > 0)
+                    @if (CartCount > 0)
                     {
                         <span class="position-absolute badge rounded-pill bg-danger border border-light badge-cart">
-                            @cartCount
+                            @CartCount
                         </span>
                     }
                 </button>
@@ -81,22 +68,10 @@
 
 @code {
     private string userName = "Ngô Đức Trọng";
-    private string searchQuery = "";
-    private int cartCount = 3;
 
     private void Logout()
     {
         Console.WriteLine("Logout clicked");
-    }
-
-    private void GoToCart()
-    {
-        Nav.NavigateTo("/client/cart");
-    }
-
-    private void SearchSubmit()
-    {
-        Console.WriteLine($"Searching for: {searchQuery}");
     }
 
     // Hàm lấy chữ cái đầu của tên để làm Avatar
@@ -114,5 +89,27 @@
         if (string.IsNullOrWhiteSpace(name)) return "User";
         var parts = name.Split(' ');
         return parts[^1];
+    }
+
+    // ==== CART ====
+    private int CartCount;
+    private void GoToCart()
+    {
+        Nav.NavigateTo("/client/cart");
+    }
+
+    protected override void OnInitialized()
+    {
+        // đăng ký event để khi giỏ thay đổi thì navbar tự rerender
+        CartService.OnChange += CartChanged;
+
+        // Lấy số lượng ban đầu (sau khi InitializeAsync chạy xong)
+        CartCount = CartService.GetTotalQuantity();
+    }
+
+    private void CartChanged()
+    {
+        CartCount = CartService.GetTotalQuantity();
+        InvokeAsync(StateHasChanged); // đảm bảo UI update
     }
 }

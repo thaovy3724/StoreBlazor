@@ -118,6 +118,10 @@ namespace StoreBlazor.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("OrderId"));
 
+                    b.Property<string>("Address")
+                        .HasColumnType("longtext")
+                        .HasColumnName("address");
+
                     b.Property<int?>("CustomerId")
                         .HasColumnType("int")
                         .HasColumnName("customer_id");
@@ -256,7 +260,7 @@ namespace StoreBlazor.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(65,30)")
+                        .HasColumnType("decimal(10,2)")
                         .HasColumnName("price");
 
                     b.Property<string>("ProductImage")

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace StoreBlazor.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -134,7 +134,7 @@ namespace StoreBlazor.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     category_id = table.Column<int>(type: "int", nullable: false),
                     supplier_id = table.Column<int>(type: "int", nullable: false),
-                    price = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    price = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     unit = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     barcode = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
@@ -169,6 +169,8 @@ namespace StoreBlazor.Migrations
                     user_id = table.Column<int>(type: "int", nullable: true),
                     promo_id = table.Column<int>(type: "int", nullable: true),
                     order_date = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    address = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     status = table.Column<string>(type: "varchar(10)", maxLength: 10, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     total_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),

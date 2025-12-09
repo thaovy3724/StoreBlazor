@@ -1,0 +1,182 @@
+USE `store_management`;
+
+-- CATEGORIES
+INSERT INTO `categories` (`category_id`, `category_name`) VALUES
+(1, 'Đồ uống');
+INSERT INTO `categories` (`category_id`, `category_name`) VALUES
+(2, 'Bánh kẹo');
+INSERT INTO `categories` (`category_id`, `category_name`) VALUES
+(3, 'Gia vị');
+INSERT INTO `categories` (`category_id`, `category_name`) VALUES
+(4, 'Đồ hộp');
+INSERT INTO `categories` (`category_id`, `category_name`) VALUES
+(5, 'Nhu yếu phẩm');
+
+-- SUPPLIERS
+INSERT INTO `suppliers` (`SupplierId`, `name`, `phone`, `email`, `address`) VALUES
+(1, 'Công ty TNHH Nước Giải Khát Tân Hiệp Phát', '0908000001', 'info@thp.vn', 'Bình Dương');
+INSERT INTO `suppliers` (`SupplierId`, `name`, `phone`, `email`, `address`) VALUES
+(2, 'Công ty Cổ phần Sữa Vinamilk', '0908000002', 'contact@vinamilk.com.vn', 'TP. Hồ Chí Minh');
+INSERT INTO `suppliers` (`SupplierId`, `name`, `phone`, `email`, `address`) VALUES
+(3, 'Công ty Ajinomoto Việt Nam', '0908000003', 'info@ajinomoto.com.vn', 'Biên Hòa');
+INSERT INTO `suppliers` (`SupplierId`, `name`, `phone`, `email`, `address`) VALUES
+(4, 'Công ty CP Acecook Việt Nam', '0908000004', 'support@acecook.vn', 'HCM');
+INSERT INTO `suppliers` (`SupplierId`, `name`, `phone`, `email`, `address`) VALUES
+(5, 'Công ty Dầu thực vật Cái Lân', '0908000005', 'info@calofic.com.vn', 'Bà Rịa - Vũng Tàu');
+
+-- PRODUCTS
+-- (match cấu trúc MySQL: product_id, product_name, product_image, category_id, supplier_id, price, unit, barcode, created_at)
+INSERT INTO `products`
+(`product_id`, `product_name`, `product_image`, `category_id`, `supplier_id`, `price`, `unit`, `barcode`, `created_at`)
+VALUES
+(1, 'Trà xanh 0 độ chai 455ml', 'SP_2577b44d52004619b75dd96cf1c4cb8e.jpg', 1, 1, 10000.00, 'chai', '3122410382', '2025-11-11 17:35:28');
+
+INSERT INTO `products`
+(`product_id`, `product_name`, `product_image`, `category_id`, `supplier_id`, `price`, `unit`, `barcode`, `created_at`)
+VALUES
+(2, 'Nước tăng lực Number One 330ml', 'SP_fd88947d6a774b53a4a5a959a8909033.jpg', 1, 1, 9000.00, 'lon', '8934868100014', '2025-11-11 17:35:28');
+
+INSERT INTO `products`
+(`product_id`, `product_name`, `product_image`, `category_id`, `supplier_id`, `price`, `unit`, `barcode`, `created_at`)
+VALUES
+(3, 'Sữa tươi Vinamilk 180ml', 'SP_202accebda9e4d4ba70a81edba8c1672.png', 1, 2, 7000.00, 'hộp', '4563576', '2025-11-11 17:35:28');
+
+INSERT INTO `products`
+(`product_id`, `product_name`, `product_image`, `category_id`, `supplier_id`, `price`, `unit`, `barcode`, `created_at`)
+VALUES
+(4, 'Mì Hảo Hảo tôm chua cay', 'SP_e387c94774214147a196fd0aa373639c.jpg', 4, 4, 4500.00, 'gói', '754635', '2025-11-11 17:35:28');
+
+INSERT INTO `products`
+(`product_id`, `product_name`, `product_image`, `category_id`, `supplier_id`, `price`, `unit`, `barcode`, `created_at`)
+VALUES
+(5, 'Nước mắm Nam Ngư 500ml', 'SP_5dc72aaade184bd08863b19d11415e8f.jpg', 3, 1, 25000.00, 'chai', '975846', '2025-11-11 17:35:28');
+
+INSERT INTO `products`
+(`product_id`, `product_name`, `product_image`, `category_id`, `supplier_id`, `price`, `unit`, `barcode`, `created_at`)
+VALUES
+(6, 'Đường trắng Biên Hòa 1kg', 'SP_636ad2082e424a4da17a0d8d3538d1f0.jpg', 5, 3, 22000.00, 'gói', '314556', '2025-11-11 17:35:28');
+
+INSERT INTO `products`
+(`product_id`, `product_name`, `product_image`, `category_id`, `supplier_id`, `price`, `unit`, `barcode`, `created_at`)
+VALUES
+(7, 'Dầu ăn Neptune 1L', 'SP_d8ec5752aaaa4c5aa3959f717146667e.webp', 5, 5, 48000.00, 'chai', '658443', '2025-11-11 17:35:28');
+
+INSERT INTO `products`
+(`product_id`, `product_name`, `product_image`, `category_id`, `supplier_id`, `price`, `unit`, `barcode`, `created_at`)
+VALUES
+(8, 'Bánh Oreo 133g', 'SP_6ae8ebb1ce05412ca870f34f7f2fd3f6.webp', 2, 2, 15000.00, 'gói', '57364358', '2025-11-11 17:35:28');
+
+INSERT INTO `products`
+(`product_id`, `product_name`, `product_image`, `category_id`, `supplier_id`, `price`, `unit`, `barcode`, `created_at`)
+VALUES
+(9, 'Nước suối Aquafina 500ml', 'SP_d712c0223f494394af25407f75bb3d8e.jpg', 1, 1, 7000.00, 'chai', '574643', '2025-11-11 17:35:28');
+
+-- CUSTOMERS
+INSERT INTO `customers`
+(`customer_id`, `name`, `phone`, `email`, `address`, `created_at`)
+VALUES
+(1, 'Nguyễn Văn A', '0909000001', 'vana@gmail.com', 'Quận 1, TP.HCM', '2025-11-11 17:35:28');
+
+INSERT INTO `customers`
+(`customer_id`, `name`, `phone`, `email`, `address`, `created_at`)
+VALUES
+(2, 'Trần Thị B', '0909000002', 'thib@gmail.com', 'Quận Bình Thạnh, TP.HCM', '2025-11-11 17:35:28');
+
+INSERT INTO `customers`
+(`customer_id`, `name`, `phone`, `email`, `address`, `created_at`)
+VALUES
+(3, 'Lê Văn C', '0909000003', 'vanc@gmail.com', 'Quận 3, TP.HCM', '2025-11-11 17:35:28');
+
+INSERT INTO `customers`
+(`customer_id`, `name`, `phone`, `email`, `address`, `created_at`)
+VALUES
+(4, 'Phạm Thị D', '0909000004', 'thid@gmail.com', 'Quận Gò Vấp, TP.HCM', '2025-11-11 17:35:28');
+
+-- PROMOTIONS
+INSERT INTO `promotions`
+(`promo_id`, `promo_code`, `description`, `discount_type`, `discount_value`,
+ `start_date`, `end_date`, `min_order_amount`, `usage_limit`, `used_count`, `status`)
+VALUES
+(1, 'KM5', 'Giảm 5% cho đơn hàng trên 100.000đ', 'Percent', 5.00,
+ '2025-11-01', '2025-12-31', 100000.00, 100, 17, 'Active');
+
+INSERT INTO `promotions`
+(`promo_id`, `promo_code`, `description`, `discount_type`, `discount_value`,
+ `start_date`, `end_date`, `min_order_amount`, `usage_limit`, `used_count`, `status`)
+VALUES
+(2, 'KM20', 'Giảm 20.000đ cho đơn hàng trên 200.000đ', 'Fixed', 20000.00,
+ '2025-11-01', '2025-12-31', 200000.00, 50, 7, 'Inactive');
+
+-- USERS
+INSERT INTO `users`
+(`UserId`, `username`, `password`, `full_name`, `role`, `created_at`)
+VALUES
+(1, 'admin', '$2a$12$OWRzaomcMZZDXIAyNFkmIehe0.Xdwe1907TCCKFrszJ03OESVzYzK',
+ 'Quản trị hệ thống', 'Admin', '2025-11-11 17:35:28');
+
+INSERT INTO `users`
+(`UserId`, `username`, `password`, `full_name`, `role`, `created_at`)
+VALUES
+(2, 'nhanvien1', '$2a$12$OWRzaomcMZZDXIAyNFkmIehe0.Xdwe1907TCCKFrszJ03OESVzYzK',
+ 'Nguyễn Thị Hoa', 'Staff', '2025-11-11 17:35:28');
+
+INSERT INTO `users`
+(`UserId`, `username`, `password`, `full_name`, `role`, `created_at`)
+VALUES
+(3, 'nhanvien2', '$2a$12$OWRzaomcMZZDXIAyNFkmIehe0.Xdwe1907TCCKFrszJ03OESVzYzK',
+ 'Lê Văn Long', 'Staff', '2025-11-11 17:35:28');
+
+-- INVENTORY
+
+INSERT INTO `inventory`
+(`inventory_id`, `product_id`, `quantity`, `updated_at`)
+VALUES
+(1, 1, 114, '2025-11-23 12:17:41');
+
+INSERT INTO `inventory`
+(`inventory_id`, `product_id`, `quantity`, `updated_at`)
+VALUES
+(2, 2, 1055, '2025-11-23 12:17:55');
+
+INSERT INTO `inventory`
+(`inventory_id`, `product_id`, `quantity`, `updated_at`)
+VALUES
+(3, 3, 169, '2025-11-23 12:18:08');
+
+INSERT INTO `inventory`
+(`inventory_id`, `product_id`, `quantity`, `updated_at`)
+VALUES
+(4, 4, 500, '2025-11-23 12:18:18');
+
+INSERT INTO `inventory`
+(`inventory_id`, `product_id`, `quantity`, `updated_at`)
+VALUES
+(5, 5, 228, '2025-11-23 12:18:32');
+
+INSERT INTO `inventory`
+(`inventory_id`, `product_id`, `quantity`, `updated_at`)
+VALUES
+(6, 6, 334, '2025-11-23 12:19:02');
+
+INSERT INTO `inventory`
+(`inventory_id`, `product_id`, `quantity`, `updated_at`)
+VALUES
+(7, 7, 350, '2025-11-23 12:19:15');
+
+INSERT INTO `inventory`
+(`inventory_id`, `product_id`, `quantity`, `updated_at`)
+VALUES
+(8, 8, 150, '2025-11-23 12:19:27');
+
+INSERT INTO `inventory`
+(`inventory_id`, `product_id`, `quantity`, `updated_at`)
+VALUES
+(9, 9, 599, '2025-11-23 12:19:37');
+
+
+-- __EFMigrationsHistory (tùy bạn có muốn giữ hay không)
+INSERT INTO `__efmigrationshistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20251122154632_initial', '9.0.10');
+
+INSERT INTO `__efmigrationshistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20251123051418_initial', '9.0.10');

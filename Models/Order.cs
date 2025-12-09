@@ -22,6 +22,9 @@ namespace StoreBlazor.Models
         [Column("order_date")]
         public DateTime OrderDate { get; set; } = DateTime.Now;
 
+        [Column("address")]
+        public string? Address { get; set; }
+
         [Column("status")]
         [StringLength(10)]
         public OrderStatus Status { get; set; }

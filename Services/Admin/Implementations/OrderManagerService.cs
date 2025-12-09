@@ -4,7 +4,6 @@ using StoreBlazor.DTO.Admin;
 using StoreBlazor.DTO.Admin.OrderManager;
 using StoreBlazor.Models;
 using StoreBlazor.Services.Admin.Interfaces;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace StoreBlazor.Services.Admin.Implementations
 {
@@ -30,7 +29,6 @@ namespace StoreBlazor.Services.Admin.Implementations
                 });
 
             return await GetPagedAsync(query, page);
-
         }
         public async Task<OrderDetailDto?> GetOrderDetailAsync(int orderId)
         {

@@ -20,27 +20,23 @@
     else
     {
         @* Có sản phẩm *@
-        <CartNotNull/>
+        <CartNotNull Cart="@Cart" />
     }
 </div>
-@* modal chọn mã giảm giá *@
-    <_CartDiscountModal/>
 
 @code {
-    
+
     private List<CartItemDTO> Cart = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        // 1. Nạp giỏ từ sessionStorage/localStorage biến Cart trong CartService
-        await service.InitializeAsync();
-
-        // 2. Lắng nghe thay đổi để badge tự cập nhật
+        Cart = service.GetCart();
         service.OnChange += HandleCartChanged;
     }
 
     private void HandleCartChanged()
     {
+        Cart = service.GetCart();
         InvokeAsync(StateHasChanged); // re-render UI khi có thay đổi, chứ ko phải reload trang
     }
 }

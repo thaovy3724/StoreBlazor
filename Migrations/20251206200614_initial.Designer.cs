@@ -12,8 +12,8 @@ using StoreBlazor.Data;
 namespace StoreBlazor.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251204070455_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251206200614_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -120,6 +120,10 @@ namespace StoreBlazor.Migrations
                         .HasColumnName("order_id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("OrderId"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("longtext")
+                        .HasColumnName("address");
 
                     b.Property<int?>("CustomerId")
                         .HasColumnType("int")
@@ -259,7 +263,7 @@ namespace StoreBlazor.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(65,30)")
+                        .HasColumnType("decimal(10,2)")
                         .HasColumnName("price");
 
                     b.Property<string>("ProductImage")

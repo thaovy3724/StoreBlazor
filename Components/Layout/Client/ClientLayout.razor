@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject ICartService CartService
+
 <HeadContent>
     <link href="css/client.css" rel="stylesheet" />
 </HeadContent>
@@ -17,3 +19,15 @@
     <!-- Footer -->
     <ClientFooter />
 </div>
+<script src="js/toast.js"></script>
+<script src="js/cart.js"></script>
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Chỉ phía client mới load giỏ hàng
+            await CartService.InitializeAsync();
+        }
+    }
+}

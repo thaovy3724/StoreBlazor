@@ -1,3 +1,4 @@
+using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using StoreBlazor.Components;
@@ -6,8 +7,8 @@ using StoreBlazor.Services.Admin.Implementations;
 using StoreBlazor.Services.Admin.Interfaces;
 using StoreBlazor.Services.Client.Implementations;
 using StoreBlazor.Services.Client.Interfaces;
-using StoreBlazor.Services.Payment.Implementations;
 using StoreBlazor.Services.Payment;
+using StoreBlazor.Services.Payment.Implementations;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +33,15 @@ builder.Services.AddScoped<IProductManagerService, ProductManagerService>();
 builder.Services.AddScoped<IStatisticService, StatisticService>();
 
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IPromotionClientService, PromotionClientService>();
+builder.Services.AddScoped<ICustomerClientService, CustomerClientService>();
+builder.Services.AddScoped<ICategoryClientService, CategoryClientService>();
+
+
+builder.Services.AddBlazoredSessionStorage();
+
+
 
 builder.Services.Configure<FormOptions>(options =>
 {

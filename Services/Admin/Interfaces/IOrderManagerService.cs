@@ -1,8 +1,5 @@
 ﻿using StoreBlazor.DTO.Admin;
 using StoreBlazor.DTO.Admin.OrderManager;
-using StoreBlazor.Models;
-using System.Drawing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace StoreBlazor.Services.Admin.Interfaces
 {
