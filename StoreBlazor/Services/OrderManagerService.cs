@@ -6,13 +6,9 @@ using StoreBlazor.Models;
 
 namespace StoreBlazor.Services
 {
-    public class OrderManagerService: BasePaginationService, IOrderManagerService
+    public class OrderManagerService(ApplicationDbContext dbContext)
+        : BasePaginationService(dbContext), IOrderManagerService
     {
-        public OrderManagerService(ApplicationDbContext dbContext) : base(dbContext)
-        {
-        }
-
-
         public async Task<PageResult<OrderTableDto>> GetAllOrdersForTableAsync(int page)
         {
             var query = _dbContext.Orders
@@ -184,9 +180,9 @@ namespace StoreBlazor.Services
             Console.WriteLine($"[SERVICE] FilterByCustomerAsync - userId: {userId}, keyword: '{keyword}', status: {status}");
 
             var username = await _dbContext.Users
-                 .Where(u => u.UserId == userId)
-                 .Select(u => u.Username)
-                 .FirstOrDefaultAsync();
+             .Where(u => u.UserId == userId)
+             .Select(u => u.Username)
+             .FirstOrDefaultAsync();
 
             var query = _dbContext.Orders
                 .Include(o => o.Customer)
