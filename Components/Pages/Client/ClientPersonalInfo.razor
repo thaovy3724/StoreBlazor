@@ -147,24 +147,35 @@
         if (!firstRender || _loaded)
             return;
 
-        var id = await SessionStorage.GetItemAsync<int?>("userId");
+        // Lấy dữ liệu từ session
+        var userId = await SessionStorage.GetItemAsync<int?>("clientId");
+        var userName = await SessionStorage.GetItemAsync<string>("userName");
+        var userEmail = await SessionStorage.GetItemAsync<string>("userEmail");
+        var userRole = await SessionStorage.GetItemAsync<string>("userRole");
 
-        if (id == null || id == 0)
+        if (userId == null || userId == 0)
         {
             Nav.NavigateTo("/client/login", true);
             return;
         }
 
-        _customerId = id.Value;
+        _customerId = userId.Value;
 
         var result = await personalInfoService.GetPersonalInfoAsync(_customerId);
 
         if (result != null)
+        {
             personalInfoModel = result;
+            personalInfoModel.UserId = userId.Value;
+            personalInfoModel.FullName = userName ?? result.FullName;
+            personalInfoModel.Email = userEmail ?? result.Email;
+            personalInfoModel.Role = userRole ?? result.Role;
+        }
 
         _loaded = true;
         await InvokeAsync(StateHasChanged);
     }
+
 
     private async Task HandleSavePersonalInfo()
     {

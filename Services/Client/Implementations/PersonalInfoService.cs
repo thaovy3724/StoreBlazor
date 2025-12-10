@@ -24,14 +24,19 @@ namespace StoreBlazor.Services.Client.Implementations
             var customer = await _dbContext.Customers.FindAsync(customerId);
             if (customer == null) return null;
 
+            // Tìm user để lấy role (nếu cần)
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == customer.Email);
+
             return new PersonalInfoDTO
             {
+                UserId = customer.CustomerId,
                 FullName = customer.Name ?? "",
                 Email = customer.Email ?? "",
                 Phone = customer.Phone ?? "",
                 Address = customer.Address ?? ""
             };
         }
+
 
         // Cập nhật thông tin cá nhân
         public async Task<ServiceResult> UpdatePersonalInfoAsync(int customerId, PersonalInfoDTO dto)

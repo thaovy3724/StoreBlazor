@@ -27,7 +27,7 @@ else if (isLoading)
         {
             try
             {
-                var userId = await SessionStorage.GetItemAsync<int?>("userId");
+                var userId = await SessionStorage.GetItemAsync<int?>("clientId");
 
                 if (userId == null || userId == 0)
                 {
