@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace StoreBlazor.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -83,7 +83,7 @@ namespace StoreBlazor.Migrations
                 name: "suppliers",
                 columns: table => new
                 {
-                    SupplierId = table.Column<int>(type: "int", nullable: false)
+                    supplier_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -96,7 +96,7 @@ namespace StoreBlazor.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_suppliers", x => x.SupplierId);
+                    table.PrimaryKey("PK_suppliers", x => x.supplier_id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -104,7 +104,7 @@ namespace StoreBlazor.Migrations
                 name: "users",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "int", nullable: false)
+                    user_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     username = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -118,7 +118,7 @@ namespace StoreBlazor.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_users", x => x.UserId);
+                    table.PrimaryKey("PK_users", x => x.user_id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -134,7 +134,7 @@ namespace StoreBlazor.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     category_id = table.Column<int>(type: "int", nullable: false),
                     supplier_id = table.Column<int>(type: "int", nullable: false),
-                    price = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    price = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     unit = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     barcode = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
@@ -154,7 +154,7 @@ namespace StoreBlazor.Migrations
                         name: "FK_products_suppliers_supplier_id",
                         column: x => x.supplier_id,
                         principalTable: "suppliers",
-                        principalColumn: "SupplierId",
+                        principalColumn: "supplier_id",
                         onDelete: ReferentialAction.Restrict);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
@@ -192,7 +192,7 @@ namespace StoreBlazor.Migrations
                         name: "FK_orders_users_user_id",
                         column: x => x.user_id,
                         principalTable: "users",
-                        principalColumn: "UserId");
+                        principalColumn: "user_id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 

@@ -1,4 +1,4 @@
-@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+﻿@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
 @inject NavigationManager NavigationManager
 
 @if (isAuthorized)
@@ -27,9 +27,9 @@ else if (isLoading)
         {
             try
             {
-                var clientId = await SessionStorage.GetItemAsync<int?>("clientId");
-                
-                if (clientId == null || clientId == 0)
+                var userId = await SessionStorage.GetItemAsync<int?>("userId");
+
+                if (userId == null || userId == 0)
                 {
                     NavigationManager.NavigateTo("/client/login", forceLoad: true);
                 }

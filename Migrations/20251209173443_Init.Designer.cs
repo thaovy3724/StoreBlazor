@@ -12,8 +12,8 @@ using StoreBlazor.Data;
 namespace StoreBlazor.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251206093630_TenMigration")]
-    partial class TenMigration
+    [Migration("20251209173443_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -357,7 +357,8 @@ namespace StoreBlazor.Migrations
                 {
                     b.Property<int>("SupplierId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("supplier_id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SupplierId"));
 
@@ -390,7 +391,8 @@ namespace StoreBlazor.Migrations
                 {
                     b.Property<int>("UserId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("UserId"));
 

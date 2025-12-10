@@ -12,6 +12,8 @@ using StoreBlazor.Services.Payment.Implementations;
 using StoreBlazor.Services.Payment;
 using Blazored.SessionStorage;
 using System;
+using StoreBlazor.Services.Client;
+using StoreBlazor.Services.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +37,10 @@ builder.Services.AddScoped<IProductManagerService, ProductManagerService>();
 builder.Services.AddScoped<IStatisticService, StatisticService>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+builder.Services.AddBlazoredSessionStorage();
+builder.Services.AddScoped<IPersonalInfoService, PersonalInfoService>();
+builder.Services.AddScoped<IAdminPersonalInfoService, AdminPersonalInfoService>();
 
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
