@@ -284,7 +284,7 @@
     <!-- Form Modal (giữ component form như cũ) -->
     <AddCustomerModal OnCustomerAdded="HandleCustomerAdded" />
 
-    <PromotionModal Promotions="Promotions"
+    <PromotionModal Promotions="@promotions"
                     TotalAmount="TotalAmount"
                     OnPromotionSelected="HandlePromotionSelected" />
 
@@ -382,6 +382,11 @@
         }
 
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task HandlePaymentConfirmed(PaymentMethod paymentMethod)
+    {
+        await ProcessPayment(paymentMethod);
     }
 
     // ===== XỬ LÝ CALLBACK =====
