@@ -126,11 +126,14 @@
                     await SessionStorage.SetItemAsync("adminEmail", user.Username);
                     await SessionStorage.SetItemAsync("adminRole", user.Role);
                     
-                    Console.WriteLine($"[DEBUG] Admin session saved - adminName: {user.FullName}");
+                    Console.WriteLine($"[DEBUG] Admin session saved - adminName: {user.FullName}, role: {user.Role}");
                 }
 
                 await JS.InvokeVoidAsync("showAlert", result.Message, "success");
-                await JS.InvokeVoidAsync("navigateToClientWithDelay", "/admin/orderstaff", 2000);
+                
+                // Điều hướng theo role
+                var redirectUrl = user?.Role?.ToLower() == "staff" ? "/admin/orderstaff" : "/admin/category";
+                await JS.InvokeVoidAsync("navigateToClientWithDelay", redirectUrl, 2000);
             }
             else
             {

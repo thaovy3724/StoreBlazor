@@ -118,6 +118,10 @@ namespace StoreBlazor.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("OrderId"));
 
+                    b.Property<string>("Address")
+                        .HasColumnType("longtext")
+                        .HasColumnName("address");
+
                     b.Property<int?>("CustomerId")
                         .HasColumnType("int")
                         .HasColumnName("customer_id");

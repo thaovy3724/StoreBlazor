@@ -1,4 +1,8 @@
-﻿/* Card sản phẩm hiệu ứng hover */
+﻿* {
+    font-family: "Lexend", sans-serif;
+}
+
+/* Card sản phẩm hiệu ứng hover */
 .product-card {
     transition: all 0.3s ease;
     border: 1px solid #eee;
@@ -27,15 +31,15 @@
     overflow: hidden;
 }
 
-    .img-wrapper img {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        padding: 10px;
-    }
+.img-wrapper img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 10px;
+}
 /*Phân trang*/
 .pagination {
     background: #ffffff;
@@ -61,10 +65,25 @@
     transition: all 0.3s ease;
 }
 
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+    border-radius: 40px;
+    width: auto;
+    min-width: 40px;
+    padding: 0 16px;
+}
+
+.page-item:first-child:not(.disabled) .page-link:hover,
+.page-item:last-child:not(.disabled) .page-link:hover {
+    background-color: #CAF0F8;
+    color: #0077B6;
+    transform: none;
+}
+
 .page-item:not(.active):not(.disabled) .page-link:hover {
     background-color: #CAF0F8;
     color: #0077B6;
-    transform: translateY(-2px);
+    transform: translateY(-2px); 
 }
 
 .page-item.active .page-link {
@@ -77,6 +96,7 @@
     color: #d1d5db;
     background-color: transparent;
     cursor: not-allowed;
+    background-color: transparent !important;
 }
 
 .page-link:focus {

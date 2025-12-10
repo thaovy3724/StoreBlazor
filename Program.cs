@@ -1,3 +1,4 @@
+using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using StoreBlazor.Components;
@@ -48,8 +49,16 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 
 
-// ??ng ký Blazored.SessionStorage
+// ??ng kï¿½ Blazored.SessionStorage
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IPromotionClientService, PromotionClientService>();
+builder.Services.AddScoped<ICustomerClientService, CustomerClientService>();
+builder.Services.AddScoped<ICategoryClientService, CategoryClientService>();
+
+
 builder.Services.AddBlazoredSessionStorage();
+
+
 
 builder.Services.Configure<FormOptions>(options =>
 {

@@ -12,10 +12,6 @@ using StoreBlazor.Data;
 namespace StoreBlazor.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-<<<<<<<< HEAD:Migrations/20251209173443_Init.Designer.cs
-    [Migration("20251209173443_Init")]
-    partial class Init
-========
 <<<<<<<< HEAD:Migrations/20251206155925_InitialCreate.Designer.cs
     [Migration("20251206155925_InitialCreate")]
     partial class InitialCreate
@@ -23,7 +19,6 @@ namespace StoreBlazor.Migrations
     [Migration("20251206200614_initial")]
     partial class initial
 >>>>>>>> DontTouch:Migrations/20251206200614_initial.Designer.cs
->>>>>>>> 45ff5fbf5784b3cceef66960441f4966304a9c8d:Migrations/20251206155925_InitialCreate.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

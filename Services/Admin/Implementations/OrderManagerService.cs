@@ -4,7 +4,6 @@ using StoreBlazor.DTO.Admin;
 using StoreBlazor.DTO.Admin.OrderManager;
 using StoreBlazor.Models;
 using StoreBlazor.Services.Admin.Interfaces;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace StoreBlazor.Services.Admin.Implementations
 {
@@ -30,7 +29,6 @@ namespace StoreBlazor.Services.Admin.Implementations
                 });
 
             return await GetPagedAsync(query, page);
-
         }
         public async Task<OrderDetailDto?> GetOrderDetailAsync(int orderId)
         {
@@ -149,6 +147,78 @@ namespace StoreBlazor.Services.Admin.Implementations
                 Type = "success",
                 Message = "Đã hủy đơn hàng thành công!"
             };
+        }
+
+        // Lấy đơn hàng của 1 user cụ thể
+        public async Task<PageResult<OrderTableDto>> GetOrdersByCustomerAsync(int userId, int page)
+        {
+            Console.WriteLine($"[SERVICE] GetOrdersByCustomerAsync - userId: {userId}, page: {page}");
+
+            var query = _dbContext.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.User)
+                .Where(o =>
+                    o.Customer.Email == _dbContext.Users
+                        .Where(u => u.UserId == userId)
+                        .Select(u => u.Username)
+                        .FirstOrDefault()
+                )
+                .OrderByDescending(o => o.OrderId)
+                .Select(o => new OrderTableDto
+                {
+                    OrderId = o.OrderId,
+                    CustomerName = o.Customer != null ? o.Customer.Name : "Khách lẻ",
+                    OrderDate = o.OrderDate,
+                    TotalAmount = o.TotalAmount,
+                    Status = o.Status
+                });
+
+            var result = await GetPagedAsync(query, page);
+            Console.WriteLine($"[SERVICE] Result - Items: {result.Items.Count}, TotalPages: {result.TotalPages}");
+
+            return result;
+        }
+
+        // Lọc đơn hàng của 1 user cụ thể
+        public async Task<PageResult<OrderTableDto>> FilterByCustomerAsync(int userId, string keyword, int status, int page)
+        {
+            Console.WriteLine($"[SERVICE] FilterByCustomerAsync - userId: {userId}, keyword: '{keyword}', status: {status}");
+
+            var username = await _dbContext.Users
+             .Where(u => u.UserId == userId)
+             .Select(u => u.Username)
+             .FirstOrDefaultAsync();
+
+            var query = _dbContext.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.User)
+                .Where(o => o.Customer.Email == username)
+                .AsQueryable();
+
+            // Lọc theo mã đơn hàng
+            if (!string.IsNullOrEmpty(keyword) && int.TryParse(keyword, out int orderId))
+            {
+                query = query.Where(o => o.OrderId == orderId);
+            }
+
+            // Lọc theo trạng thái
+            if (status != -1)
+            {
+                query = query.Where(o => (int)o.Status == status);
+            }
+
+            query = query.OrderByDescending(o => o.OrderDate);
+
+            var dtoQuery = query.Select(o => new OrderTableDto
+            {
+                OrderId = o.OrderId,
+                CustomerName = o.Customer != null ? o.Customer.Name : "Khách lẻ",
+                OrderDate = o.OrderDate,
+                TotalAmount = o.TotalAmount,
+                Status = o.Status
+            });
+
+            return await GetPagedAsync<OrderTableDto>(dtoQuery, page);
         }
     }
 }

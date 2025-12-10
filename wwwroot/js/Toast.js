@@ -5,7 +5,7 @@
         icon: type, // success | error | warning | info | question
         title: message,
         showConfirmButton: false,
-        timer: 4000,
+        timer: 1300,
         timerProgressBar: true
     });
 };

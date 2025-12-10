@@ -7,11 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace StoreBlazor.Migrations
 {
     /// <inheritdoc />
-<<<<<<<< HEAD:Migrations/20251209173443_Init.cs
-    public partial class Init : Migration
-========
     public partial class initial : Migration
->>>>>>>> 45ff5fbf5784b3cceef66960441f4966304a9c8d:Migrations/20251206155925_InitialCreate.cs
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
