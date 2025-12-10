@@ -40,9 +40,22 @@ namespace StoreBlazor.Services.Admin.Implementations
             if (admin == null)
                 return new ServiceResult { Type = "error", Message = "Không tìm thấy tài khoản admin." };
 
+            // Kiểm tra trùng username (trừ chính user hiện tại)
+            var newUsername = (dto.Username ?? string.Empty).Trim();
+            if (!string.Equals(admin.Username, newUsername, StringComparison.OrdinalIgnoreCase))
+            {
+                var existed = await _dbContext.Users
+                    .AnyAsync(u => u.Username == newUsername && u.UserId != adminId);
+                if (existed)
+                {
+                    return new ServiceResult { Type = "error", Message = "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác!" };
+                }
+            }
+
             try
             {
                 admin.FullName = (dto.FullName ?? string.Empty).Trim();
+                admin.Username = newUsername;
                 await _dbContext.SaveChangesAsync();
 
                 return new ServiceResult { Type = "success", Message = "Cập nhật thông tin thành công!" };
@@ -53,7 +66,7 @@ namespace StoreBlazor.Services.Admin.Implementations
             }
         }
 
-        // Đổi mật khẩu cho admin (giống client)
+
         public async Task<ServiceResult> ChangePasswordAsync(int adminId, AdminChangePasswordDTO dto)
         {
             if (adminId <= 0)

@@ -34,6 +34,8 @@ namespace StoreBlazor.DTO.Client
 
     public class PersonalInfoDTO
     {
+        public int UserId { get; set; }
+
         [ValidFullName]
         public string FullName { get; set; } = string.Empty;
 
@@ -50,6 +52,8 @@ namespace StoreBlazor.DTO.Client
         [Required(ErrorMessage = "Địa chỉ không được để trống!")]
         [StringLength(255, ErrorMessage = "Địa chỉ không được vượt quá 255 ký tự!")]
         public string Address { get; set; } = string.Empty;
+
+        public string Role { get; set; } = string.Empty;
     }
 
     public class ChangePasswordDTO
