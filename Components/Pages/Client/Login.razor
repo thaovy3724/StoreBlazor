@@ -24,11 +24,11 @@
                     <form @onkeydown="HandleKeyDown">
                         <div class="form-floating mb-3">
                             <input class="form-control @(EmailError != null ? "is-invalid" : "")"
-                                   id="loginEmail"
-                                   placeholder="name@example.com"
-                                   @bind="Email"
-                                   @bind:event="oninput"
-                                   disabled="@isLoading" />
+                            id="loginEmail"
+                            placeholder="name@example.com"
+                            @bind="Email"
+                            @bind:event="oninput"
+                            disabled="@isLoading" />
                             <label for="loginEmail">Địa chỉ Email</label>
                             @if (EmailError != null)
                             {
@@ -38,12 +38,12 @@
 
                         <div class="form-floating mb-3">
                             <input type="password"
-                                   class="form-control @(PasswordError != null ? "is-invalid" : "")"
-                                   id="loginPassword"
-                                   placeholder="Password"
-                                   @bind="Password"
-                                   @bind:event="oninput"
-                                   disabled="@isLoading" />
+                            class="form-control @(PasswordError != null ? "is-invalid" : "")"
+                            id="loginPassword"
+                            placeholder="Password"
+                            @bind="Password"
+                            @bind:event="oninput"
+                            disabled="@isLoading" />
                             <label for="loginPassword">Mật khẩu</label>
                             @if (PasswordError != null)
                             {
@@ -52,9 +52,9 @@
                         </div>
 
                         <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold mb-3 shadow-sm"
-                                type="button"
-                                @onclick="LoginAsync"
-                                disabled="@isLoading">
+                        type="button"
+                        @onclick="LoginAsync"
+                        disabled="@isLoading">
                             ĐĂNG NHẬP
                         </button>
                     </form>
@@ -131,7 +131,7 @@
                     await SessionStorage.SetItemAsync("userEmail", user.Username);
                     await SessionStorage.SetItemAsync("userRole", user.Role);
                     await SessionStorage.SetItemAsync("cartCount", 0);
-                    
+
                     Console.WriteLine($"[DEBUG] Session saved - userName: {user.FullName}");
                 }
 
