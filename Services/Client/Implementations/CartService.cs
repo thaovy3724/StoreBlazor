@@ -86,7 +86,7 @@ namespace StoreBlazor.Services.Client.Implementations
 
         public async Task ClearCartAsync()
         {
-            Cart.Clear();
+            Cart.Clear(); //empty cart item list
             _appliedPromotion = null;
 
             await JsHelper.InvokeVoidAsync("CartStorage.clear", StorageKey);

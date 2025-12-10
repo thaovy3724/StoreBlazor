@@ -13,15 +13,15 @@ INSERT INTO `categories` (`category_id`, `category_name`) VALUES
 (5, 'Nhu yếu phẩm');
 
 -- SUPPLIERS
-INSERT INTO `suppliers` (`SupplierId`, `name`, `phone`, `email`, `address`) VALUES
+INSERT INTO `suppliers` (`supplier_id`, `name`, `phone`, `email`, `address`) VALUES
 (1, 'Công ty TNHH Nước Giải Khát Tân Hiệp Phát', '0908000001', 'info@thp.vn', 'Bình Dương');
-INSERT INTO `suppliers` (`SupplierId`, `name`, `phone`, `email`, `address`) VALUES
+INSERT INTO `suppliers` (`supplier_id`, `name`, `phone`, `email`, `address`) VALUES
 (2, 'Công ty Cổ phần Sữa Vinamilk', '0908000002', 'contact@vinamilk.com.vn', 'TP. Hồ Chí Minh');
-INSERT INTO `suppliers` (`SupplierId`, `name`, `phone`, `email`, `address`) VALUES
+INSERT INTO `suppliers` (`supplier_id`, `name`, `phone`, `email`, `address`) VALUES
 (3, 'Công ty Ajinomoto Việt Nam', '0908000003', 'info@ajinomoto.com.vn', 'Biên Hòa');
-INSERT INTO `suppliers` (`SupplierId`, `name`, `phone`, `email`, `address`) VALUES
+INSERT INTO `suppliers` (`supplier_id`, `name`, `phone`, `email`, `address`) VALUES
 (4, 'Công ty CP Acecook Việt Nam', '0908000004', 'support@acecook.vn', 'HCM');
-INSERT INTO `suppliers` (`SupplierId`, `name`, `phone`, `email`, `address`) VALUES
+INSERT INTO `suppliers` (`supplier_id`, `name`, `phone`, `email`, `address`) VALUES
 (5, 'Công ty Dầu thực vật Cái Lân', '0908000005', 'info@calofic.com.vn', 'Bà Rịa - Vũng Tàu');
 
 -- PRODUCTS
@@ -109,19 +109,19 @@ VALUES
 
 -- USERS
 INSERT INTO `users`
-(`UserId`, `username`, `password`, `full_name`, `role`, `created_at`)
+(`user_id`, `username`, `password`, `full_name`, `role`, `created_at`)
 VALUES
 (1, 'admin', '$2a$12$OWRzaomcMZZDXIAyNFkmIehe0.Xdwe1907TCCKFrszJ03OESVzYzK',
  'Quản trị hệ thống', 'Admin', '2025-11-11 17:35:28');
 
 INSERT INTO `users`
-(`UserId`, `username`, `password`, `full_name`, `role`, `created_at`)
+(`user_id`, `username`, `password`, `full_name`, `role`, `created_at`)
 VALUES
 (2, 'nhanvien1', '$2a$12$OWRzaomcMZZDXIAyNFkmIehe0.Xdwe1907TCCKFrszJ03OESVzYzK',
  'Nguyễn Thị Hoa', 'Staff', '2025-11-11 17:35:28');
 
 INSERT INTO `users`
-(`UserId`, `username`, `password`, `full_name`, `role`, `created_at`)
+(`user_id`, `username`, `password`, `full_name`, `role`, `created_at`)
 VALUES
 (3, 'nhanvien2', '$2a$12$OWRzaomcMZZDXIAyNFkmIehe0.Xdwe1907TCCKFrszJ03OESVzYzK',
  'Lê Văn Long', 'Staff', '2025-11-11 17:35:28');
