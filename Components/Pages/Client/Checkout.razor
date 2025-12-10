@@ -183,7 +183,7 @@
         // ==== PAYMENT METHOD ====
         PaymentMethodSelected = PaymentMethod.Cash;
         // Xử lý callback từ VNPay/MoMo
-        await HandlePaymentCallbackAsync();
+        // await HandlePaymentCallbackAsync();
     }
 
     //===== PAYMENT =====
@@ -213,101 +213,101 @@
         else await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (_deferShowPaymentModal)
-        {
-            _deferShowPaymentModal = false;
-            try
-            {
-                await JS.InvokeVoidAsync("showModal", _deferredModalId);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error invoking showModal: {ex.Message}");
-            }
-        }
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (_deferShowPaymentModal)
+    //     {
+    //         _deferShowPaymentModal = false;
+    //         try
+    //         {
+    //             await JS.InvokeVoidAsync("showModal", _deferredModalId);
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             Console.WriteLine($"Error invoking showModal: {ex.Message}");
+    //         }
+    //     }
 
-        if (_deferShowAlert)
-        {
-            _deferShowAlert = false;
-            try
-            {
-                await JS.InvokeVoidAsync("showAlert", _deferAlertMessage, _deferAlertType);
-                // Xóa query params bằng JS helper (không reload)
-                await JS.InvokeVoidAsync("replaceUrl", "/admin/orderstaff");
+    //     if (_deferShowAlert)
+    //     {
+    //         _deferShowAlert = false;
+    //         try
+    //         {
+    //             await JS.InvokeVoidAsync("showAlert", _deferAlertMessage, _deferAlertType);
+    //             Xóa query params bằng JS helper (không reload)
+    //             await JS.InvokeVoidAsync("replaceUrl", "/admin/orderstaff");
 
-                // Clear cart và reload products sau khi alert
-                ClearCart();
-                await LoadProductsAsync(CurrentPage);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error invoking showAlert/replaceUrl: {ex.Message}");
-            }
-        }
+    //             Clear cart và reload products sau khi alert
+    //             ClearCart();
+    //             await LoadProductsAsync(CurrentPage);
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             Console.WriteLine($"Error invoking showAlert/replaceUrl: {ex.Message}");
+    //         }
+    //     }
 
-        await base.OnAfterRenderAsync(firstRender);
-    }
+    //     await base.OnAfterRenderAsync(firstRender);
+    // }
 
     // ===== XỬ LÝ CALLBACK =====
-    private async Task HandlePaymentCallbackAsync()
-    {
-        var uri = Nav.ToAbsoluteUri(Nav.Uri);
-        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+    // private async Task HandlePaymentCallbackAsync()
+    // {
+    //     var uri = Nav.ToAbsoluteUri(Nav.Uri);
+    //     var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
 
-        // Check VNPay callback
-        if (query.AllKeys.Contains("vnp_ResponseCode"))
-        {
-            var queryParams = query.AllKeys.ToDictionary(k => k ?? "", k => query[k] ?? "");
-            var response = vnpayService.ProcessCallback(queryParams);
+    //     Check VNPay callback
+    //     if (query.AllKeys.Contains("vnp_ResponseCode"))
+    //     {
+    //         var queryParams = query.AllKeys.ToDictionary(k => k ?? "", k => query[k] ?? "");
+    //         var response = vnpayService.ProcessCallback(queryParams);
 
-            paymentResult = new PaymentResultDto
-            {
-                Success = response.Success,
-                OrderId = response.OrderId,
-                TransactionId = response.TransactionId,
-                Message = response.Message
-            };
+    //         paymentResult = new PaymentResultDto
+    //         {
+    //             Success = response.Success,
+    //             OrderId = response.OrderId,
+    //             TransactionId = response.TransactionId,
+    //             Message = response.Message
+    //         };
 
-            if (response.Success)
-            {
-                await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(response.OrderId), PaymentMethod.BankTransfer, response.TransactionId);
-            }
+    //         if (response.Success)
+    //         {
+    //             await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(response.OrderId), PaymentMethod.BankTransfer, response.TransactionId);
+    //         }
 
-            // Chỉ hiển thị alert, không hiển thị modal
-            _deferShowAlert = true;
-            _deferAlertMessage = paymentResult.Success ? "Thanh toán thành công" : (paymentResult.Message ?? "Thanh toán thất bại");
-            _deferAlertType = paymentResult.Success ? "success" : "error";
+    //         Chỉ hiển thị alert, không hiển thị modal
+    //         _deferShowAlert = true;
+    //         _deferAlertMessage = paymentResult.Success ? "Thanh toán thành công" : (paymentResult.Message ?? "Thanh toán thất bại");
+    //         _deferAlertType = paymentResult.Success ? "success" : "error";
 
-            // Trigger re-render để OnAfterRenderAsync chạy
-            _ = InvokeAsync(StateHasChanged);
-        }
-        // Check MoMo callback
-        else if (query.AllKeys.Contains("resultCode"))
-        {
-            var resultCode = query["resultCode"];
-            var orderId = query["orderId"] ?? "";
-            var transId = query["transId"] ?? "";
+    //         Trigger re-render để OnAfterRenderAsync chạy
+    //         _ = InvokeAsync(StateHasChanged);
+    //     }
+    //     Check MoMo callback
+    //     else if (query.AllKeys.Contains("resultCode"))
+    //     {
+    //         var resultCode = query["resultCode"];
+    //         var orderId = query["orderId"] ?? "";
+    //         var transId = query["transId"] ?? "";
 
-            paymentResult = new PaymentResultDto
-            {
-                Success = resultCode == "0",
-                OrderId = orderId,
-                TransactionId = transId,
-                Message = resultCode == "0" ? "Thanh toán thành công" : "Thanh toán thất bại"
-            };
+    //         paymentResult = new PaymentResultDto
+    //         {
+    //             Success = resultCode == "0",
+    //             OrderId = orderId,
+    //             TransactionId = transId,
+    //             Message = resultCode == "0" ? "Thanh toán thành công" : "Thanh toán thất bại"
+    //         };
 
-            if (paymentResult.Success)
-            {
-                await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(orderId), PaymentMethod.EWallet, transId);
-            }
+    //         if (paymentResult.Success)
+    //         {
+    //             await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(orderId), PaymentMethod.EWallet, transId);
+    //         }
 
-            // Chỉ hiển thị alert, không hiển thị modal
-            _deferShowAlert = true;
-            _deferAlertMessage = paymentResult.Message;
-            _deferAlertType = paymentResult.Success ? "success" : "error";
-            _ = InvokeAsync(StateHasChanged);
-        }
-    }
+    //         Chỉ hiển thị alert, không hiển thị modal
+    //         _deferShowAlert = true;
+    //         _deferAlertMessage = paymentResult.Message;
+    //         _deferAlertType = paymentResult.Success ? "success" : "error";
+    //         _ = InvokeAsync(StateHasChanged);
+    //     }
+    // }
 }

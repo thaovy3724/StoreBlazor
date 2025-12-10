@@ -1,0 +1,85 @@
+﻿@inject IJSRuntime JS
+
+<div class="modal fade" id="modalAddCustomer" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Tên khách hàng*</label>
+                    <input type="text" class="form-control @(NameError != null ? "is-invalid" : "")"
+                           @bind="NewCustomer.Name">
+                    <div class="invalid-feedback">@NameError</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại*</label>
+                    <input type="text" class="form-control @(PhoneError != null ? "is-invalid" : "")"
+                           @bind="NewCustomer.Phone">
+                    <div class="invalid-feedback">@PhoneError</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" @onclick="SubmitAddCustomer">
+                    Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<Customer> OnCustomerAdded { get; set; }
+
+    private Customer NewCustomer = new();
+    private string? NameError;
+    private string? PhoneError;
+
+    private async Task SubmitAddCustomer()
+    {
+        ClearErrors();
+
+        if (!Validate())
+        {
+            StateHasChanged();
+            return;
+        }
+
+        await OnCustomerAdded.InvokeAsync(NewCustomer);
+
+        NewCustomer = new Customer();
+        await JS.InvokeVoidAsync("hideModal", "modalAddCustomer");
+    }
+
+    private void ClearErrors()
+    {
+        NameError = null;
+        PhoneError = null;
+    }
+
+    private bool Validate()
+    {
+        bool isValid = true;
+
+        if (string.IsNullOrWhiteSpace(NewCustomer.Name))
+        {
+            NameError = "Vui lòng nhập tên khách hàng";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(NewCustomer.Phone))
+        {
+            PhoneError = "Vui lòng nhập số điện thoại";
+            isValid = false;
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(NewCustomer.Phone, @"^0\d{9}$"))
+        {
+            PhoneError = "Số điện thoại không hợp lệ";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+}

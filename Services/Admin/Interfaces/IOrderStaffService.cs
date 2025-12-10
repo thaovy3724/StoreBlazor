@@ -23,5 +23,6 @@ namespace StoreBlazor.Services.Admin.Interfaces
         Task<ServiceResult> CreateOrderWithPaymentAsync(OrderCreateDto orderDto);
 
         Task<ServiceResult> UpdateOrderStatusAfterPaymentAsync(int orderId, PaymentMethod paymentMethod);
+        Task<ServiceResult> CancelOrderAsync(int orderId);
     }
 }

@@ -282,13 +282,16 @@
     </div>
 
     <!-- Form Modal (giữ component form như cũ) -->
-    <OrderStaffForm Promotions="@promotions"
-                    TotalAmount="@TotalAmount"
-                    DiscountAmount="@DiscountAmount"
-                    FinalAmount="@FinalAmount"
-                    OnCustomerAdded="HandleCustomerAdded"
-                    OnPromotionSelected="HandlePromotionSelected"
-                    OnPaymentConfirmed="ProcessPayment" />
+    <AddCustomerModal OnCustomerAdded="HandleCustomerAdded" />
+
+    <PromotionModal Promotions="Promotions"
+                    TotalAmount="TotalAmount"
+                    OnPromotionSelected="HandlePromotionSelected" />
+
+    <PaymentModal TotalAmount="TotalAmount"
+                  DiscountAmount="DiscountAmount"
+                  FinalAmount="FinalAmount"
+                  OnPaymentConfirmed="HandlePaymentConfirmed" />
 </AdminAuthGuard>
 
 @code {
@@ -407,7 +410,7 @@
 
             if (response.Success)
             {
-                await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(response.OrderId), PaymentMethod.BankTransfer, response.TransactionId);
+                await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(response.OrderId), PaymentMethod.BankTransfer);
             }
 
             // Chỉ hiển thị alert, không hiển thị modal
@@ -435,7 +438,11 @@
 
             if (paymentResult.Success)
             {
-                await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(orderId), PaymentMethod.EWallet, transId);
+                await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(orderId), PaymentMethod.EWallet);
+            }
+            else
+            {
+				await service.CancelOrderAsync(int.Parse(orderId));
             }
 
             // Chỉ hiển thị alert, không hiển thị modal
