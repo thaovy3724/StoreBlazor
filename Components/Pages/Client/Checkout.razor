@@ -182,47 +182,47 @@
     }
 
     // ===== PAYMENT =====
-    private int userId = 0;
-    private async Task ProcessPayment(PaymentMethod paymentMethod)
-    {
-        var orderDto = new OrderCreateDto
-        {
-            CustomerId = selectedCustomer?.CustomerId,
-            PromoId = selectedPromotion?.PromoId,
-            TotalAmount = TotalAmount,
-            DiscountAmount = DiscountAmount,
-            PaymentMethod = paymentMethod,
-            Items = cartItems.Select(c => new OrderItemCreateDto
-            {
-                ProductId = c.ProductId,
-                ProductName = c.ProductName,
-                Quantity = c.Quantity,
-                Price = c.Price
-            }).ToList()
-        };
+    // private int userId = 0;
+    // private async Task ProcessPayment(PaymentMethod paymentMethod)
+    // {
+    //     var orderDto = new OrderCreateDto
+    //     {
+    //         CustomerId = selectedCustomer?.CustomerId,
+    //         PromoId = selectedPromotion?.PromoId,
+    //         TotalAmount = TotalAmount,
+    //         DiscountAmount = DiscountAmount,
+    //         PaymentMethod = paymentMethod,
+    //         Items = cartItems.Select(c => new OrderItemCreateDto
+    //         {
+    //             ProductId = c.ProductId,
+    //             ProductName = c.ProductName,
+    //             Quantity = c.Quantity,
+    //             Price = c.Price
+    //         }).ToList()
+    //     };
 
-        var ipAddress = "127.0.0.1";
+    //     var ipAddress = "127.0.0.1";
 
-        userId = await SessionStorage.GetItemAsync<int?>("adminId") ?? 0;
+    //     userId = await SessionStorage.GetItemAsync<int?>("adminId") ?? 0;
 
-        var result = await service.CreateOrderWithPaymentAsync(orderDto, userId, ipAddress);
+    //     var result = await service.CreateOrderWithPaymentAsync(orderDto, userId, ipAddress);
 
-        if (result.Type == "success")
-        {
-            if (paymentMethod == PaymentMethod.BankTransfer || paymentMethod == PaymentMethod.EWallet)
-            {
-                Nav.NavigateTo(result.Message, true);
-            }
-            else
-            {
-                await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
-                ClearCart();
-                await LoadProductsAsync(CurrentPage);
-            }
-        }
-        else
-        {
-            await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
-        }
-    }
+    //     if (result.Type == "success")
+    //     {
+    //         if (paymentMethod == PaymentMethod.BankTransfer || paymentMethod == PaymentMethod.EWallet)
+    //         {
+    //             Nav.NavigateTo(result.Message, true);
+    //         }
+    //         else
+    //         {
+    //             await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
+    //             ClearCart();
+    //             await LoadProductsAsync(CurrentPage);
+    //         }
+    //     }
+    //     else
+    //     {
+    //         await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
+    //     }
+    // }
 }
