@@ -84,8 +84,7 @@ namespace StoreBlazor.Services.Client.Implementations
                     {
                         OrderId = order.OrderId.ToString(),
                         Amount = order.TotalAmount,
-                        OrderInfo = $"Thanh toan don hang #{order.OrderId}",
-                        IpAddress = "127.0.0.1"
+                        OrderInfo = $"Thanh toan don hang #{order.OrderId}"
                     };
                     paymentUrl = _vnpayService.CreatePaymentUrl(vnpayRequest);
                 }

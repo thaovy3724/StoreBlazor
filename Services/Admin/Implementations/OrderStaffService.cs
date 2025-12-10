@@ -313,7 +313,7 @@ namespace StoreBlazor.Services.Admin.Implementations
             }
         }
 
-        public async Task<ServiceResult> CancelOrderAsync(int orderId, string reason = null)
+        public async Task<ServiceResult> CancelOrderAsync(int orderId)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
 

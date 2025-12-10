@@ -185,9 +185,9 @@ namespace StoreBlazor.Services.Admin.Implementations
             Console.WriteLine($"[SERVICE] FilterByCustomerAsync - userId: {userId}, keyword: '{keyword}', status: {status}");
 
             var username = await _dbContext.Users
-             .Where(u => u.UserId == userId)
-             .Select(u => u.Username)
-             .FirstOrDefaultAsync();
+                 .Where(u => u.UserId == userId)
+                 .Select(u => u.Username)
+                 .FirstOrDefaultAsync();
 
             var query = _dbContext.Orders
                 .Include(o => o.Customer)
