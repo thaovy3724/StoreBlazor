@@ -28,13 +28,18 @@ namespace StoreBlazor.Services.Payment.Implementations
             throw new InvalidOperationException($"Missing MoMo configuration. Searched keys: {string.Join(", ", keys)}");
         }
 
-        public async Task<MoMoResponseDto> CreatePaymentAsync(MoMoRequestDto request)
+        public async Task<MoMoResponseDto> CreatePaymentAsync(MoMoRequestDto request, bool isClient = false)
         {
             var partnerCode = GetConfigValue("MoMo:PartnerCode", "PaymentConfig:MoMo:PartnerCode");
             var accessKey = GetConfigValue("MoMo:AccessKey", "PaymentConfig:MoMo:AccessKey");
             var secretKey = GetConfigValue("MoMo:SecretKey", "PaymentConfig:MoMo:SecretKey");
             var endpoint = GetConfigValue("MoMo:Endpoint", "PaymentConfig:MoMo:Endpoint");
             var returnUrl = GetConfigValue("MoMo:ReturnUrl", "PaymentConfig:MoMo:ReturnUrl");
+            // Nếu là client thì dùng returnUrl dành cho client
+            if (isClient)
+            {
+                returnUrl = GetConfigValue("MoMo:ClientReturnUrl", "PaymentConfig:MoMo:ClientReturnUrl");
+            }
             var ipnUrl = GetConfigValue("MoMo:IpnUrl", "PaymentConfig:MoMo:IpnUrl");
 
             var requestId = Guid.NewGuid().ToString();

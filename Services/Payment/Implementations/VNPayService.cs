@@ -27,11 +27,16 @@ namespace StoreBlazor.Services.Payment.Implementations
             throw new InvalidOperationException($"Missing VNPay configuration. Searched keys: {string.Join(", ", keys)}");
         }
 
-        public string CreatePaymentUrl(VNPayRequestDto request)
+        public string CreatePaymentUrl(VNPayRequestDto request, bool isClient=false)
         {
             var vnp_TmnCode = GetConfigValue("VnPay:TmnCode", "PaymentConfig:VNPay:TmnCode");
             var vnp_HashSecret = GetConfigValue("VnPay:HashSecret", "PaymentConfig:VNPay:HashSecret");
             var vnp_Url = GetConfigValue("VnPay:BaseUrl", "PaymentConfig:VNPay:Url");
+            // Nếu là client thì dùng URL dành cho client
+            if (isClient)
+            {
+                vnp_Url = GetConfigValue("VnPay:PaymentBackClientReturnUrl", "PaymentConfig:VNPay:PaymentBackClientReturnUrl");
+            }
             var vnp_ReturnUrl = GetConfigValue("VnPay:PaymentBackReturnUrl", "PaymentConfig:VNPay:ReturnUrl");
 
             // Tạo dữ liệu request
@@ -43,7 +48,7 @@ namespace StoreBlazor.Services.Payment.Implementations
             vnpay.AddRequestData("vnp_Amount", ((long)(request.Amount * 100)).ToString()); // VNPay tính bằng VNDx100
             vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
             vnpay.AddRequestData("vnp_CurrCode", "VND");
-            vnpay.AddRequestData("vnp_IpAddr", request.IpAddress);
+            vnpay.AddRequestData("vnp_IpAddr", "127.0.0.1");
             vnpay.AddRequestData("vnp_Locale", "vn");
             vnpay.AddRequestData("vnp_OrderInfo", request.OrderInfo);
             vnpay.AddRequestData("vnp_OrderType", "other");

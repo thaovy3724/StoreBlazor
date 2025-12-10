@@ -20,10 +20,8 @@ namespace StoreBlazor.Services.Admin.Interfaces
         Task<List<PromotionDto>> GetActivePromotionsAsync();
 
         // Đặt hàng
-        Task<ServiceResult> CreateOrderAsync(OrderCreateDto orderDto, int userId);
+        Task<ServiceResult> CreateOrderWithPaymentAsync(OrderCreateDto orderDto);
 
-        Task<ServiceResult> CreateOrderWithPaymentAsync(OrderCreateDto orderDto, int userId, string ipAddress);
-
-        Task<ServiceResult> UpdateOrderStatusAfterPaymentAsync(int orderId, PaymentMethod paymentMethod, string transactionId);
+        Task<ServiceResult> UpdateOrderStatusAfterPaymentAsync(int orderId, PaymentMethod paymentMethod);
     }
 }
