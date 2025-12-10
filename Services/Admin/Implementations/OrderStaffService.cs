@@ -158,8 +158,105 @@ namespace StoreBlazor.Services.Admin.Implementations
         }
 
         // ===== ĐẶT HÀNG =====
+        public async Task<ServiceResult> CreateOrderAsync(OrderCreateDto orderDto, int userId)
+        {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                // 1. Tạo Order
+                var order = new Order
+                {
+                    CustomerId = orderDto.CustomerId,
+                    UserId = userId,
+                    PromoId = orderDto.PromoId,
+                    OrderDate = DateTime.Now,
+                    Status = OrderStatus.Paid,
+                    TotalAmount = orderDto.TotalAmount,
+                    DiscountAmount = orderDto.DiscountAmount
+                };
+
+                _dbContext.Orders.Add(order);
+                await _dbContext.SaveChangesAsync();
+
+                // 2. Tạo OrderItems
+                foreach (var item in orderDto.Items)
+                {
+                    var orderItem = new OrderItem
+                    {
+                        OrderId = order.OrderId,
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        Price = item.Price,
+                        Subtotal = item.Subtotal
+                    };
+
+                    _dbContext.OrderItems.Add(orderItem);
+
+                    // 3. Cập nhật tồn kho
+                    var inventory = await _dbContext.Inventories
+                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
+
+                    if (inventory == null || inventory.Quantity < item.Quantity)
+                    {
+                        await transaction.RollbackAsync();
+                        return new ServiceResult
+                        {
+                            Type = "error",
+                            Message = $"Sản phẩm '{item.ProductName}' không đủ số lượng trong kho"
+                        };
+                    }
+
+                    inventory.Quantity -= item.Quantity;
+                    inventory.UpdatedAt = DateTime.Now;
+                }
+
+                // 4. Tạo Payment
+                var payment = new StoreBlazor.Models.Payment
+                {
+                    OrderId = order.OrderId,
+                    Amount = orderDto.TotalAmount - orderDto.DiscountAmount,
+                    PaymentDate = DateTime.Now,
+                    PaymentMethod = orderDto.PaymentMethod
+                };
+
+                _dbContext.Payments.Add(payment);
+
+                // 5. Cập nhật UsedCount của Promotion
+                if (orderDto.PromoId.HasValue)
+                {
+                    var promo = await _dbContext.Promotions
+                        .FindAsync(orderDto.PromoId.Value);
+
+                    if (promo != null)
+                    {
+                        promo.UsedCount++;
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return new ServiceResult
+                {
+                    Type = "success",
+                    Message = $"Đặt hàng thành công! Mã đơn: #{order.OrderId}"
+                };
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return new ServiceResult
+                {
+                    Type = "error",
+                    Message = "Có lỗi xảy ra: " + ex.Message
+                };
+            }
+        }
         public async Task<ServiceResult> CreateOrderWithPaymentAsync(
-                                        OrderCreateDto orderDto)
+        OrderCreateDto orderDto,
+        int userId,
+        string ipAddress)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
@@ -169,7 +266,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                 var order = new Order
                 {
                     CustomerId = orderDto.CustomerId,
-                    UserId = orderDto.UserId,
+                    UserId = userId,
                     PromoId = orderDto.PromoId,
                     OrderDate = DateTime.Now,
                     Status = OrderStatus.Pending, // Chờ thanh toán
@@ -194,7 +291,6 @@ namespace StoreBlazor.Services.Admin.Implementations
                     _dbContext.OrderItems.Add(orderItem);
 
                     // Cập nhật tồn kho
-                    // Nếu thanh toán thất bại thì cộng lại tồn kho sau
                     var inventory = await _dbContext.Inventories
                         .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
                     if (inventory == null || inventory.Quantity < item.Quantity)
@@ -206,15 +302,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                     inventory.UpdatedAt = DateTime.Now;
                 }
 
-                // Cập nhật UsedCount của Promotion
-                if (orderDto.PromoId.HasValue)
-                {
-                    var promo = await _dbContext.Promotions.FindAsync(orderDto.PromoId.Value);
-                    if (promo != null) promo.UsedCount++;
-                }
-
-                await _dbContext.SaveChangesAsync(); // lưu vào db 
-
+                await _dbContext.SaveChangesAsync();
 
                 // 3. Xử lý thanh toán theo phương thức
                 string paymentUrl = string.Empty;
@@ -226,7 +314,8 @@ namespace StoreBlazor.Services.Admin.Implementations
                     {
                         OrderId = order.OrderId.ToString(),
                         Amount = orderDto.FinalAmount,
-                        OrderInfo = $"Thanh toan don hang #{order.OrderId}"
+                        OrderInfo = $"Thanh toan don hang #{order.OrderId}",
+                        IpAddress = ipAddress
                     };
                     paymentUrl = _vnpayService.CreatePaymentUrl(vnpayRequest);
                 }
@@ -243,16 +332,33 @@ namespace StoreBlazor.Services.Admin.Implementations
 
                     if (!momoResponse.Success)
                     {
-                        // update order status to cancelled
+                        await transaction.RollbackAsync();
                         return new ServiceResult { Type = "error", Message = momoResponse.Message };
-                    }else  paymentUrl = momoResponse.PayUrl;
+                    }
+                    paymentUrl = momoResponse.PayUrl;
                 }
                 else
                 {
                     // Thanh toán trực tiếp (Cash/Card)
-                    UpdateOrderStatusAfterPaymentAsync(order.OrderId, orderDto.PaymentMethod);
+                    order.Status = OrderStatus.Paid;
+                    var payment = new StoreBlazor.Models.Payment
+                    {
+                        OrderId = order.OrderId,
+                        Amount = orderDto.FinalAmount,
+                        PaymentDate = DateTime.Now,
+                        PaymentMethod = orderDto.PaymentMethod
+                    };
+                    _dbContext.Payments.Add(payment);
                 }
 
+                // Cập nhật UsedCount của Promotion
+                if (orderDto.PromoId.HasValue)
+                {
+                    var promo = await _dbContext.Promotions.FindAsync(orderDto.PromoId.Value);
+                    if (promo != null) promo.UsedCount++;
+                }
+
+                await _dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 return new ServiceResult
@@ -270,8 +376,9 @@ namespace StoreBlazor.Services.Admin.Implementations
             }
         }
         public async Task<ServiceResult> UpdateOrderStatusAfterPaymentAsync(
-                                        int orderId,
-                                        PaymentMethod paymentMethod)
+    int orderId,
+    PaymentMethod paymentMethod,
+    string transactionId)
         {
             try
             {
@@ -292,6 +399,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                     Amount = order.TotalAmount - order.DiscountAmount,
                     PaymentDate = DateTime.Now,
                     PaymentMethod = paymentMethod
+                    // Có thể lưu transactionId vào field mới nếu cần
                 };
 
                 _dbContext.Payments.Add(payment);
@@ -312,70 +420,5 @@ namespace StoreBlazor.Services.Admin.Implementations
                 };
             }
         }
-
-        public async Task<ServiceResult> CancelOrderAsync(int orderId, string reason = null)
-        {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-            try
-            {
-                // 1. Lấy order
-                var order = await _dbContext.Orders
-                    .Include(o => o.OrderItems)
-                    .FirstOrDefaultAsync(o => o.OrderId == orderId);
-
-                if (order == null)
-                    return new ServiceResult { Type = "error", Message = "Không tìm thấy đơn hàng." };
-
-                // Không cho phép hủy nếu đã thanh toán
-                if (order.Status != OrderStatus.Pending)
-                    return new ServiceResult { Type = "error", Message = "Đơn hàng không thể hủy." };
-
-                // 2. Khôi phục tồn kho của từng sản phẩm
-                foreach (var item in order.OrderItems)
-                {
-                    var inventory = await _dbContext.Inventories
-                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
-
-                    if (inventory != null)
-                    {
-                        inventory.Quantity += item.Quantity;
-                        inventory.UpdatedAt = DateTime.Now;
-                    }
-                }
-
-                // 3. Tăng UsedCount của Promotion nếu có
-                if (order.PromoId.HasValue)
-                {
-                    var promo = await _dbContext.Promotions
-                        .FirstOrDefaultAsync(p => p.PromoId == order.PromoId.Value);
-
-                    if (promo != null && promo.UsedCount > 0)
-                        promo.UsedCount++;
-                }
-
-                // 4. Cập nhật trạng thái order
-                order.Status = OrderStatus.Cancelled;
-                order.OrderDate = DateTime.Now;
-
-                await _dbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return new ServiceResult
-                {
-                    Type = "success",
-                    Message = $"Đơn hàng #{orderId} đã được hủy thành công."
-                };
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return new ServiceResult
-                {
-                    Type = "error",
-                    Message = "Lỗi khi hủy đơn hàng: " + ex.Message
-                };
-            }
-        }
     }
-    }
+}

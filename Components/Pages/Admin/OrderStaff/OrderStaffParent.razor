@@ -321,6 +321,9 @@
     private int CurrentPage = 1;
     private int TotalPages = 1;
 
+    // Payment Result
+    private PaymentResultDto? paymentResult;
+
     // Flags để defer JS
     private bool _deferShowPaymentModal = false;
     private string _deferredModalId = "modalPaymentResult";
@@ -382,9 +385,6 @@
     }
 
     // ===== XỬ LÝ CALLBACK =====
-    // Payment Result
-    private PaymentResultDto? paymentResult;
-
     private async Task HandlePaymentCallbackAsync()
     {
         var uri = Nav.ToAbsoluteUri(Nav.Uri);
@@ -394,8 +394,7 @@
         if (query.AllKeys.Contains("vnp_ResponseCode"))
         {
             var queryParams = query.AllKeys.ToDictionary(k => k ?? "", k => query[k] ?? "");
-            // xử lý lỗi và trả về DTO cần thiết
-            var response = vnpayService.ProcessCallback(queryParams); 
+            var response = vnpayService.ProcessCallback(queryParams);
 
             paymentResult = new PaymentResultDto
             {
@@ -601,11 +600,11 @@
     }
 
     // ===== PAYMENT =====
+    private int userId = 0;
     private async Task ProcessPayment(PaymentMethod paymentMethod)
     {
         var orderDto = new OrderCreateDto
-        {   
-            UserId = await SessionStorage.GetItemAsync<int?>("adminId") ?? 0,
+        {
             CustomerId = selectedCustomer?.CustomerId,
             PromoId = selectedPromotion?.PromoId,
             TotalAmount = TotalAmount,
@@ -620,9 +619,12 @@
             }).ToList()
         };
 
-        var result = await service.CreateOrderWithPaymentAsync(orderDto);
+        var ipAddress = "127.0.0.1"; 
 
-        // Trong trường hợp ghi vào DB thành công 
+        userId = await SessionStorage.GetItemAsync<int?>("adminId") ?? 0;
+
+        var result = await service.CreateOrderWithPaymentAsync(orderDto, userId, ipAddress);
+
         if (result.Type == "success")
         {
             if (paymentMethod == PaymentMethod.BankTransfer || paymentMethod == PaymentMethod.EWallet)

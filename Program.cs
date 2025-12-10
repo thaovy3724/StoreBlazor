@@ -43,11 +43,11 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 
 
+// ??ng k� Blazored.SessionStorage
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IPromotionClientService, PromotionClientService>();
 builder.Services.AddScoped<ICustomerClientService, CustomerClientService>();
 builder.Services.AddScoped<ICategoryClientService, CategoryClientService>();
-builder.Services.AddScoped<IOrderService, OrderService>();
 
 
 builder.Services.AddBlazoredSessionStorage();

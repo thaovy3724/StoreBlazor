@@ -7,8 +7,6 @@ namespace StoreBlazor.DTO.Admin
     /// </summary>
     public class OrderCreateDto
     {
-        public int? UserId { get; set; }
-
         /// <summary>
         /// ID khách hàng (nullable - khách vãng lai không cần)
         /// </summary>
