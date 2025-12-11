@@ -18,17 +18,20 @@ namespace StoreBlazor.Services.Auth.Implementations
 
         public async Task<ServiceResult> LoginAsync(LoginDTO loginDTO, string userType)
         {
-            var emailLower = loginDTO.Email?.Trim().ToLower() ?? string.Empty;
+            var username = loginDTO.Email?.Trim() ?? string.Empty;
 
+            // Lấy user từ DB (MySQL mặc định case-insensitive)
             var user = await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.Username.ToLower() == emailLower);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Username == username);
 
-            if (user == null)
+            // So sánh lại trong C# để đảm bảo case-sensitive
+            if (user == null || !user.Username.Equals(username, StringComparison.Ordinal))
             {
                 return new ServiceResult
                 {
                     Type = "error",
-                    Message = "Email hoặc mật khẩu không đúng."
+                    Message = "Tên đăng nhập hoặc mật khẩu không đúng."
                 };
             }
 
@@ -56,7 +59,7 @@ namespace StoreBlazor.Services.Auth.Implementations
                 return new ServiceResult
                 {
                     Type = "error",
-                    Message = "Email hoặc mật khẩu không đúng."
+                    Message = "Tên đăng nhập hoặc mật khẩu không đúng."
                 };
             }
 
@@ -80,12 +83,17 @@ namespace StoreBlazor.Services.Auth.Implementations
         public async Task<UserResponseDTO?> GetCurrentUserAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email)) return null;
-            var emailLower = email.Trim().ToLower();
+            var username = email.Trim();
 
             var user = await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.Username.ToLower() == emailLower);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Username == username);
 
-            if (user == null) return null;
+            // So sánh case-sensitive
+            if (user == null || !user.Username.Equals(username, StringComparison.Ordinal))
+            {
+                return null;
+            }
 
             return new UserResponseDTO
             {
