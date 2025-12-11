@@ -104,12 +104,18 @@
 
     private bool ValidateForm()
     {
+        ClearErrors();
         bool isValid = true;
 
         // Validate Name (required)
-        if (string.IsNullOrEmpty(Model.Name))
+        if (string.IsNullOrWhiteSpace(Model.Name))
         {
             NameError = "Tên khách hàng không được để trống";
+            isValid = false;
+        }
+        else if (Model.Name.Trim().Length < 2)
+        {
+            NameError = "Tên khách hàng phải có ít nhất 2 ký tự";
             isValid = false;
         }
         else if (Model.Name.Length > 100)
@@ -117,18 +123,19 @@
             NameError = "Tên khách hàng tối đa 100 ký tự";
             isValid = false;
         }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(Model.Name.Trim(), @"^[\p{L}\s]+$"))
+        {
+            NameError = "Tên khách hàng chỉ được chứa chữ cái và khoảng trắng";
+            isValid = false;
+        }
 
         // Validate Phone (optional nhưng nếu có thì phải hợp lệ)
         if (!string.IsNullOrEmpty(Model.Phone))
         {
-            if (Model.Phone.Length > 20)
+            // Định dạng giống form đăng ký: bắt đầu bằng 03, 05, 07, 08, 09 và có 10 số
+            if (!System.Text.RegularExpressions.Regex.IsMatch(Model.Phone, @"^(03|05|07|08|09)\d{8}$"))
             {
-                PhoneError = "Số điện thoại tối đa 20 ký tự";
-                isValid = false;
-            }
-            else if (!System.Text.RegularExpressions.Regex.IsMatch(Model.Phone, @"^0\d{9}$"))
-            {
-                PhoneError = "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0)";
+                PhoneError = "Số điện thoại không hợp lệ (VD: 0901234567)";
                 isValid = false;
             }
         }
