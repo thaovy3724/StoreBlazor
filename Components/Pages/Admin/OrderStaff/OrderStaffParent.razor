@@ -414,9 +414,9 @@
             };
 
             if (response.Success)
-            {
                 await service.UpdateOrderStatusAfterPaymentAsync(int.Parse(response.OrderId), PaymentMethod.BankTransfer);
-            }
+            else 
+                await service.CancelOrderAsync(int.Parse(response.OrderId));
 
             // Chỉ hiển thị alert, không hiển thị modal
             _deferShowAlert = true;

@@ -27,7 +27,6 @@ namespace StoreBlazor.DTO.Client
         [Compare("Password", ErrorMessage = "Mật khẩu xác nhận không khớp!")]
         public string ConfirmPassword { get; set; }
 
-        [Required(ErrorMessage = "Địa chỉ không được để trống!")]
-        public string Address { get; set; }
+        public string? Address { get; set; } = string.Empty;
     }
 }

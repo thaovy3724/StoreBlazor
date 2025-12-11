@@ -214,7 +214,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                 }
 
                 await _dbContext.SaveChangesAsync(); // lưu vào db 
-
+                await transaction.CommitAsync();
 
                 // 3. Xử lý thanh toán theo phương thức
                 string paymentUrl = string.Empty;
@@ -244,16 +244,15 @@ namespace StoreBlazor.Services.Admin.Implementations
                     if (!momoResponse.Success)
                     {
                         // update order status to cancelled
+                        await CancelOrderAsync(order.OrderId);
                         return new ServiceResult { Type = "error", Message = momoResponse.Message };
                     }else  paymentUrl = momoResponse.PayUrl;
                 }
                 else
                 {
                     // Thanh toán trực tiếp (Cash/Card)
-                    UpdateOrderStatusAfterPaymentAsync(order.OrderId, orderDto.PaymentMethod);
+                    await UpdateOrderStatusAfterPaymentAsync(order.OrderId, orderDto.PaymentMethod);
                 }
-
-                await transaction.CommitAsync();
 
                 return new ServiceResult
                 {

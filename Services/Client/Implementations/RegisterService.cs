@@ -51,7 +51,7 @@ namespace StoreBlazor.Services.Client.Implementations
                     Name = registerDTO.Name.Trim(),
                     Phone = registerDTO.Phone.Trim(),
                     Email = registerDTO.Email.Trim(),
-                    Address = registerDTO.Address.Trim(),
+                    Address = registerDTO.Address?.Trim() ?? "",
                     CreatedAt = DateTime.Now
                 };
 

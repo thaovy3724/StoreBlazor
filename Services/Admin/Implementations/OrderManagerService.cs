@@ -135,18 +135,67 @@ namespace StoreBlazor.Services.Admin.Implementations
 
         public async Task<ServiceResult> CancelAsync(int orderId)
         {
-            var order = await _dbContext.Orders.FindAsync(orderId);
-            if (order == null)
-                return new ServiceResult { Type = "error", Message = "Đơn hàng không tồn tại" };
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
-            order.Status = OrderStatus.Cancelled;
-            await _dbContext.SaveChangesAsync();
-
-            return new ServiceResult
+            try
             {
-                Type = "success",
-                Message = "Đã hủy đơn hàng thành công!"
-            };
+                // 1. Lấy order
+                var order = await _dbContext.Orders
+                    .Include(o => o.OrderItems)
+                    .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+                if (order == null)
+                    return new ServiceResult { Type = "error", Message = "Không tìm thấy đơn hàng." };
+
+                // Không cho phép hủy nếu đã thanh toán
+                if (order.Status != OrderStatus.Pending)
+                    return new ServiceResult { Type = "error", Message = "Đơn hàng không thể hủy." };
+
+                // 2. Khôi phục tồn kho của từng sản phẩm
+                foreach (var item in order.OrderItems)
+                {
+                    var inventory = await _dbContext.Inventories
+                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
+
+                    if (inventory != null)
+                    {
+                        inventory.Quantity += item.Quantity;
+                        inventory.UpdatedAt = DateTime.Now;
+                    }
+                }
+
+                // 3. Tăng UsedCount của Promotion nếu có
+                if (order.PromoId.HasValue)
+                {
+                    var promo = await _dbContext.Promotions
+                        .FirstOrDefaultAsync(p => p.PromoId == order.PromoId.Value);
+
+                    if (promo != null && promo.UsedCount > 0)
+                        promo.UsedCount++;
+                }
+
+                // 4. Cập nhật trạng thái order
+                order.Status = OrderStatus.Cancelled;
+                order.OrderDate = DateTime.Now;
+
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return new ServiceResult
+                {
+                    Type = "success",
+                    Message = $"Đơn hàng #{orderId} đã được hủy thành công."
+                };
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return new ServiceResult
+                {
+                    Type = "error",
+                    Message = "Lỗi khi hủy đơn hàng: " + ex.Message
+                };
+            }
         }
 
         // Lấy đơn hàng của 1 user cụ thể
