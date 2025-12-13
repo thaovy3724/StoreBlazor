@@ -48,6 +48,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                 OrderId = order.OrderId,
                 CustomerName = order.Customer?.Name ?? "",
                 UserName = order.User?.FullName ?? "",
+                Address = order.Address ?? "",
                 OrderDate = order.OrderDate,
                 Status = order.Status,
                 TotalAmount = order.TotalAmount,

@@ -57,7 +57,10 @@ namespace StoreBlazor.Services.Client.Implementations
             var existing = Cart.FirstOrDefault(x => x.ProductId == item.ProductId);
 
             if (existing != null)
+            {
                 existing.SelectedQuantity += item.SelectedQuantity;
+                existing.SelectedQuantityText = item.SelectedQuantity.ToString();
+            }
             else
                 Cart.Add(item);
 
