@@ -27,12 +27,6 @@
                 @* Gio hang *@
                 <button class="btn btn-outline-light text-dark border-0 nav-icon-btn position-relative" @onclick="GoToCart" title="Giỏ hàng">
                     <i class="bi bi-cart3 fs-4"></i>
-                    @if (CartCount > 0)
-                    {
-                        <span class="position-absolute badge rounded-pill bg-danger border border-light badge-cart">
-                            @CartCount
-                        </span>
-                    }
                 </button>
 
                 <div class="vr h-100 mx-1 d-none d-lg-block"></div>
@@ -113,7 +107,9 @@
     {
         try
         {
-            await SessionStorage.RemoveItemAsync("clientSession");
+            await SessionStorage.RemoveItemAsync("userId");
+            await SessionStorage.RemoveItemAsync("userName");
+            await SessionStorage.RemoveItemAsync("userRole");        
         }
         catch (Exception ex)
         {
@@ -145,18 +141,6 @@
     }
 
     // ==== CART ====
-    private int CartCount;
-    protected override void OnInitialized()
-    {
-        CartService.OnChange += CartChanged;
-        CartCount = CartService.GetTotalQuantity();
-    }
-    private void CartChanged()
-    {
-        CartCount = CartService.GetTotalQuantity();
-        InvokeAsync(StateHasChanged); // đảm bảo UI update
-    }
-
     private void GoHome()
     {
         Nav.NavigateTo("/client", forceLoad: true);

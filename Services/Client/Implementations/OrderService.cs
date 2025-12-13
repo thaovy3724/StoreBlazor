@@ -116,7 +116,7 @@ namespace StoreBlazor.Services.Client.Implementations
                 }
                 else
                 {
-                    // Thanh toán trực tiếp (Cash/Card)
+                    // Thanh toán trực tiếp (Cash)
                     await UpdateOrderStatusAfterPaymentAsync(order.OrderId, orderDTO.PaymentMethod);
                     paymentUrl = $"/client/payment-success/{order.OrderId}";
                 }
@@ -149,7 +149,8 @@ namespace StoreBlazor.Services.Client.Implementations
                 }
 
                 // Cập nhật trạng thái đơn hàng
-                order.Status = OrderStatus.Paid;
+                if(paymentMethod != PaymentMethod.Cash)
+                    order.Status = OrderStatus.Paid;
 
                 // Tạo Payment record
                 var payment = new StoreBlazor.Models.Payment

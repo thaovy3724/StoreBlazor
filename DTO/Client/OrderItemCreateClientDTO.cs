@@ -5,19 +5,13 @@
         public int ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Số lượng mua
-        /// </summary>
+        // Số lượng mua
         public int Quantity { get; set; }
 
-        /// <summary>
-        /// Đơn giá tại thời điểm mua
-        /// </summary>
+        // Đơn giá tại thời điểm mua
         public decimal Price { get; set; }
 
-        /// <summary>
-        /// Thành tiền = Price * Quantity
-        /// </summary>
+        // Thành tiền = Price * Quantity
         public decimal SubTotal => Price * Quantity;
     }
 }

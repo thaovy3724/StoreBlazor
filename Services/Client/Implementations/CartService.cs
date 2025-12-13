@@ -58,11 +58,18 @@ namespace StoreBlazor.Services.Client.Implementations
 
             if (existing != null)
             {
-                existing.SelectedQuantity += item.SelectedQuantity;
-                existing.SelectedQuantityText = item.SelectedQuantity.ToString();
+                if (item.SelectedQuantity <= (existing.Quantity - existing.SelectedQuantity))
+                {
+                    existing.SelectedQuantity += item.SelectedQuantity;
+                }
+                else
+                {
+                    existing.SelectedQuantity = item.SelectedQuantity;
+                }
+                existing.SelectedQuantityText = existing.SelectedQuantity.ToString();
+
             }
-            else
-                Cart.Add(item);
+            else Cart.Add(item);
 
             await PersistAsync();
             OnChange?.Invoke();

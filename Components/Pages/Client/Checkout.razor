@@ -124,7 +124,7 @@
                                     <input type="radio" name="paymentMethod"
                                            checked="@(PaymentMethodSelected == PaymentMethod.EWallet)"
                                            @onchange="@(() => PaymentMethodSelected = PaymentMethod.EWallet)"
-                                           class="form-check-input me-3 mt-0">
+                                            class="form-check-input me-3 mt-0">
                                     <div class="flex-grow-1">
                                         <div class="fw-bold">
                                             <i class="bi bi-wallet2 me-2"></i>Ví MoMo
@@ -233,7 +233,7 @@
         var result = await OrderService.CreateOrderWithPaymentAsync(orderDTO);
 
         // if create order successfully, redirect to according pages
-        if (result.Type == "success") Nav.NavigateTo(result.Message, true);
+        if (result.Type == "success") Nav.NavigateTo(result.Message, forceLoad: true);
         else await JS.InvokeVoidAsync("showAlert", result.Message, result.Type);
     }
 }
