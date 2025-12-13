@@ -37,11 +37,30 @@
 
                     <div class="mb-3">
                         <label class="form-label">Vai trò</label>
-                        <select class="form-control" @bind="Model.Role">
-                            <option value="@Role.Admin">Admin</option>
-                            <option value="@Role.Staff">Staff</option>
-                            <option value="@Role.Customer">Customer</option>
-                        </select>
+                        @if (IsEditMode && OriginalRole == Role.Customer)
+                        {
+                            <!-- Tài khoản khách hàng đăng ký: không cho đổi role -->
+                            <select class="form-select" disabled>
+                                <option value="@Role.Customer" selected>Customer</option>
+                            </select>
+                            <small class="text-muted">Tài khoản khách hàng tự đăng ký không thể thay đổi vai trò</small>
+                        }
+                        else if (IsEditMode)
+                        {
+                            <!-- Chỉnh sửa tài khoản Admin/Staff: cho đổi giữa Admin và Staff -->
+                            <select class="form-select" @bind="Model.Role">
+                                <option value="@Role.Admin">Admin</option>
+                                <option value="@Role.Staff">Staff</option>
+                            </select>
+                        }
+                        else
+                        {
+                            <!-- Thêm mới: chỉ cho phép Admin hoặc Staff -->
+                            <select class="form-select" @bind="Model.Role">
+                                <option value="@Role.Admin">Admin</option>
+                                <option value="@Role.Staff" selected>Staff</option>
+                            </select>
+                        }
                     </div>
                 </div>
 
@@ -59,6 +78,9 @@
 
     [Parameter]
     public bool IsEditMode { get; set; }
+
+    [Parameter]
+    public Role OriginalRole { get; set; } // Role gốc trước khi edit
 
     [Parameter]
     public EventCallback OnClose { get; set; }

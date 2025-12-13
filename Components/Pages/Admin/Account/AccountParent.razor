@@ -1,6 +1,7 @@
 ﻿@page "/admin/account"
 @layout AdminLayout
 @inject IAccountService service
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
 @inherits BaseParent<User>
 
 <div class="container-fluid p-4">
@@ -48,11 +49,22 @@
                                                 @onclick="()=>OpenEditForm(item)">
                                             <i class="bi bi-pencil text-success"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-light border btn-delete"
-                                                title="Xóa"
-                                                @onclick="() => HandleDeleteAsync(item)">
-                                            <i class="bi bi-trash text-danger"></i>
-                                        </button>
+                                        @if (item.UserId != currentUserId)
+                                        {
+                                            <button class="btn btn-sm btn-light border btn-delete"
+                                                    title="Xóa"
+                                                    @onclick="() => HandleDeleteAsync(item)">
+                                                <i class="bi bi-trash text-danger"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-light border btn-delete"
+                                                    title="Không thể xóa tài khoản đang đăng nhập"
+                                                    disabled>
+                                                <i class="bi bi-trash text-muted"></i>
+                                            </button>
+                                        }
                                     </td>
                                 </tr>
                             }
@@ -75,6 +87,7 @@
 
 <AccountForm Model="@SelectedItem"
              IsEditMode="@IsEditMode"
+             OriginalRole="@OriginalRole"
              OnSave="HandleSaveAsync"
              OnClose="CloseForm" />
 
@@ -83,10 +96,15 @@
     private List<User> listResult = new();
     private ServiceResult serviceResult = new();
     private string keyword = string.Empty;
+    private int currentUserId = 0;
+
+    // Thêm biến lưu role gốc
+    private Role OriginalRole = Role.Staff;
 
     // ==== LOAD DATA ====
     protected override async Task OnInitializedAsync()
     {
+        currentUserId = await SessionStorage.GetItemAsync<int>("adminId");
         await LoadPageAsync(1);
     }
 
@@ -111,6 +129,7 @@
     private void OpenEditForm(User item)
     {
         IsEditMode = true;
+        OriginalRole = item.Role; // Lưu role gốc
         SelectedItem = new User
             {
                 UserId = item.UserId,
@@ -124,6 +143,7 @@
     // === SAVE DATA ====
     private async Task HandleSaveAsync(User model)
     {
+        ServiceResult serviceResult;
         if (IsEditMode)
         {
             serviceResult = await service.UpdateAsync(model);
@@ -133,12 +153,29 @@
             serviceResult = await service.CreateAsync(model);
         }
         await ShowAlertAsync(serviceResult);
+
+        if (serviceResult.Type == "success")
+        {
+            await HideModalAsync("accountModal");
+            CloseForm();
+        }
         await LoadPageAsync(CurrentPage);
     }
 
     // ==== DELETE ====
     private async Task HandleDeleteAsync(User model)
     {
+        // Double check: không cho xóa tài khoản đang đăng nhập
+        if (model.UserId == currentUserId)
+        {
+            await ShowAlertAsync(new ServiceResult
+            {
+                Type = "error",
+                Message = "Không thể xóa tài khoản đang đăng nhập!"
+            });
+            return;
+        }
+
         if (!await ConfirmDeleteAsync()) return;
 
         serviceResult = await service.DeleteAsync(model);

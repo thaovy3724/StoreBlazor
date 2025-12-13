@@ -13,11 +13,17 @@ namespace StoreBlazor.Components.Pages.Admin
 
         protected bool IsDetailMode { get; set; }
 
-
         [Inject]
         protected IJSRuntime JS { get; set; } = default!;
 
         // ==== MODAL ====
+        protected void OpenAddForm()
+        {
+            SelectedItem = new();
+            IsEditMode = false;
+            IsDetailMode = false;
+        }
+
         protected void CloseForm()
         {
             SelectedItem = new();
@@ -35,6 +41,12 @@ namespace StoreBlazor.Components.Pages.Admin
             return await JS.InvokeAsync<bool>("showDeleteAlert");
         }
 
+        // ==== HIDE MODAL ====
+        protected async Task HideModalAsync(string modalId)
+        {
+            await JS.InvokeVoidAsync("hideModal", modalId);
+        }
+
         // ==== PAGINATION ====
         protected int CurrentPage;
         protected int TotalPages;
@@ -43,7 +55,7 @@ namespace StoreBlazor.Components.Pages.Admin
 
         protected async Task<bool> ConfirmLockAsync(string title)
         {
-            return await JS.InvokeAsync<bool>("showLockAlert",title);
+            return await JS.InvokeAsync<bool>("showLockAlert", title);
         }
     }
 }

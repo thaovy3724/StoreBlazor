@@ -30,10 +30,20 @@ namespace StoreBlazor.Services.Admin.Implementations
                 query = query.Where(p => p.PromoCode.Contains(keyword));
             }
 
-            if (status != -1)
+            // Xử lý lọc theo trạng thái
+            if (status == -2) // Hết hạn
             {
-                query = query.Where(p => (int)p.Status == status);
+                query = query.Where(p => p.EndDate.Date < DateTime.Today);
             }
+            else if (status == (int)PromotionStatus.Active) // Hoạt động (Active + chưa hết hạn)
+            {
+                query = query.Where(p => p.Status == PromotionStatus.Active && p.EndDate.Date >= DateTime.Today);
+            }
+            else if (status == (int)PromotionStatus.Inactive) // Đã khóa
+            {
+                query = query.Where(p => p.Status == PromotionStatus.Inactive);
+            }
+            // status == -1: Tất cả, không cần filter
 
             if (fromDate.HasValue)
             {

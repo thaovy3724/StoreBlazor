@@ -127,9 +127,14 @@
                                         </td>
                                         <td class="text-center align-middle">@item.Price.ToString("N0")đ</td>
                                         <td class="text-center align-middle">
-                                            <div class="input-group input-group-sm" style="width: 110px; margin: 0 auto;">
+                                            <div class="input-group input-group-sm" style="width: 130px; margin: 0 auto;">
                                                 <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, -1)">-</button>
-                                                <input type="text" class="form-control text-center" value="@item.Quantity" readonly>
+                                                <input type="number" 
+                                                       class="form-control text-center" 
+                                                       min="1" 
+                                                       max="@item.StockQuantity"
+                                                       value="@item.Quantity"
+                                                       @onchange="(e) => SetQuantity(item, e)" />
                                                 <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, 1)">+</button>
                                             </div>
                                         </td>
@@ -661,5 +666,25 @@
         public string OrderId { get; set; } = string.Empty;
         public string TransactionId { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
+    }
+
+    private void SetQuantity(CartItemDto item, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newQuantity))
+        {
+            if (newQuantity < 1)
+            {
+                item.Quantity = 1;
+            }
+            else if (newQuantity > item.StockQuantity)
+            {
+                item.Quantity = item.StockQuantity;
+                JS.InvokeVoidAsync("showAlert", "Không đủ hàng trong kho", "warning");
+            }
+            else
+            {
+                item.Quantity = newQuantity;
+            }
+        }
     }
 }

@@ -127,6 +127,7 @@
     // === SAVE DATA ====
     private async Task HandleSaveAsync(Supplier model)
     {
+        ServiceResult serviceResult;
         if (IsEditMode)
         {
             serviceResult = await service.UpdateAsync(model);
@@ -136,6 +137,13 @@
             serviceResult = await service.CreateAsync(model);
         }
         await ShowAlertAsync(serviceResult);
+
+        if (serviceResult.Type == "success")
+        {
+            await HideModalAsync("supplierModal");
+            CloseForm();
+        }
+
         await LoadPageAsync(CurrentPage);
     }
 

@@ -228,11 +228,21 @@
             StartDateError = "Vui lòng chọn ngày bắt đầu";
             isValid = false;
         }
+        else if (!IsEditMode && Model.StartDate.Date < DateTime.Today)
+        {
+            StartDateError = "Ngày bắt đầu không được nhỏ hơn hôm nay";
+            isValid = false;
+        }
 
         // Ngày kết thúc
         if (Model.EndDate == default)
         {
             EndDateError = "Vui lòng chọn ngày kết thúc";
+            isValid = false;
+        }
+        else if (!IsEditMode && Model.EndDate.Date < DateTime.Today)
+        {
+            EndDateError = "Ngày kết thúc không được nhỏ hơn hôm nay";
             isValid = false;
         }
 
