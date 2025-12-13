@@ -6,27 +6,32 @@
         <option value="-1" selected="@(FilterStatus == -1)">Tất cả trạng thái</option>
         <option value="@((int)PromotionStatus.Active)" selected="@(FilterStatus == (int)PromotionStatus.Active)">Hoạt động</option>
         <option value="@((int)PromotionStatus.Inactive)" selected="@(FilterStatus == (int)PromotionStatus.Inactive)">Đã khóa</option>
+        <option value="-2" selected="@(FilterStatus == -2)">Hết hạn</option>
     </select>
 
     <!-- Lọc từ ngày -->
     <div class="input-group input-group-sm" style="width: 200px;">
         <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
         <input type="date" class="form-control" 
-               @bind="FromDate">
+               value="@(FromDate?.ToString("yyyy-MM-dd"))"
+               @onchange="OnFromDateChanged">
     </div>
 
     <!-- Lọc đến ngày -->
     <div class="input-group input-group-sm" style="width: 200px;">
         <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
         <input type="date" class="form-control" 
-               @bind="ToDate">
+               value="@(ToDate?.ToString("yyyy-MM-dd"))"
+               @onchange="OnToDateChanged">
     </div>
 
     <!-- Ô tìm kiếm -->
     <div class="input-group input-group-sm" style="width: 300px;">
         <input type="text" class="form-control" placeholder="Nhập mã khuyến mãi"
-               @bind="KeyWord"
-               @onkeypress="OnKeyPress">
+               @bind="searchKeyword"
+               @bind:event="oninput"
+               @onkeydown="OnKeyDown"
+               @onkeydown:preventDefault="shouldPreventDefault">
         <button class="btn btn-primary" type="button" @onclick="HandleSearch">
             <i class="bi bi-search"></i>
         </button>
@@ -34,6 +39,9 @@
 </div>
 
 @code {
+    private string searchKeyword = string.Empty;
+    private bool shouldPreventDefault = false;
+
     [Parameter] 
     public string KeyWord { get; set; } = string.Empty;
 
@@ -48,6 +56,7 @@
 
     [Parameter] 
     public DateTime? FromDate { get; set; }
+
     [Parameter] 
     public EventCallback<DateTime?> FromDateChanged { get; set; }
 
@@ -60,27 +69,48 @@
     [Parameter] 
     public EventCallback<int> OnSearch { get; set; }
 
+    protected override void OnParametersSet()
+    {
+        searchKeyword = KeyWord;
+    }
 
     private async Task OnStatusChanged(ChangeEventArgs e)
     {
         FilterStatus = int.Parse(e.Value?.ToString() ?? "-1");
-        await HandleSearch();
+        await FilterStatusChanged.InvokeAsync(FilterStatus);
+        await OnSearch.InvokeAsync(1);
     }
 
-    private async Task HandleSearch()
+    private async Task OnFromDateChanged(ChangeEventArgs e)
     {
-        await KeyWordChanged.InvokeAsync(KeyWord);
-        await FilterStatusChanged.InvokeAsync(FilterStatus);
+        FromDate = string.IsNullOrEmpty(e.Value?.ToString()) ? null : DateTime.Parse(e.Value.ToString()!);
         await FromDateChanged.InvokeAsync(FromDate);
+        await OnSearch.InvokeAsync(1);
+    }
+
+    private async Task OnToDateChanged(ChangeEventArgs e)
+    {
+        ToDate = string.IsNullOrEmpty(e.Value?.ToString()) ? null : DateTime.Parse(e.Value.ToString()!);
         await ToDateChanged.InvokeAsync(ToDate);
         await OnSearch.InvokeAsync(1);
     }
 
-    private async Task OnKeyPress(KeyboardEventArgs e)
+    private async Task HandleSearch()
+    {
+        await KeyWordChanged.InvokeAsync(searchKeyword);
+        await OnSearch.InvokeAsync(1);
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
+            shouldPreventDefault = true;
             await HandleSearch();
+        }
+        else
+        {
+            shouldPreventDefault = false;
         }
     }
 }

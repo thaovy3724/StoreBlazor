@@ -52,7 +52,17 @@
                                     <td>@item.StartDate.ToString("dd/MM/yyyy")</td>
                                     <td>@item.EndDate.ToString("dd/MM/yyyy")</td>
                                     <td class="text-center">
-                                        @if (item.Status == PromotionStatus.Active)
+                                        @{
+                                            bool isExpired = item.EndDate.Date < DateTime.Today;
+                                        }
+                                        @if (isExpired)
+                                        {
+                                            <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                                                  style="background-color:#dc35451a; color:#dc3545; border:1px solid #dc3545;">
+                                                Hết hạn
+                                            </span>
+                                        }
+                                        else if (item.Status == PromotionStatus.Active)
                                         {
                                             <span class="badge rounded-pill px-3 py-2 fw-semibold"
                                                   style="background-color:#0d6efd1a; color:#0d6efd; border:1px solid #0d6efd;">
@@ -194,6 +204,7 @@
     // === SAVE DATA ====
     private async Task HandleSaveAsync(Promotion model)
     {
+        ServiceResult serviceResult;
         if (IsEditMode)
         {
             serviceResult = await service.UpdateAsync(model);
@@ -203,6 +214,13 @@
             serviceResult = await service.CreateAsync(model);
         }
         await ShowAlertAsync(serviceResult);
+
+        if (serviceResult.Type == "success")
+        {
+            await HideModalAsync("promotionModal");
+            CloseForm();
+        }
+
         await LoadPageAsync(CurrentPage);
     }
     // == LOCK PROMOTION ==
@@ -220,8 +238,4 @@
         await LoadPageAsync(CurrentPage);
     }
      // ==== SEARCH ====
-    
-
-
-
 }
