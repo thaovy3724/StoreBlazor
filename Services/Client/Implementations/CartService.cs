@@ -1,34 +1,30 @@
-﻿using Microsoft.JSInterop;
+﻿using Blazored.SessionStorage;
 using StoreBlazor.DTO.Client;
 using StoreBlazor.Models;
 using StoreBlazor.Services.Client.Interfaces;
-using System.Text.Json;
 
 namespace StoreBlazor.Services.Client.Implementations
 {
     public class CartService : ICartService
     {
-        private readonly IJSRuntime JsHelper;
+        private readonly ISessionStorageService _session;
         private readonly List<CartItemDTO> Cart = new();
         private Promotion? _appliedPromotion;
 
-        private const string StorageKey = "cart_items";
-        private const string PromotionStorageKey = "cart_promotion";
+        private const string CartKey = "cart_items";
+        private const string PromotionKey = "cart_promotion";
 
         public event Action? OnChange;
 
-        public CartService(IJSRuntime js)
+        public CartService(ISessionStorageService session)
         {
-            JsHelper = js;
+            _session = session;
         }
 
         public async Task InitializeAsync()
         {
             // Gọi CartStorage.load bên JS, trả về List<CartItemDTO> hoặc null
-            var items = await JsHelper.InvokeAsync<List<CartItemDTO>?>(
-                "CartStorage.load",
-                StorageKey
-            );
+            var items = await _session.GetItemAsync<List<CartItemDTO>>(CartKey);
 
             if (items is not null)
             {
@@ -36,10 +32,7 @@ namespace StoreBlazor.Services.Client.Implementations
                 Cart.AddRange(items);
             }
 
-            var promo = await JsHelper.InvokeAsync<Promotion?>(
-                "CartStorage.loadPromotion",
-                PromotionStorageKey
-            );
+            var promo = await _session.GetItemAsync<Promotion>(PromotionKey);
 
             if (promo != null)
             {
@@ -52,12 +45,10 @@ namespace StoreBlazor.Services.Client.Implementations
 
         private async Task PersistAsync()
         {
-            await JsHelper.InvokeVoidAsync("CartStorage.save", StorageKey, Cart);
+            await _session.SetItemAsync(CartKey, Cart);
             if (_appliedPromotion != null)
             {
-                await JsHelper.InvokeVoidAsync("CartStorage.savePromotion",
-                    PromotionStorageKey,
-                    _appliedPromotion);
+                await _session.SetItemAsync(PromotionKey, _appliedPromotion);
             }
         }
 
@@ -66,7 +57,10 @@ namespace StoreBlazor.Services.Client.Implementations
             var existing = Cart.FirstOrDefault(x => x.ProductId == item.ProductId);
 
             if (existing != null)
+            {
                 existing.SelectedQuantity += item.SelectedQuantity;
+                existing.SelectedQuantityText = item.SelectedQuantity.ToString();
+            }
             else
                 Cart.Add(item);
 
@@ -89,8 +83,8 @@ namespace StoreBlazor.Services.Client.Implementations
             Cart.Clear(); //empty cart item list
             _appliedPromotion = null;
 
-            await JsHelper.InvokeVoidAsync("CartStorage.clear", StorageKey);
-            await JsHelper.InvokeVoidAsync("CartStorage.clearPromotion", PromotionStorageKey);
+            await _session.RemoveItemAsync(CartKey);
+            await _session.RemoveItemAsync(PromotionKey);
 
             OnChange?.Invoke();
         }
@@ -119,10 +113,7 @@ namespace StoreBlazor.Services.Client.Implementations
         }
 
         // ==== PROMOTION ====
-        public Promotion? GetAppliedPromotion()
-        {
-            return _appliedPromotion;
-        }
+        public Promotion? GetAppliedPromotion() => _appliedPromotion;
 
         public decimal GetPromotionAmount(decimal subTotalAmount)
         {
@@ -160,11 +151,7 @@ namespace StoreBlazor.Services.Client.Implementations
         {
             _appliedPromotion = promo;
 
-            await JsHelper.InvokeVoidAsync(
-                "CartStorage.savePromotion",
-                PromotionStorageKey,
-                promo
-            );
+            await _session.SetItemAsync(PromotionKey, promo);
 
             OnChange?.Invoke();
         }
@@ -174,10 +161,7 @@ namespace StoreBlazor.Services.Client.Implementations
         {
             _appliedPromotion = null;
 
-            await JsHelper.InvokeVoidAsync(
-                "CartStorage.clearPromotion",
-                PromotionStorageKey
-            );
+            await _session.RemoveItemAsync(PromotionKey);
 
             OnChange?.Invoke();
         }

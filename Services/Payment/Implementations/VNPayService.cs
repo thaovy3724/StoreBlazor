@@ -17,28 +17,17 @@ namespace StoreBlazor.Services.Payment.Implementations
             _configuration = configuration;
         }
 
-        private string GetConfigValue(params string[] keys)
-        {
-            foreach (var k in keys)
-            {
-                var v = _configuration[k];
-                if (!string.IsNullOrEmpty(v)) return v;
-            }
-            throw new InvalidOperationException($"Missing VNPay configuration. Searched keys: {string.Join(", ", keys)}");
-        }
-
         public string CreatePaymentUrl(VNPayRequestDto request, bool isClient=false)
         {
-            var vnp_TmnCode = GetConfigValue("VnPay:TmnCode", "PaymentConfig:VNPay:TmnCode");
-            var vnp_HashSecret = GetConfigValue("VnPay:HashSecret", "PaymentConfig:VNPay:HashSecret");
-            var vnp_Url = GetConfigValue("VnPay:BaseUrl", "PaymentConfig:VNPay:Url");
+            var vnp_TmnCode = _configuration["VnPay:TmnCode"];
+            var vnp_HashSecret = _configuration["VnPay:HashSecret"];
+            var vnp_Url = _configuration["VnPay:BaseUrl"];
+            var vnp_ReturnUrl = _configuration["VnPay:PaymentBackReturnUrl"];
             // Nếu là client thì dùng URL dành cho client
             if (isClient)
             {
-                vnp_Url = GetConfigValue("VnPay:PaymentBackClientReturnUrl", "PaymentConfig:VNPay:PaymentBackClientReturnUrl");
+                vnp_ReturnUrl = _configuration["VnPay:PaymentBackClientReturnUrl"];
             }
-            var vnp_ReturnUrl = GetConfigValue("VnPay:PaymentBackReturnUrl", "PaymentConfig:VNPay:ReturnUrl");
-
             // Tạo dữ liệu request
             var vnpay = new VNPayLibrary();
 

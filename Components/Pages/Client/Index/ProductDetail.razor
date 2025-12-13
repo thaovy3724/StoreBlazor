@@ -1,4 +1,6 @@
-﻿@inject ICartService service
+﻿@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inject NavigationManager NavigationManager
+@inject ICartService service
 @inject IJSRuntime JS
 ﻿<div class="modal fade" id="productDetailModal" style="background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -38,7 +40,9 @@
                             <div class="d-flex gap-3 align-items-center mb-4">
                                 <div class="input-group input-group-sm" style="width: 120px;">
                                 <button class="btn btn-outline-secondary" @onclick="DecreaseSelectedQuantity">-</button>
-                                <input type="text" class="form-control text-center" value="@SelectedQuantity" readonly>
+                                <input type="text" class="form-control text-center"
+                                       @bind-value="SelectedQuantityText"
+                                       @onblur="ValidateQuantityOnBlur">
                                 <button class="btn btn-outline-secondary" @onclick="IncreaseSelectedQuantity">+</button>
                                 </div>
                             </div>
@@ -61,6 +65,7 @@
     public ProductCardDTO Model { get; set; } = new ProductCardDTO();
 
     private int SelectedQuantity = 1;
+    private string SelectedQuantityText = "1";
 
     [Parameter]
     public EventCallback OnClose { get; set; }
@@ -68,34 +73,73 @@
     private async Task HandleOnClose()
     {
         SelectedQuantity = 1;
+        SelectedQuantityText = "1";
         await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleAddToCart()
+    {
+        var clientId = await SessionStorage.GetItemAsync<int?>("userId");
+
+        if (clientId == null || clientId == 0)
+        {
+            NavigationManager.NavigateTo("/client/login", forceLoad: true);
+        }
+        else
+        {
+            CartItemDTO cartItem = new()
+                {
+                    ProductId = Model.ProductId,
+                    ProductName = Model.ProductName,
+                    ProductImage = Model.ProductImage,
+                    ProductPrice = Model.Price,
+                    Quantity = Model.Quantity,
+                    SelectedQuantity = SelectedQuantity,
+                    SelectedQuantityText = SelectedQuantityText
+                };
+            await service.AddToCartAsync(cartItem);
+
+            await JS.InvokeVoidAsync("showAlert", "Đã thêm vào giỏ hàng thành công", "success");
+        }
+    }
+
+    // Validate ô nhập số lượng
+    private void ValidateQuantityOnBlur(FocusEventArgs _)
+    {
+        // rỗng / chữ => reset về SelectedQuantity (hoặc 1)
+        if (!int.TryParse(SelectedQuantityText?.Trim(), out var n) || n <= 0)
+        {
+            SelectedQuantity = 1;
+            SelectedQuantityText = "1";
+            return;
+        }
+
+        if (n > Model.Quantity)
+        {
+            SelectedQuantity = Model.Quantity;
+            SelectedQuantityText = Model.Quantity.ToString();
+            return;
+        }
+
+        SelectedQuantity = n;
+        SelectedQuantityText = n.ToString();
     }
 
     private void DecreaseSelectedQuantity()
     {
         if (SelectedQuantity > 1)
+        {
             SelectedQuantity--;
+            SelectedQuantityText = SelectedQuantity.ToString();
+        }
     }
 
     private void IncreaseSelectedQuantity()
     {
         if (SelectedQuantity < Model.Quantity)
-            SelectedQuantity++;
-    }
-
-    private async Task HandleAddToCart()
-    {
-        CartItemDTO cartItem = new()
         {
-            ProductId = Model.ProductId,
-            ProductName = Model.ProductName,
-            ProductImage = Model.ProductImage,
-            ProductPrice = Model.Price,
-            Quantity = Model.Quantity,
-            SelectedQuantity = SelectedQuantity
-        };
-        await service.AddToCartAsync(cartItem);
-
-        await JS.InvokeVoidAsync("showAlert", "Đã thêm vào giỏ hàng thành công", "success");
+            SelectedQuantity++;
+            SelectedQuantityText = SelectedQuantity.ToString();
+        }
     }
 }

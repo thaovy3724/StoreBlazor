@@ -54,8 +54,17 @@
     // ==== LOAD DATA ====
     protected override async Task OnInitializedAsync()
     {
+        ResetFilter();
         await LoadPageAsync(1);
         categories = await CategoryService.GetAllCategoryAsync();
+    }
+
+    private void ResetFilter()
+    {
+        keyword = string.Empty;
+        selectedCategory = -1;
+        priceFrom = null;
+        priceTo = null;
     }
 
     protected async Task LoadPageAsync(int page)

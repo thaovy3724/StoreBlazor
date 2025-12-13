@@ -18,29 +18,19 @@ namespace StoreBlazor.Services.Payment.Implementations
             _httpClient = httpClient;
         }
 
-        private string GetConfigValue(params string[] keys)
-        {
-            foreach (var k in keys)
-            {
-                var v = _configuration[k];
-                if (!string.IsNullOrEmpty(v)) return v;
-            }
-            throw new InvalidOperationException($"Missing MoMo configuration. Searched keys: {string.Join(", ", keys)}");
-        }
-
         public async Task<MoMoResponseDto> CreatePaymentAsync(MoMoRequestDto request, bool isClient = false)
         {
-            var partnerCode = GetConfigValue("MoMo:PartnerCode", "PaymentConfig:MoMo:PartnerCode");
-            var accessKey = GetConfigValue("MoMo:AccessKey", "PaymentConfig:MoMo:AccessKey");
-            var secretKey = GetConfigValue("MoMo:SecretKey", "PaymentConfig:MoMo:SecretKey");
-            var endpoint = GetConfigValue("MoMo:Endpoint", "PaymentConfig:MoMo:Endpoint");
-            var returnUrl = GetConfigValue("MoMo:ReturnUrl", "PaymentConfig:MoMo:ReturnUrl");
+            var partnerCode = _configuration["MoMo:PartnerCode"];
+            var accessKey = _configuration["MoMo:AccessKey"];
+            var secretKey = _configuration["MoMo:SecretKey"];
+            var endpoint = _configuration["MoMo:Endpoint"];
+            var returnUrl = _configuration["MoMo:ReturnUrl"];
             // Nếu là client thì dùng returnUrl dành cho client
             if (isClient)
             {
-                returnUrl = GetConfigValue("MoMo:ClientReturnUrl", "PaymentConfig:MoMo:ClientReturnUrl");
+                returnUrl = _configuration["MoMo:ClientReturnUrl"];
             }
-            var ipnUrl = GetConfigValue("MoMo:IpnUrl", "PaymentConfig:MoMo:IpnUrl");
+            var ipnUrl = _configuration["MoMo:IpnUrl"];
 
             var requestId = Guid.NewGuid().ToString();
             var orderId = request.OrderId;

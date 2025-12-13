@@ -35,7 +35,9 @@
                             <div class="col-6 col-md-3 d-flex justify-content-center">
                                 <div class="input-group input-group-sm" style="width: 110px;">
                                     <button class="btn btn-outline-secondary" @onclick="() => DecreaseSelectedQuantity(item)">-</button>
-                                    <input type="text" class="form-control text-center bg-white" value="@item.SelectedQuantity" readonly>
+                                    <input type="text" class="form-control text-center bg-white" 
+                                            @bind-value="item.SelectedQuantityText"
+                                            @onblur="()=>ValidateQuantityOnBlur(item)">
                                     <button class="btn btn-outline-secondary" @onclick="() => IncreaseSelectedQuantity(item)">+</button>
                                 </div>
                             </div>
@@ -112,24 +114,6 @@
         await CartService.RemoveItemAsync(productId); // tự động bắn OnChange
     }
 
-    private async Task DecreaseSelectedQuantity(CartItemDTO item)
-    {
-        if (item.SelectedQuantity > 1)
-        {
-            var newQty = item.SelectedQuantity - 1;
-            await CartService.UpdateQuantityAsync(item.ProductId, newQty);
-        }
-    }
-
-    private async Task IncreaseSelectedQuantity(CartItemDTO item)
-    {
-        if (item.SelectedQuantity < item.Quantity)
-        {
-            var newQty = item.SelectedQuantity + 1;
-            await CartService.UpdateQuantityAsync(item.ProductId, newQty);
-        }
-    }
-
     // ==== PROMOTION ====
     private List<Promotion> ListPromotion = new();
     private Promotion? AppliedCoupon;
@@ -165,9 +149,55 @@
     {
         Navigation.NavigateTo("/client/checkout");
     }
+
     public void Dispose()
     {
         CartService.OnChange -= StateHasChanged;
     }
 
+    // Validate ô nhập số lượng
+    private async Task ValidateQuantityOnBlur(CartItemDTO item)
+    {
+        if (!int.TryParse(item.SelectedQuantityText?.Trim(), out var n) || n <= 0)
+        {
+            // reset về giá trị hợp lệ trước đó
+            item.SelectedQuantity = 1;
+            item.SelectedQuantityText = "1";
+            await CartService.UpdateQuantityAsync(item.ProductId, item.SelectedQuantity);
+            return;
+        }
+
+        if (n > item.Quantity)
+        {
+            item.SelectedQuantity = item.Quantity;
+            item.SelectedQuantityText = item.Quantity.ToString();
+            await CartService.UpdateQuantityAsync(item.ProductId, item.SelectedQuantity);
+            return;
+        }
+
+        item.SelectedQuantity = n;
+        item.SelectedQuantityText = n.ToString();
+
+        await CartService.UpdateQuantityAsync(item.ProductId, item.SelectedQuantity);
+    }
+
+    private async Task DecreaseSelectedQuantity(CartItemDTO item)
+    {
+        if (item.SelectedQuantity > 1)
+        {
+            item.SelectedQuantity --;
+            item.SelectedQuantityText = item.SelectedQuantity.ToString();
+            await CartService.UpdateQuantityAsync(item.ProductId, item.SelectedQuantity);
+        }
+    }
+
+    private async Task IncreaseSelectedQuantity(CartItemDTO item)
+    {
+        if (item.SelectedQuantity < item.Quantity)
+        {
+            item.SelectedQuantity++;
+            item.SelectedQuantityText = item.SelectedQuantity.ToString();
+            await CartService.UpdateQuantityAsync(item.ProductId, item.SelectedQuantity);
+        }
+    }
 }

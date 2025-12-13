@@ -126,13 +126,11 @@
                 var user = await AuthService.GetCurrentUserAsync(Email);
                 if (user != null)
                 {
-                    await SessionStorage.SetItemAsync("clientId", user.UserId); 
-                    await SessionStorage.SetItemAsync("userName", user.FullName);
-                    await SessionStorage.SetItemAsync("userEmail", user.Username);
+                    await SessionStorage.SetItemAsync("userId", user.UserId); 
+                    await SessionStorage.SetItemAsync("userName", user.Username);
                     await SessionStorage.SetItemAsync("userRole", user.Role);
-                    await SessionStorage.SetItemAsync("cartCount", 0);
                     
-                    Console.WriteLine($"[DEBUG] Session saved - userName: {user.FullName}");
+                    Console.WriteLine($"[DEBUG] Session saved - userName: {user.Username}");
                 }
 
                 await JS.InvokeVoidAsync("showAlert", result.Message, "success");

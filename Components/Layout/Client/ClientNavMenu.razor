@@ -7,7 +7,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3">
     <div class="container">
         @* Brand Store *@
-        <a class="navbar-brand d-flex align-items-center fw-bold text-primary me-4" href="/client">
+        <a class="navbar-brand d-flex align-items-center fw-bold text-primary me-4" href="#" @onclick="GoHome">
             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
                 <i class="bi bi-shop fs-5"></i>
             </div>
@@ -20,6 +20,10 @@
 
         <div class="collapse navbar-collapse" id="clientNavbar">
             <div class="d-flex align-items-center gap-3 ms-auto justify-content-end">
+                @if (userName == null || userName == string.Empty)
+                {
+                    <a class="btn btn-primary fw-semibold py-2 px-4 rounded-3" href="/client/login">Đăng nhập</a>
+                }else{
                 @* Gio hang *@
                 <button class="btn btn-outline-light text-dark border-0 nav-icon-btn position-relative" @onclick="GoToCart" title="Giỏ hàng">
                     <i class="bi bi-cart3 fs-4"></i>
@@ -32,6 +36,8 @@
                 </button>
 
                 <div class="vr h-100 mx-1 d-none d-lg-block"></div>
+
+                
                 @* Thong tin ca nhan *@
                 <div class="dropdown">
                     <button class="btn btn-outline-light text-dark border-0 d-flex align-items-center gap-2 py-1 ps-2 pe-3 rounded-pill"
@@ -63,21 +69,14 @@
                         </li>
                     </ul>
                 </div>
+                }
             </div>
         </div>
     </div>
 </nav>
 
 @code {
-    private string searchQuery = "";
-    private int cartCount = 0;
-    private bool isSessionReady = false;
-    private string userName = "Ngô Đức Trọng";
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadUserData();
-    }
+    private string userName = null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -102,19 +101,11 @@
                 userName = storedName;
             }
 
-            var storedCartCount = await SessionStorage.GetItemAsync<int?>("cartCount");
-            if (storedCartCount.HasValue && storedCartCount.Value > 0)
-            {
-                cartCount = storedCartCount.Value;
-            }
-
-            isSessionReady = true;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[ERROR] LoadUserData - {ex.Message}");
-            userName = "Khách";
-            cartCount = 0;
+            userName = null;
         }
     }
 
@@ -122,11 +113,7 @@
     {
         try
         {
-            await SessionStorage.RemoveItemAsync("userId");
-            await SessionStorage.RemoveItemAsync("userName");
-            await SessionStorage.RemoveItemAsync("userEmail");
-            await SessionStorage.RemoveItemAsync("userRole");
-            await SessionStorage.RemoveItemAsync("cartCount");
+            await SessionStorage.RemoveItemAsync("clientSession");
         }
         catch (Exception ex)
         {
@@ -139,15 +126,6 @@
     private async Task GoToCart()
     {
         await JS.InvokeVoidAsync("navigateToClient", "/client/cart");
-    }
-
-    private async Task SearchSubmit()
-    {
-        if (!string.IsNullOrEmpty(searchQuery))
-        {
-            var url = $"/client/search?query={Uri.EscapeDataString(searchQuery)}";
-            await JS.InvokeVoidAsync("navigateToClient", url);
-        }
     }
 
     // Hàm lấy chữ cái đầu của tên để làm Avatar
@@ -168,19 +146,19 @@
 
     // ==== CART ====
     private int CartCount;
-
     protected override void OnInitialized()
     {
-        // đăng ký event để khi giỏ thay đổi thì navbar tự rerender
         CartService.OnChange += CartChanged;
-
-        // Lấy số lượng ban đầu (sau khi InitializeAsync chạy xong)
         CartCount = CartService.GetTotalQuantity();
     }
-
     private void CartChanged()
     {
         CartCount = CartService.GetTotalQuantity();
         InvokeAsync(StateHasChanged); // đảm bảo UI update
+    }
+
+    private void GoHome()
+    {
+        Nav.NavigateTo("/client", forceLoad: true);
     }
 }

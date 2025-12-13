@@ -1,4 +1,4 @@
-﻿@page "/client/payment_success"
+﻿@page "/client/payment-success/{OrderId:int}"
 @layout ClientLayout
 @inject ICartService CartService
 
@@ -14,9 +14,11 @@
                         <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
                     </div>
 
-                    <!-- Title -->
+                     <!-- Title -->
                     <h3 class="fw-bold text-success mb-3">Thanh toán thành công!</h3>
-
+                    <p class="fw-semibold text-dark">
+                        Mã đơn hàng: <span class="text-primary">#@OrderId</span>
+                    </p>
                     <!-- Message -->
                     <p class="text-muted mb-4">
                         Cảm ơn bạn! Đơn hàng của bạn đã được thanh toán thành công.
@@ -35,9 +37,6 @@
     </div>
 </div>
 @code{
-    // when create order success, clear cart
-        protected override async Task OnInitializedAsync()
-    {
-        await CartService.ClearCartAsync();
-    }
+    [Parameter] public int OrderId { get; set; }
+
 }

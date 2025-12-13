@@ -7,6 +7,7 @@
 @inherits BaseParent<Order>
 @rendermode InteractiveServer
 
+<ClientAuthGuard />
 <div class="container py-5">
     <div class="row mb-4">
         <div class="col-12">
@@ -117,7 +118,7 @@
     {
         if (firstRender && !isPageLoaded)
         {
-            currentUserId = await SessionStorage.GetItemAsync<int?>("clientId") ?? 0;
+            currentUserId = await SessionStorage.GetItemAsync<int?>("userId") ?? 0;
 
             Console.WriteLine($"[DEBUG] currentUserId from session = {currentUserId}");
 
@@ -127,7 +128,7 @@
             }
             else
             {
-                Console.WriteLine("[DEBUG] Session 'clientId' is missing or 0");
+                Console.WriteLine("[DEBUG] Session 'userId' is missing or 0");
             }
 
             isPageLoaded = true;

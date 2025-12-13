@@ -9,7 +9,7 @@ namespace StoreBlazor.DTO.Admin.OrderManager
         public string UserName { get; set; } = string.Empty;
         public DateTime OrderDate { get; set; }
         public OrderStatus Status { get; set; }
-
+        public string Address { get; set; } = string.Empty;
         // Thanh toán
         public PaymentMethod PaymentMethod { get; set; } 
         public decimal PaymentAmount { get; set; }

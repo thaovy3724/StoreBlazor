@@ -9,29 +9,21 @@ namespace StoreBlazor.DTO.Client
 
         public int CustomerId { get; set; }
 
-        /// <summary>
-        /// ID khuyến mãi (nullable)
-        /// </summary>
+        public string Address { get; set; } = string.Empty;
+
+        // ID khuyến mãi (nullable)
         public int? PromoId { get; set; }
 
-        /// <summary>
-        /// Tổng tiền hàng (chưa giảm giá)
-        /// </summary>
+        // Tổng tiền hàng (chưa giảm giá)
         public decimal TotalAmount { get; set; }
 
-        /// <summary>
-        /// Số tiền được giảm
-        /// </summary>
+        // Số tiền được giảm
         public decimal DiscountAmount { get; set; }
 
-        /// <summary>
-        /// Phương thức thanh toán
-        /// </summary>
+        // Phương thức thanh toán
         public PaymentMethod PaymentMethod { get; set; }
 
-        /// <summary>
-        /// Danh sách sản phẩm trong đơn
-        /// </summary>
+        // Danh sách sản phẩm trong đơn
         public List<OrderItemCreateClientDTO> Items { get; set; } = new();
     }
 }
