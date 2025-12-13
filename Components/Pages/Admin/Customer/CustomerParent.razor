@@ -3,6 +3,7 @@
 @inject ICustomerService service
 @inherits BaseParent<Customer>
 
+<AdminAuthGuard>
 <div class="container-fluid p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="fw-bold">Quản lý Khách hàng</h3>
@@ -77,6 +78,7 @@
         </div>
     </div>
 </div>
+</AdminAuthGuard>
 
 <CustomerForm Model="@SelectedItem"
               IsEditMode="@IsEditMode"
