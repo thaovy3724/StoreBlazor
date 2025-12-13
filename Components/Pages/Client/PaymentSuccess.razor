@@ -38,5 +38,18 @@
 </div>
 @code{
     [Parameter] public int OrderId { get; set; }
+    private bool _needClear = true;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_needClear)
+        {
+            _needClear = false;
+            await CartService.ClearCartAsync();
+
+            // *** THÊM PHẦN NÀY ***
+            // Thêm một độ trễ ngắn để UI có thời gian xử lý sự kiện OnChange
+            await Task.Delay(50);
+        }
+    }
 }
