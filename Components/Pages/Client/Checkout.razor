@@ -214,7 +214,7 @@
 
         OrderCreateClientDTO orderDTO = new OrderCreateClientDTO
         {
-            UserId = await SessionStorage.GetItemAsync<int>("userId"),
+            UserId = null,
             CustomerId = CustomerId,
             PromoId = CartService.GetAppliedPromotion()?.PromoId,
             TotalAmount = Total,

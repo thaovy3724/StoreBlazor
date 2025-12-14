@@ -11,7 +11,7 @@ namespace StoreBlazor.DTO.Admin.OrderManager
         public OrderStatus Status { get; set; }
         public string Address { get; set; } = string.Empty;
         // Thanh toán
-        public PaymentMethod PaymentMethod { get; set; } 
+        public PaymentMethod? PaymentMethod { get; set; } 
         public decimal PaymentAmount { get; set; }
         public DateTime? PaymentDate { get; set; }
 

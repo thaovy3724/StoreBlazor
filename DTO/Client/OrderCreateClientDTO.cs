@@ -5,7 +5,7 @@ namespace StoreBlazor.DTO.Client
 {
     public class OrderCreateClientDTO
     {
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
 
         public int CustomerId { get; set; }
 

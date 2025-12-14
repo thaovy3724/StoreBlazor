@@ -6,8 +6,8 @@ namespace StoreBlazor.Services.Admin.Interfaces
     public interface IOrderManagerService
     {
         Task<PageResult<OrderTableDto>> GetAllOrdersForTableAsync(int page);
-        Task<ServiceResult> ApproveAsync(int orderId);
-        Task<ServiceResult> CancelAsync(int orderId);
+        Task<ServiceResult> ApproveAsync(int orderId, int? userId);
+        Task<ServiceResult> CancelAsync(int orderId, int? userId);
         Task<OrderDetailDto?> GetOrderDetailAsync(int orderId);
         Task<PageResult<OrderTableDto>> FilterAsync(string keyword, int status, decimal? priceFrom, decimal? priceTo, int page);
 

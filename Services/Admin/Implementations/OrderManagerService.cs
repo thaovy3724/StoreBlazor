@@ -54,7 +54,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                 TotalAmount = order.TotalAmount,
                 DiscountAmount = order.DiscountAmount,
                 PromoCode = order.Promotion?.PromoCode ?? "Không có",
-                PaymentMethod = order.Payment.PaymentMethod,
+                PaymentMethod = order.Payment?.PaymentMethod,
                 PaymentAmount = order.Payment?.Amount ?? 0,
                 PaymentDate = order.Payment?.PaymentDate,
                 Items = order.OrderItems?.Select(oi => new OrderDetailDto.OrderItemDto
@@ -118,13 +118,14 @@ namespace StoreBlazor.Services.Admin.Implementations
 
 
 
-        public async Task<ServiceResult> ApproveAsync(int orderId)
+        public async Task<ServiceResult> ApproveAsync(int orderId, int? userId)
         {
             var order = await _dbContext.Orders.FindAsync(orderId);
             if (order == null)
                 return new ServiceResult { Type = "error", Message = "Đơn hàng không tồn tại" };
 
             order.Status = OrderStatus.Paid;
+            order.UserId = userId;
             await _dbContext.SaveChangesAsync();
 
             return new ServiceResult
@@ -134,7 +135,7 @@ namespace StoreBlazor.Services.Admin.Implementations
             };
         }
 
-        public async Task<ServiceResult> CancelAsync(int orderId)
+        public async Task<ServiceResult> CancelAsync(int orderId, int? userId)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
@@ -177,6 +178,7 @@ namespace StoreBlazor.Services.Admin.Implementations
 
                 // 4. Cập nhật trạng thái order
                 order.Status = OrderStatus.Cancelled;
+                order.UserId = userId;
                 order.OrderDate = DateTime.Now;
 
                 await _dbContext.SaveChangesAsync();

@@ -187,7 +187,7 @@
     // === CANCEL ORDER ===
     private async Task CancelOrder(int orderId)
     {
-        var result = await service.CancelAsync(orderId);
+        var result = await service.CancelAsync(orderId, null);
         await ShowAlertAsync(result);
         await LoadPageAsync(CurrentPage);
         CloseModal();

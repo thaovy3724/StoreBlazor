@@ -72,11 +72,17 @@
                                     </div>
                                     <div class="mb-2 d-flex justify-content-between">
                                         <span class="fw-semibold">Nhân viên phụ trách:</span>
-                                        <span class="order-history-username">@Model?.UserName</span>
+                                        <span class="order-history-username"> @(string.IsNullOrEmpty(Model.UserName) ? "Không có" : Model.UserName)</span>
                                     </div>
                                     <div class="mb-2 d-flex justify-content-between">
                                         <span class="fw-semibold">Ngày tạo đơn hàng:</span>
                                         <span class="order-history-orderdate">@Model?.OrderDate.ToString("dd/MM/yyyy HH:mm:ss")</span>
+                                    </div>
+                                    <div class="mb-2 d-flex justify-content-between">
+                                        <span class="fw-semibold">Địa chỉ giao hàng:</span>
+                                    <span class="order-history-address">
+                                        @(string.IsNullOrEmpty(Model.Address) ? "Đơn mua tại quầy" : Model.Address)
+                                    </span>
                                     </div>
                                     <div class="mb-2 d-flex justify-content-between">
                                         <span class="fw-semibold">Trạng thái:</span>
@@ -112,7 +118,7 @@
                                                 PaymentMethod.Card => "Thẻ",
                                                 PaymentMethod.BankTransfer => "Chuyển khoản",
                                                 PaymentMethod.EWallet => "Ví điện tử",
-                                                _ => "Không xác định"
+                                                _ => "Chưa thanh toán"
                                             })
                                             </button>
                                         </div>
@@ -122,7 +128,7 @@
                                         <div class="collapse mt-2 order-history-paymentmethod-div-collapse" id="paymentInfo">
                                             <div class="card card-body">
                                                 <p>Phương thức: <span class="order-history-paymentmethod"> @Model?.PaymentMethod</span></p>
-                                                <p>Số tiền: <span class="order-history-paymentamount">@Model?.PaymentAmount.ToString("N0") đ</span></p>
+                                                <p>Số tiền: <span class="order-history-paymentamount">@((Model?.TotalAmount ?? 0).ToString("N0")) đ</span></p>
                                                 <p>Ngày thanh toán: <span class="order-history-paymentdate">@Model?.PaymentDate?.ToString("dd/MM/yyyy HH:mm:ss")</span></p>
                                             </div>
                                         </div>
@@ -131,7 +137,7 @@
                                     <hr>
                                     <div class="mb-2 d-flex justify-content-between">
                                         <span class="fw-semibold">Thành tiền:</span>
-                                        <span class="order-history-totalamount">@Model?.TotalAmount.ToString("N0")</span>
+                                        <span class="order-history-totalamount">@(((Model?.TotalAmount ?? 0) + (Model?.DiscountAmount ?? 0)).ToString("N0")) đ</span>
                                     </div>
                                     <div class="mb-2 d-flex justify-content-between">
                                         <span class="fw-semibold">Mã giảm giá:</span>
@@ -144,7 +150,7 @@
                                     <hr>
                                     <div class="mb-2 d-flex justify-content-between fs-5">
                                         <span class="fw-bold">Tổng thanh toán:</span>
-                                        <span class="order-history-finalamount fw-bold text-danger">@(((Model?.TotalAmount ?? 0) - (Model?.DiscountAmount ?? 0)).ToString("N0")) đ</span>
+                                        <span class="order-history-finalamount fw-bold text-danger">@((Model?.TotalAmount ?? 0).ToString("N0")) đ</span>
                                     </div>
                                 </div>
                             </div>

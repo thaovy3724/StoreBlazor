@@ -1,6 +1,7 @@
 ﻿@page "/admin/order"
 @using StoreBlazor.DTO.Admin.OrderManager
 @layout AdminLayout
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
 @inject IOrderManagerService service
 @inherits BaseParent<Order>
 
@@ -160,14 +161,16 @@
     // === SAVE DATA - APPROVE/CANCEL ORDER ====
     private async Task CancelOrder(int orderId)
     {
-        var result = await service.CancelAsync(orderId);
+        var userId = await SessionStorage.GetItemAsync<int?>("adminId");
+        var result = await service.CancelAsync(orderId ,userId);
         await ShowAlertAsync(result);
         await LoadPageAsync(CurrentPage);
     }
 
     private async Task ApproveOrder(int orderId)
     {
-        var result = await service.ApproveAsync(orderId);
+        var userId = await SessionStorage.GetItemAsync<int?>("adminId");
+        var result = await service.ApproveAsync(orderId ,userId);
         await ShowAlertAsync(result);
         await LoadPageAsync(CurrentPage);
     }
@@ -186,6 +189,8 @@
     {
         var detail = await service.GetOrderDetailAsync(orderId);
         if (detail == null) return;
+
+		var addressText = string.IsNullOrEmpty(detail.Address) ? "Đơn mua tại quầy" : detail.Address;
 
         var finalAmount = (detail.TotalAmount) - (detail.DiscountAmount);
 
@@ -244,6 +249,7 @@
                     <h3>HÓA ĐƠN BÁN HÀNG</h3>
                     <div>Mã đơn: <strong>#{detail.OrderId}</strong></div>
                     <div>Ngày: {detail.OrderDate:dd/MM/yyyy HH:mm}</div>
+                    <div>Địa chỉ giao hàng: {addressText}</div>
                 </div>
                 <hr>
 
