@@ -52,6 +52,19 @@ namespace StoreBlazor.Services.Admin.Implementations
                 }
             }
 
+            // 2) Kiểm tra username ở Users KHÔNG được trùng với email ở Customers
+            var existedInCustomerEmail = await _dbContext.Customers
+                .AnyAsync(c => c.Email != null && c.Email.ToLower() == newUsername);
+
+            if (existedInCustomerEmail)
+            {
+                return new ServiceResult
+                {
+                    Type = "error",
+                    Message = "Tên đăng nhập không hợp lệ (trùng email khách hàng). Vui lòng chọn tên khác!"
+                };
+            }
+
             try
             {
                 admin.FullName = (dto.FullName ?? string.Empty).Trim();
