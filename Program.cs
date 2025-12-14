@@ -48,6 +48,8 @@ builder.Services.AddScoped<IPromotionClientService, PromotionClientService>();
 builder.Services.AddScoped<ICustomerClientService, CustomerClientService>();
 builder.Services.AddScoped<ICategoryClientService, CategoryClientService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IPersonalInfoService, PersonalInfoService>();
+builder.Services.AddScoped<IAdminPersonalInfoService, AdminPersonalInfoService>();
 
 
 builder.Services.AddBlazoredSessionStorage();
