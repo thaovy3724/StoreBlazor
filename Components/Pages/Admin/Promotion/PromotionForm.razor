@@ -202,7 +202,7 @@
         }
 
         // Giá trị khuyến mãi
-        if (Model.DiscountValue <= 0)
+        if (Model.DiscountValue < 0)
         {
             DiscountValueError = "Giá trị khuyến mãi không hợp lệ";
             isValid = false;
