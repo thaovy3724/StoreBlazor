@@ -26,9 +26,9 @@ else if (isLoading)
     private bool isLoading = true;
 
     // Định nghĩa trang nào cho role nào
-    private static readonly string[] StaffPages = ["/admin/orderstaff", "/admin/customer"];
+    private static readonly string[] StaffPages = ["/admin/orderstaff", "/admin/customer", "/admin/profile"];
     private static readonly string[] AdminPages = ["/admin/category", "/admin/promotion", "/admin/order", 
-        "/admin/product", "/admin/supplier", "/admin/account", "/admin/customer", "/admin/statistic"];
+        "/admin/product", "/admin/supplier", "/admin/account", "/admin/customer", "/admin/statistic", "/admin/profile"];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -60,7 +60,7 @@ else if (isLoading)
                 else if (role?.ToLower() == "admin")
                 {
                     // Admin không được vào trang bán hàng
-                    if (currentPath.StartsWith("/admin/orderstaff"))
+                    if (!AdminPages.Any(p => currentPath.StartsWith(p)))
                     {
                         NavigationManager.NavigateTo("/admin/category", forceLoad: true);
                         return;

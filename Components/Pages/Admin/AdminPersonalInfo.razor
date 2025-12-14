@@ -1,5 +1,5 @@
 ﻿@page "/admin/profile"
-@layout AdminLoginLayout
+@layout AdminLayout
 @using StoreBlazor.DTO.Admin
 @inject IAdminPersonalInfoService AdminPersonalInfoService
 @inject Blazored.SessionStorage.ISessionStorageService SessionStorage
@@ -152,12 +152,6 @@
         {
             var id = await SessionStorage.GetItemAsync<int?>("adminId");
             Console.WriteLine($"[DEBUG] adminId in AdminProfile: {id}");
-
-            if (id == null || id == 0)
-            {
-                Nav.NavigateTo("/admin/login", true);
-                return;
-            }
 
             _adminId = id.Value;
 

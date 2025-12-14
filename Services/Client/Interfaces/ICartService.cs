@@ -7,7 +7,7 @@ namespace StoreBlazor.Services.Client.Interfaces
     {
         event Action? OnChange;
 
-        Task InitializeAsync();         // load từ localStorage
+        Task InitializeAsync();         
 
         // Cart methods
         List<CartItemDTO> GetCart();
