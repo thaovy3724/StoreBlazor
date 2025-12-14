@@ -1,5 +1,5 @@
 ﻿@page "/admin/profile"
-@layout AdminLoginLayout
+@layout AdminLayout
 @using StoreBlazor.DTO.Admin
 @inject IAdminPersonalInfoService AdminPersonalInfoService
 @inject Blazored.SessionStorage.ISessionStorageService SessionStorage
@@ -10,9 +10,10 @@
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <h3 class="fw-bold text-white">
+                <h3 class="fw-bold text-primary">
                     <i class="bi bi-person-circle me-2"></i>Hồ sơ của tôi
                 </h3>
+                <p class="text-muted">Quản lý thông tin hồ sơ để bảo mật tài khoản.</p>
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-header bg-white border-bottom-0 p-0">
