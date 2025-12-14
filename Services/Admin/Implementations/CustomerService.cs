@@ -41,7 +41,12 @@ namespace StoreBlazor.Services.Admin.Implementations
             if (!string.IsNullOrEmpty(model.Phone))
             {
                 var existingPhone = await _dbContext.Customers
-                    .FirstOrDefaultAsync(c => c.Phone == model.Phone);
+                    .Where(c => c.Phone == model.Phone)
+                    .Where(c =>
+                        !_dbContext.Users
+                            .Any(u => u.Username == c.Email)
+                    )
+                    .FirstOrDefaultAsync();
 
                 if (existingPhone != null)
                 {
@@ -52,6 +57,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                     };
                 }
             }
+
 
             model.CreatedAt = DateTime.Now;
             _dbContext.Customers.Add(model);
@@ -101,9 +107,15 @@ namespace StoreBlazor.Services.Admin.Implementations
             if (!string.IsNullOrEmpty(model.Phone))
             {
                 var existingPhone = await _dbContext.Customers
-                    .FirstOrDefaultAsync(c =>
-                        c.CustomerId != model.CustomerId &&
-                        c.Phone == model.Phone);
+                    .Where(c =>
+                        c.CustomerId != model.CustomerId &&      // loại trừ chính nó
+                        c.Phone == model.Phone                   // cùng số điện thoại
+                    )
+                    .Where(c =>
+                        !_dbContext.Users
+                            .Any(u => u.Username == c.Email)     // loại trừ khách có email = username
+                    )
+                    .FirstOrDefaultAsync();
 
                 if (existingPhone != null)
                 {
@@ -114,6 +126,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                     };
                 }
             }
+
 
             // Cập nhật thông tin
             entity.Name = model.Name.Trim();

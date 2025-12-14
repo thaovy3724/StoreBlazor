@@ -84,12 +84,20 @@ namespace StoreBlazor.Services.Admin.Implementations
         // ===== KHÁCH HÀNG =====
         public async Task<List<CustomerSuggestionDto>> SearchCustomerAsync(string keyword)
         {
-            if (string.IsNullOrWhiteSpace(keyword)) return new List<CustomerSuggestionDto>();
+            if (string.IsNullOrWhiteSpace(keyword))
+                return new List<CustomerSuggestionDto>();
 
             var kw = keyword.Trim();
 
             return await _dbContext.Customers
-                .Where(c => c.Phone != null && EF.Functions.Like(c.Phone, $"%{kw}%"))
+                .Where(c =>
+                    c.Phone != null &&
+                    EF.Functions.Like(c.Phone, $"%{kw}%") &&
+                    (
+                        c.Email == null ||
+                        !_dbContext.Users.Any(u => u.Username == c.Email)
+                    )
+                )
                 .Take(5)
                 .Select(c => new CustomerSuggestionDto
                 {
@@ -101,6 +109,7 @@ namespace StoreBlazor.Services.Admin.Implementations
                 })
                 .ToListAsync();
         }
+
 
         public async Task<ServiceResult> CreateCustomerAsync(Customer customer)
         {
@@ -115,14 +124,24 @@ namespace StoreBlazor.Services.Admin.Implementations
                 return new ServiceResult { Type = "error", Message = "Vui lòng nhập số điện thoại" };
             }
 
-            // Check trùng số điện thoại
+            // Check trùng số điện thoại (loại trừ khách hàng có email là username trong bảng User)
             var exists = await _dbContext.Customers
-                .AnyAsync(c => c.Phone == customer.Phone);
+                .Where(c => c.Phone == customer.Phone)
+                .Where(c =>
+                    !_dbContext.Users
+                        .Any(u => u.Username == c.Email)
+                )
+                .AnyAsync();
 
             if (exists)
             {
-                return new ServiceResult { Type = "error", Message = "Số điện thoại đã tồn tại" };
+                return new ServiceResult
+                {
+                    Type = "error",
+                    Message = "Số điện thoại đã tồn tại"
+                };
             }
+
 
             _dbContext.Customers.Add(customer);
             await _dbContext.SaveChangesAsync();
