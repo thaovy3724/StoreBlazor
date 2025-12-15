@@ -11,7 +11,6 @@ using StoreBlazor.Services.Auth.Implementations;
 using StoreBlazor.Services.Auth.Interfaces;
 using StoreBlazor.Services.Payment.Implementations;
 using StoreBlazor.Services.Payment;
-using Blazored.SessionStorage;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,9 +18,10 @@ var builder = WebApplication.CreateBuilder(args);
 // instance _dbcontext object
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseMySql(connectionString,
-        ServerVersion.AutoDetect(connectionString)));
+        ServerVersion.AutoDetect(connectionString)),
+    ServiceLifetime.Scoped);
 
 // instance IService
 builder.Services.AddScoped<ICategoryService, CategoryService>();

@@ -5,86 +5,86 @@
 @inherits BaseParent<User>
 
 <AdminAuthGuard>
-<div class="container-fluid p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="fw-bold">Quản lý Tài khoản</h3>
-    </div>
+    <div class="container-fluid p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="fw-bold">Quản lý Tài khoản</h3>
+        </div>
 
-    <AccountSearch @bind-KeyWord="@keyword"
-                   OnSearch="LoadPageAsync" />
+        <AccountSearch @bind-KeyWord="@keyword"
+                       OnSearch="LoadPageAsync" />
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered align-middle">
-                    <thead class="table-light thead-separator">
-                        <tr class="text-center">
-                            <th style="width:80px;">ID</th>
-                            <th>Tên tài khoản</th>
-                            <th>Họ và tên</th>
-                            <th>Vai trò</th>
-                            <th>Ngày tạo</th>
-                            <th style="width:150px;">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody id="accountTableBody">
-                        @if (listResult != null && listResult.Any())
-                        {
-                            foreach (var item in listResult)
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light thead-separator">
+                            <tr class="text-center">
+                                <th style="width:80px;">ID</th>
+                                <th>Tên tài khoản</th>
+                                <th>Họ và tên</th>
+                                <th>Vai trò</th>
+                                <th>Ngày tạo</th>
+                                <th style="width:150px;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountTableBody">
+                            @if (listResult != null && listResult.Any())
                             {
-                                <tr class="text-center" data-id="@item.UserId">
-                                    <td>@($"TK{item.UserId}")</td>
-                                    <td class="text-start">@item.Username</td>
-                                    <td class="text-start">@(item.FullName ?? "")</td>
-                                    <td>
-                                        <span class="badge @GetRoleBadgeClass(item.Role)">
-                                            @GetRoleText(item.Role)
-                                        </span>
-                                    </td>
-                                    <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-light border me-1 btn-edit"
-                                                title="Sửa"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#accountModal"
-                                                @onclick="()=>OpenEditForm(item)">
-                                            <i class="bi bi-pencil text-success"></i>
-                                        </button>
-                                        @if (item.UserId != currentUserId)
-                                        {
-                                            <button class="btn btn-sm btn-light border btn-delete"
-                                                    title="Xóa"
-                                                    @onclick="() => HandleDeleteAsync(item)">
-                                                <i class="bi bi-trash text-danger"></i>
+                                foreach (var item in listResult)
+                                {
+                                    <tr class="text-center" data-id="@item.UserId">
+                                        <td>@($"TK{item.UserId}")</td>
+                                        <td class="text-start">@item.Username</td>
+                                        <td class="text-start">@(item.FullName ?? "")</td>
+                                        <td>
+                                            <span class="badge @GetRoleBadgeClass(item.Role)">
+                                                @GetRoleText(item.Role)
+                                            </span>
+                                        </td>
+                                        <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-light border me-1 btn-edit"
+                                                    title="Sửa"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#accountModal"
+                                                    @onclick="() => OpenEditForm(item)">
+                                                <i class="bi bi-pencil text-success"></i>
                                             </button>
-                                        }
-                                        else
-                                        {
-                                            <button class="btn btn-sm btn-light border btn-delete"
-                                                    title="Không thể xóa tài khoản đang đăng nhập"
-                                                    disabled>
-                                                <i class="bi bi-trash text-muted"></i>
-                                            </button>
-                                        }
-                                    </td>
+                                            @if (item.UserId != currentUserId)
+                                            {
+                                                <button class="btn btn-sm btn-light border btn-delete"
+                                                        title="Xóa"
+                                                        @onclick="() => HandleDeleteAsync(item)">
+                                                    <i class="bi bi-trash text-danger"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm btn-light border btn-delete"
+                                                        title="Không thể xóa tài khoản đang đăng nhập"
+                                                        disabled>
+                                                    <i class="bi bi-trash text-muted"></i>
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center">Chưa có dữ liệu</td>
                                 </tr>
                             }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="6" class="text-center">Chưa có dữ liệu</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
+                <Pagination CurrentPage="@CurrentPage"
+                            TotalPages="@TotalPages"
+                            OnPageChange="LoadPageAsync" />
             </div>
-            <Pagination CurrentPage="@CurrentPage"
-                        TotalPages="@TotalPages"
-                        OnPageChange="LoadPageAsync" />
         </div>
     </div>
-</div>
 </AdminAuthGuard>
 
 <AccountForm Model="@SelectedItem"
@@ -99,15 +99,22 @@
     private ServiceResult serviceResult = new();
     private string keyword = string.Empty;
     private int currentUserId = 0;
+    private bool _isInitialized = false;
 
     // Thêm biến lưu role gốc
     private Role OriginalRole = Role.Staff;
 
     // ==== LOAD DATA ====
-    protected override async Task OnInitializedAsync()
+    // Xóa OnInitializedAsync, dùng OnAfterRenderAsync thay thế
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        currentUserId = await SessionStorage.GetItemAsync<int>("adminId");
-        await LoadPageAsync(1);
+        if (firstRender && !_isInitialized)
+        {
+            _isInitialized = true;
+            currentUserId = await SessionStorage.GetItemAsync<int>("adminId");
+            await LoadPageAsync(1);
+            StateHasChanged();
+        }
     }
 
     protected override async Task LoadPageAsync(int page)
@@ -133,13 +140,13 @@
         IsEditMode = true;
         OriginalRole = item.Role; // Lưu role gốc
         SelectedItem = new User
-            {
-                UserId = item.UserId,
-                Username = item.Username,
-                FullName = item.FullName,
-                Role = item.Role,
-                Password = "" // Không load mật khẩu cũ
-            };
+        {
+            UserId = item.UserId,
+            Username = item.Username,
+            FullName = item.FullName,
+            Role = item.Role,
+            Password = "" // Không load mật khẩu cũ
+        };
     }
 
     // === SAVE DATA ====

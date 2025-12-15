@@ -8,15 +8,17 @@ namespace StoreBlazor.Services.Admin.Implementations
 {
     public class StatisticService : IStatisticService
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
 
-        public StatisticService(ApplicationDbContext dbContext)
+        public StatisticService(IDbContextFactory<ApplicationDbContext> dbContextFactory)
         {
-            _dbContext = dbContext;
+            _dbContextFactory = dbContextFactory;
         }
 
         public async Task<WeeklyStatisticDTO> GetWeeklyStatisticsAsync()
         {
+            await using var _dbContext = await _dbContextFactory.CreateDbContextAsync();
+
             DateTime today = DateTime.Now;
 
             // Xác định tuần hiện tại
@@ -98,6 +100,8 @@ namespace StoreBlazor.Services.Admin.Implementations
 
         public async Task<List<RevenueByMonthDTO>> GetRevenueByMonthAsync(int year)
         {
+            await using var _dbContext = await _dbContextFactory.CreateDbContextAsync();
+
             if (year == 0)
                 year = DateTime.Now.Year;
 
@@ -117,6 +121,8 @@ namespace StoreBlazor.Services.Admin.Implementations
 
         public async Task<List<RevenueByDateDTO>> GetRevenueByRangeAsync(DateTime startDate, DateTime endDate)
         {
+            await using var _dbContext = await _dbContextFactory.CreateDbContextAsync();
+
             var data = await _dbContext.Orders
                 .Where(o => o.Status == OrderStatus.Paid &&
                            o.OrderDate.Date >= startDate.Date &&
@@ -144,6 +150,8 @@ namespace StoreBlazor.Services.Admin.Implementations
 
         public async Task<List<TopDataDTO>> GetTopDataAsync(int type, int limit, DateTime? startDate, DateTime? endDate)
         {
+            await using var _dbContext = await _dbContextFactory.CreateDbContextAsync();
+
             if (limit <= 0) limit = 5;
 
             DateTime start = startDate ?? DateTime.Now.AddMonths(-1);
@@ -198,6 +206,8 @@ namespace StoreBlazor.Services.Admin.Implementations
 
         public async Task<List<int>> GetAvailableYearsAsync()
         {
+            await using var _dbContext = await _dbContextFactory.CreateDbContextAsync();
+
             return await _dbContext.Orders
                 .Select(o => o.OrderDate.Year)
                 .Distinct()
