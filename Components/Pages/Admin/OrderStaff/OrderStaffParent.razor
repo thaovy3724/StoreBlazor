@@ -500,6 +500,7 @@
 
     private async Task HandleBarcodeScanned(string barcode)
     {
+        await Task.Delay(2000);
         var product = await service.GetProductByBarcodeAsync(barcode);
 
         if (product != null)
